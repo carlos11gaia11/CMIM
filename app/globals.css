@@ -100,3 +100,26 @@ header nav .portal-link:hover{background:#342d13;border-color:#ffd72a;color:#ffe
  .pilot-progress-notice span{flex:auto;max-width:none}
  .pilot-progress-notice a{width:100%}
 }
+
+
+/* CMIM — Worlds 2026 Orchestral Theme (YouTube official embed).
+   O vídeo permanece visível durante a reprodução, com controle do usuário. */
+.cmim-soundtrack{display:grid;gap:10px;margin:0 0 13px;width:100%;min-width:0}
+.cmim-soundtrack .music-controls{margin-bottom:0;justify-content:flex-end;gap:10px}
+.cmim-soundtrack .music-controls button[aria-pressed="true"]{background:#302b16;border-color:#e9c950;color:#ffeb9f}
+.music-track-title{font-size:12px!important;font-weight:900;color:#ffeb9a!important;letter-spacing:.15px}
+.music-source-label{font-size:10px!important;color:#d4d9cf!important;opacity:.92}
+.worlds-music-panel{display:flex;gap:17px;align-items:center;justify-content:flex-end;flex-wrap:wrap;
+ padding:14px 17px;border:1px solid #7e743d;border-radius:9px;
+ background:linear-gradient(100deg,#27291c,#121c17);box-shadow:0 14px 38px #0005;}
+.worlds-music-details{display:grid;gap:6px;max-width:390px;min-width:185px;flex:1 1 190px}
+.worlds-music-details strong{color:#ffe88a;font-size:12px;font-weight:900;line-height:1.4}
+.worlds-music-details span{font-size:11px;color:#e2e9dd;line-height:1.6}
+.worlds-music-panel iframe{display:block;flex:0 0 auto;width:356px;height:202px;max-width:100%;
+ border:1px solid #89945f;border-radius:7px;background:#090d0b}
+@media(max-width:750px){
+ .cmim-soundtrack .music-controls{justify-content:flex-start}
+ .worlds-music-panel{justify-content:stretch}
+ .worlds-music-details{min-width:0;flex:1 1 100%}
+ .worlds-music-panel iframe{width:100%;height:auto;aspect-ratio:16/9;min-height:200px}
+}
