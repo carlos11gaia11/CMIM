@@ -53,3 +53,8 @@
 .change-buttons button{min-width:95px}
 .change-buttons strong{font-family:Barlow Condensed,Arial,sans-serif;color:var(--yellow);font-size:26px}
 @media(max-width:700px){.change-banner{flex-direction:column;align-items:stretch}.change-buttons{width:100%;justify-content:flex-start}}
+
+/* Navegação para a central de ferramentas */
+header nav .portal-link{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.35px;color:#ffdf45;text-decoration:none;border:1px solid #726628;background:#201c10;border-radius:5px;padding:10px 12px;white-space:nowrap}
+header nav .portal-link:hover{background:#342d13;border-color:#ffd72a;color:#ffed84}
+@media(max-width:850px){header nav .portal-link{padding:8px;font-size:10px}}
