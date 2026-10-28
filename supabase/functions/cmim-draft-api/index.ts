@@ -26,14 +26,17 @@ async function dbGet(id:string) {
  if(!r.ok) throw Error('Banco indisponível.');
  const rows=await r.json();return rows[0]||null;
 }
+let cachedChampions:any=null;
+let championsCachedAt=0;
 async function catalog() {
+ if(cachedChampions && Date.now()-championsCachedAt<600000)return cachedChampions;
  const v=await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
  if(!v.ok) throw Error('Catálogo da Riot indisponível.');
  const [version]=await v.json();
  const c=await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/pt_BR/champion.json`);
  if(!c.ok) throw Error('Campeões indisponíveis.');
  const {data}=await c.json();
- return {version, champions:Object.values(data).map((x:any)=>({id:x.id,name:x.name,tags:x.tags})).sort((a:any,b:any)=>a.name.localeCompare(b.name,'pt-BR'))};
+ cachedChampions = {version, champions:Object.values(data).map((x:any)=>({id:x.id,name:x.name,tags:x.tags})).sort((a:any,b:any)=>a.name.localeCompare(b.name,'pt-BR'))}; championsCachedAt=Date.now(); return cachedChampions;
 }
 
 Deno.serve(async req=>{
@@ -67,7 +70,7 @@ Deno.serve(async req=>{
     const body=await req.json();
     if(!Number.isSafeInteger(body?.revision)||body.revision!==Number(row.revision)) return fail('O draft mudou. Atualize e tente novamente.',409);
     let champions:string[]=[];
-    if(body.action?.type==='confirm') champions=(await catalog()).champions.map((c:any)=>c.id);
+    if(['confirm','change_commit'].includes(body.action?.type)) champions=(await catalog()).champions.map((c:any)=>c.id);
     let next;
     try {next=apply(row.state,body.action,role,champions,Date.now());}
     catch(e){return fail((e as Error).message,400)}
