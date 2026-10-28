@@ -6,6 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+# Serializa publicacoes para evitar o erro de deploy simultaneo no Pages.
+concurrency:
+  group: cmim-pages-deploy
+  cancel-in-progress: false
+
 permissions:
   contents: read
   pages: write
