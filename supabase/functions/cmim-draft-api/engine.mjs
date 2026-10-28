@@ -5,10 +5,12 @@ export const ORDER = [
  ['R','pick'],['B','pick'],['B','pick'],['R','pick']
 ];
 export const ADJUST_SECONDS = 30;
+export const HIDDEN_GRACE_MS = 5000;
+export const CHANGE_SECONDS = 10;
 export function initial(config={}) {
  const duration = [20,30,45,60,90].includes(Number(config.duration)) ? Number(config.duration) : 30;
  const teams = ['B','R'].map((side,i)=>({name:String(config.teams?.[i]?.name||`Time ${i+1}`).slice(0,40),logo:cleanLogo(config.teams?.[i]?.logo),players:Array.from({length:5},(_,j)=>String(config.teams?.[i]?.players?.[j]||['Top','Jungle','Mid','ADC','Support'][j]).slice(0,24))}));
- return {sideOwners:['B','R'],ready:[false,false],swapDuration:ADJUST_SECONDS,swapDeadline:0,lanes:[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']],presentation:cleanPresentation(config.presentation),teams,mode:['Normal','Fearless','Ironman'].includes(config.mode)?config.mode:'Normal',games:Math.max(1,Math.min(5,Math.trunc(Number(config.games))||1)),duration,disabled:Array.isArray(config.disabled)?config.disabled.filter(x=>typeof x==='string').slice(0,200):[],first:config.first==='R'?'R':'B',game:1,history:[],actions:[],started:false,paused:false,remaining:duration,deadline:0,score:[0,0],swaps:[[0,1,2,3,4],[0,1,2,3,4]],pendingDecision:null,lastEvent:null};
+ return {sideOwners:['B','R'],ready:[false,false],swapDuration:ADJUST_SECONDS,swapDeadline:0,lanes:[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']],presentation:cleanPresentation(config.presentation),teams,mode:['Normal','Fearless','Ironman'].includes(config.mode)?config.mode:'Normal',games:Math.max(1,Math.min(5,Math.trunc(Number(config.games))||1)),duration,disabled:Array.isArray(config.disabled)?config.disabled.filter(x=>typeof x==='string').slice(0,200):[],first:config.first==='R'?'R':'B',game:1,history:[],actions:[],started:false,paused:false,remaining:duration,deadline:0,score:[0,0],swaps:[[0,1,2,3,4],[0,1,2,3,4]],pendingDecision:null,changeRequest:null,lastEvent:null};
 }
 export function cleanLogo(value) {return typeof value==='string' && value.length<600000 && /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(value)?value:''}
 export function turn(s) { const t=ORDER[s.actions.length]; return t ? {side:s.first==='R'?(t[0]==='B'?'R':'B'):t[0],type:t[1]} : null; }
@@ -19,6 +21,60 @@ export function apply(s,action,role,champions=[],now=Date.now()) {
  const next=structuredClone(s),captain=['B','R'].includes(role);
  const needCaptain=()=>{if(!captain)throw Error('Somente os capitães podem fazer isso.');};
  if(!action||typeof action.type!=='string')throw Error('Ação inválida.');
+ // Um pedido de correção congela a sequência até a resposta e a escolha final.
+ const restoreClock=()=>{
+  const req=next.changeRequest;
+  if(!req)return;
+  next.paused=req.wasPaused;
+  if(turn(next)&&!req.wasPaused)next.deadline=now+req.remainingMs;
+  if(!turn(next)&&req.adjustRemainingMs!==null)next.swapDeadline=now+req.adjustRemainingMs;
+  next.changeRequest=null;
+ };
+ if(next.changeRequest){
+  if(!['change_answer','change_commit','change_cancel','change_timeout'].includes(action.type))
+   throw Error('Existe uma solicitação de troca de campeão em andamento.');
+ }
+ if(action.type==='change_request'){
+  needCaptain();
+  if(!next.started||next.finished)throw Error('Não há draft ativo para corrigir.');
+  if(!turn(next)&&(!next.swapDeadline||now>=next.swapDeadline))throw Error('O período de ajustes já terminou.');
+  if(!Number.isInteger(action.index)||action.index<0||action.index>=next.actions.length)throw Error('Escolha inválida.');
+  const pick=next.actions[action.index];
+  if(pick.type!=='pick'||pick.side!==role||!pick.champion)throw Error('Só é possível pedir a troca de um campeão escolhido pelo seu time.');
+  next.changeRequest={by:role,index:action.index,original:pick.champion,status:'requested',until:0,wasPaused:next.paused,remainingMs:turn(next)?Math.max(1000,(next.paused?(next.remaining||next.duration)*1000:next.deadline-now)):0,adjustRemainingMs:turn(next)?null:Math.max(0,next.swapDeadline-now)};
+  next.paused=true;
+  return next;
+ }
+ if(action.type==='change_answer'){
+  needCaptain();
+  const req=next.changeRequest;
+  if(!req||req.status!=='requested'||req.by===role)throw Error('Esta solicitação não está disponível para você.');
+  if(action.approve===true){req.status='select';req.until=now+CHANGE_SECONDS*1000;}
+  else restoreClock();
+  return next;
+ }
+ if(action.type==='change_cancel'){
+  needCaptain();
+  if(!next.changeRequest||next.changeRequest.by!==role)throw Error('Somente quem solicitou pode cancelar.');
+  restoreClock();return next;
+ }
+ if(action.type==='change_timeout'){
+  needCaptain();
+  const req=next.changeRequest;
+  if(!req||req.status!=='select'||now<req.until)throw Error('O tempo de troca ainda não terminou.');
+  restoreClock();return next;
+ }
+ if(action.type==='change_commit'){
+  needCaptain();
+  const req=next.changeRequest;
+  if(!req||req.status!=='select'||req.by!==role)throw Error('Troca de campeão não autorizada.');
+  if(now>=req.until)throw Error('Os 10 segundos terminaram.');
+  if(action.champion===req.original||!champions.includes(action.champion)||locked(next).has(action.champion))
+   throw Error('Esse campeão está indisponível para a troca.');
+  next.actions[req.index].champion=action.champion;
+  next.lastEvent={side:role,type:'pick',champion:action.champion,correction:true,id:crypto.randomUUID()};
+  restoreClock();return next;
+ }
  // Comandos que mudam a partida exigem aprovação dos dois capitães, sem Master.
  if(decisions.has(action.type)) {
   needCaptain();
@@ -47,13 +103,13 @@ export function apply(s,action,role,champions=[],now=Date.now()) {
  else if(action.type==='confirm') {
   const t=turn(next);if(!next.started||next.paused||!t)throw Error('Draft indisponível para seleção.');
   if(role!==t.side)throw Error('Aguarde o turno do seu time.');
-  if(now>=next.deadline)throw Error('O tempo do turno acabou.');
+  if(now>=next.deadline+HIDDEN_GRACE_MS)throw Error('O tempo do turno acabou.');
   if(!champions.includes(action.champion)||locked(next).has(action.champion))throw Error('Campeão indisponível.');
   next.actions.push({...t,champion:action.champion});next.lastEvent={...t,champion:action.champion,id:crypto.randomUUID()};next.deadline=now+next.duration*1000;
   if(!turn(next))next.swapDeadline=now+ADJUST_SECONDS*1000;
  }
  else if(action.type==='timeout') {
-  if(!next.started||next.paused||!turn(next)||now<next.deadline)throw Error('O tempo ainda não acabou.');
+  if(!next.started||next.paused||!turn(next)||now<next.deadline+HIDDEN_GRACE_MS)throw Error('O tempo ainda não acabou.');
   const t=turn(next);
   if(t.type==='ban'){next.actions.push({...t,champion:null});next.lastEvent={...t,champion:null,id:crypto.randomUUID()};next.deadline=now+next.duration*1000;}
   else {next.paused=true;next.remaining=0;}
@@ -61,11 +117,11 @@ export function apply(s,action,role,champions=[],now=Date.now()) {
  else if(action.type==='pause') {needCaptain();if(!next.started||!turn(next))throw Error('Nenhum turno ativo.');next.paused=!next.paused;if(next.paused)next.remaining=Math.max(0,(next.deadline-now)/1000);else next.deadline=now+(next.remaining>0?next.remaining:next.duration)*1000;}
  else if(action.type==='undo') {next.swapDeadline=0;next.actions.pop();next.paused=false;next.deadline=now+next.duration*1000;next.lastEvent=null;}
  else if(action.type==='finish') {next.score[action.winner==='B'?0:1]++;next.finished=true;next.finalWinner=action.winner;}
- else if(action.type==='reset') {next.ready=[false,false];next.swapDeadline=0;next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;next.swaps=[[0,1,2,3,4],[0,1,2,3,4]];}
+ else if(action.type==='reset') {next.ready=[false,false];next.swapDeadline=0;next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;next.swaps=[[0,1,2,3,4],[0,1,2,3,4]];next.changeRequest=null;}
  else if(action.type==='next') {
   next.score[action.winner==='B'?0:1]++;next.history.push({game:next.game,actions:next.actions,winner:action.winner,teams:next.teams,swaps:next.swaps,lanes:next.lanes});
   if(action.invertSides===true){next.teams=[...next.teams].reverse();next.score=[...next.score].reverse();next.sideOwners=[...(next.sideOwners||['B','R'])].reverse();}
-  next.game++;next.first=next.first==='B'?'R':'B';next.ready=[false,false];next.swapDeadline=0;next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;next.swaps=[[0,1,2,3,4],[0,1,2,3,4]];
+  next.game++;next.first=next.first==='B'?'R':'B';next.ready=[false,false];next.swapDeadline=0;next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;next.swaps=[[0,1,2,3,4],[0,1,2,3,4]];next.changeRequest=null;
  }
  else if(action.type==='lane') {const i=action.side==='R'?1:0;if(!captain||role!==action.side)throw Error('Você só pode ajustar seu time.');if(turn(next)||next.finished||!next.swapDeadline||now>=next.swapDeadline)throw Error('Tempo de ajustes encerrado.');if(!Number.isInteger(action.player)||action.player<0||action.player>4||!['TOP','JGL','MID','ADC','SUP'].includes(action.lane))throw Error('Posição inválida.');next.lanes??=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];const j=next.lanes[i].indexOf(action.lane);[next.lanes[i][action.player],next.lanes[i][j]]=[next.lanes[i][j],next.lanes[i][action.player]];}
  else if(action.type==='swap') {const i=action.side==='R'?1:0;if(!captain||role!==action.side)throw Error('Você só pode trocar seu time.');if(turn(next)||next.finished||!next.swapDeadline||now>=next.swapDeadline)throw Error('Trocas disponíveis somente nos 30 segundos de ajustes.');if(!Number.isInteger(action.a)||!Number.isInteger(action.b)||action.a<0||action.a>4||action.b<0||action.b>4)throw Error('Posição inválida.');[next.swaps[i][action.a],next.swaps[i][action.b]]=[next.swaps[i][action.b],next.swaps[i][action.a]];}
