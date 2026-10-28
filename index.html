@@ -114,7 +114,7 @@
   <header class="site-header">
     <div class="wrap topbar">
       <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./cmim.jpeg" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
-      <nav class="nav" aria-label="Menu principal"><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="#regras">REGRAS</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><button id="portal-admin-button" class="portal-admin-entry" type="button">⚙ ACESSO ADMIN</button>
+      <nav class="nav" aria-label="Menu principal"><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="#regras">REGRAS</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><a id="portal-admin-button" class="portal-admin-entry" href="./admin.html">⚙ ADMINISTRAR</a>
     </div>
   </header>
   <main>
@@ -129,11 +129,13 @@
         </div>
         <div class="hero-meta"><span>03 FERRAMENTAS DISPONÍVEIS</span><span><b id="total-players">—</b> JOGADORES NO HISTÓRICO</span><span>DESDE 12.02.2025</span></div>
       </div>
-      <div class="hero-art" aria-label="Símbolo da Comunidade Mais Insalubre do Mundo">
-        <span class="topmark">● COMUNIDADE MAIS INSALUBRE DO MUNDO</span>
-        <img src="./cmim.jpeg" alt="Logo oficial da CMIM">
-        <span class="side-tag">COME BACK EDITION</span>
-        <div class="bottommark"><div class="hero-art-strap">NASCEU DO ZERO. VOLTOU MAIS FORTE.</div><div class="hero-art-words"><strong>PLAY.</strong><strong>COMPETE.</strong><strong>REPEAT.</strong></div><span class="hero-art-edition">CMIM / 2026</span></div>
+      <div class="hero-art hero-art-refined" aria-label="Marca da Comunidade Mais Insalubre do Mundo">
+        <div class="hero-art-refined-top"><span><i></i> COMUNIDADE MAIS INSALUBRE DO MUNDO</span><b>COME BACK / 2026</b></div>
+        <div class="hero-art-refined-middle">
+          <img src="./cmim.jpeg" alt="Logo oficial do CMIM: figura mascarada sobre o amarelo">
+          <div class="hero-art-refined-copy"><span>UM TIME.</span><span>UMA HISTÓRIA.</span><strong>UM CMIM.</strong></div>
+        </div>
+        <div class="hero-art-refined-bottom"><div><small>NASCEU DO ZERO. VOLTOU MAIS FORTE.</small><strong>PLAY <span>·</span> COMPETE <span>·</span> REPEAT</strong></div></div>
       </div>
     </section>
     <div class="wrap divider"></div>
@@ -279,59 +281,7 @@
   </main>
   <footer class="wrap footer"><span>CMIM © 2026 · COMUNIDADE MAIS INSALUBRE DO MUNDO · FEITO PARA A COMUNIDADE.</span><span>GG WP · <a href="https://www.twitch.tv/11gaia11br" target="_blank" rel="noopener noreferrer">ACOMPANHE AS LIVES ↗</a></span></footer>
 
-  <dialog id="portal-admin-dialog" class="admin-dialog" aria-label="Painel administrativo do CMIM">
-    <div class="admin-shell">
-      <div class="admin-top"><div><span class="portal-label">CENTRAL ADMINISTRATIVA</span><h2>GERENCIAR CMIM<span class="yellow">.</span></h2></div><button type="button" id="portal-admin-close" class="admin-close" aria-label="Fechar painel">✕</button></div>
-      <p class="admin-intro">Acesso com as <b>mesmas credenciais e permissões do administrador da tabela de pontuação.</b> Visitantes não podem alterar tiers nem publicar notícias.</p>
-      <section id="admin-login-view">
-        <form id="portal-login" class="admin-login-grid">
-          <label>E-MAIL DO ADMINISTRADOR<input name="email" type="email" placeholder="E-mail do administrador" autocomplete="username" required></label>
-          <label>SENHA<input name="password" type="password" placeholder="Sua senha" autocomplete="current-password" required></label>
-          <p id="admin-login-error" class="admin-error" role="alert"></p>
-          <button type="submit" class="admin-main-button">ENTRAR NO PAINEL →</button>
-        </form>
-      </section>
-      <section id="admin-management-view" hidden>
-        <div class="admin-status"><span>● ADMINISTRADOR AUTORIZADO</span><button id="portal-logout" type="button">Sair da conta</button></div>
-        <div class="admin-block">
-          <div class="admin-block-head"><div><span class="portal-label">CONSELHO DE TIERS / FICHA DO PLAYER</span><h3>EDITAR JOGADORES</h3></div><small id="admin-player-count">Carregando...</small></div>
-          <label>JOGADOR DO RANKING<select id="admin-player-select"><option value="">Selecione um jogador...</option></select></label>
-          <form id="admin-player-form" hidden>
-            <h4 id="admin-player-name">Jogador</h4>
-            <div class="admin-fields">
-              <label>TIER CMIM<select id="admin-tier" name="tier"><option value="">Não definido</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select></label>
-              <label>LANE PRINCIPAL<select id="admin-lane" name="lane"><option value="">Não informada</option><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
-              <label>TAG RIOT (SEM #)<input id="admin-riot-tag" name="tag" maxlength="6" placeholder="BR1"></label>
-              <label>CAMPEÕES / ESPECIALIDADES<input id="admin-champions" name="champions" maxlength="124" placeholder="Yasuo, Ahri, Zed (até 5)"></label>
-            </div>
-            <p class="admin-muted">O tier e a lane fazem parte da ficha CMIM, independentemente do ranking da solo queue. As alterações aparecem na lista pública de jogadores.</p>
-            <div class="admin-actions"><small id="admin-player-feedback" role="status"></small><button type="submit" class="admin-main-button">SALVAR FICHA DO JOGADOR</button></div>
-          </form>
-        </div>
-        <div class="admin-block">
-          <div class="admin-block-head"><div><span class="portal-label">CADASTRO E INSCRIÇÃO</span><h3>ADICIONAR AO RANKING</h3></div><small id="admin-season-name">Carregando temporada...</small></div>
-          <div class="admin-add-grid">
-            <form id="admin-create-player"><label>NOVO NICK<input name="nick" type="text" minlength="2" maxlength="32" required placeholder="Nick do jogador"></label><button type="submit">CRIAR E INSCREVER</button></form>
-            <form id="admin-enroll-player"><label>JOGADOR JÁ CADASTRADO<select id="admin-existing-player" required><option value="">Selecione um jogador...</option></select></label><button type="submit">INSCREVER NA TEMPORADA</button></form>
-          </div>
-          <p class="admin-muted">Os cadastros e inscrições seguem as mesmas validações do ranking, incluindo nicks parecidos, duplicações e temporada ativa. Para estatísticas, resultados ou exclusão, use o <a href="./ranking.html">painel do Ranking CMIM ↗</a>.</p>
-        </div>
-        <div class="admin-block">
-          <div class="admin-block-head"><div><span class="portal-label">JORNAL DA COMUNIDADE</span><h3>PUBLICAR NO CMIM NEWS</h3></div><small>Editor administrativo</small></div>
-          <form id="admin-create-news" class="admin-news-form">
-            <label>MANCHETE<input name="title" maxlength="140" minlength="5" required placeholder="A noite que mudou o CMIM..."></label>
-            <label>RESUMO<input name="excerpt" maxlength="280" minlength="3" required placeholder="Uma frase de destaque para o portal"></label>
-            <label>REPORTAGEM<textarea name="body" minlength="3" maxlength="25000" rows="5" required placeholder="Escreva a notícia completa..."></textarea></label>
-            <div class="admin-fields"><label>EDITORIA<select name="category"><option>Comunicado</option><option>Campeonato</option><option>Comunidade</option><option>Entrevista</option></select></label>
-              <label>URL DA IMAGEM (HTTPS, OPCIONAL)<input name="image_url" type="url" placeholder="https://..."></label></div>
-            <label class="admin-check"><input name="published" type="checkbox" value="1" checked> Publicar imediatamente no portal</label>
-            <div class="admin-actions"><span class="admin-muted">Você também pode salvar como rascunho.</span><button type="submit" class="admin-main-button">SALVAR EDIÇÃO</button></div>
-          </form>
-          <div class="admin-news-list"><h4>ÚLTIMAS EDIÇÕES</h4><div id="admin-news-list"><p class="admin-muted">Carregando...</p></div></div>
-        </div>
-      </section>
-    </div>
-  </dialog>
+
   <dialog id="cmim-news-reader" class="news-reader" aria-label="Ler reportagem CMIM News">
     <div><button id="news-reader-close" class="news-reader-close" type="button">✕ FECHAR</button><span id="news-reader-category" class="portal-label"></span><h2 id="news-reader-title"></h2><p id="news-reader-body"></p></div>
   </dialog>
