@@ -135,6 +135,12 @@ end
 $function$;
 
 
+
+-- A API usa service_role para gravar salas; o gatilho precisa deste acesso.
+grant usage on schema cmim_private to service_role;
+revoke all on function cmim_private.archive_confirmed_draft_game() from public,anon,authenticated;
+grant execute on function cmim_private.archive_confirmed_draft_game() to service_role;
+
 drop trigger if exists cmim_archive_confirmed_game on public.cmim_draft_rooms;
 create trigger cmim_archive_confirmed_game after update of state on public.cmim_draft_rooms
  for each row execute function cmim_private.archive_confirmed_draft_game();
