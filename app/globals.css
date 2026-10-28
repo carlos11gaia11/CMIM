@@ -58,3 +58,21 @@
 header nav .portal-link{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.35px;color:#ffdf45;text-decoration:none;border:1px solid #726628;background:#201c10;border-radius:5px;padding:10px 12px;white-space:nowrap}
 header nav .portal-link:hover{background:#342d13;border-color:#ffd72a;color:#ffed84}
 @media(max-width:850px){header nav .portal-link{padding:8px;font-size:10px}}
+
+
+/* Apuração independente de resultados por capitão */
+.result-vote-banner{border:1px solid #807c3b;background:linear-gradient(110deg,#302d18,#191e18);color:#f7f1cc;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.result-vote-banner strong{display:block;color:#ffe475;line-height:1.3;font-size:15px;overflow-wrap:anywhere}
+.result-vote-banner span{display:block;font-size:12px;color:#e1e6d5;line-height:1.5}
+.result-vote-status{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.result-vote-status span{display:inline-flex;align-items:center;border:1px solid #636d4a;border-radius:6px;background:#273023;padding:6px 10px;color:#e6efd4;font-size:10px;font-weight:850}
+.result-vote-banner.result-conflict{border-color:#e49457;background:linear-gradient(110deg,#3e261c,#221e1b)}
+.result-vote-banner.result-conflict strong{color:#ffbd88}
+.result-vote-banner .primary{white-space:normal;flex-shrink:0;max-width:100%}
+.report-txt-button{display:inline-flex;align-items:center;gap:6px;border:1px solid #6d7f51;border-radius:6px;background:#222e20;color:#f1f7da;cursor:pointer;padding:8px 12px;font-size:11px;font-weight:850}
+.report-txt-button:hover{background:#30472e;border-color:#b2c87e}
+.previous-games .report-txt-button{margin:0 10px 0 auto}
+.result-field{display:grid;gap:8px;font-size:12px;color:#f4e8a5;font-weight:900;margin:18px 0}
+.result-field select{min-height:46px;background:#151d16!important;color:#f3f7ef!important;border:1px solid #71825d;border-radius:6px;padding:10px 12px;max-width:100%}
+.result-field select option{background:#152117;color:#f8fcef}
+@media(max-width:650px){.result-vote-banner{align-items:stretch}.result-vote-banner .primary{width:100%}.result-vote-status{flex-direction:column}.result-vote-status span{width:100%}.previous-games .report-txt-button{margin:10px 0}}
