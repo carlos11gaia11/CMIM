@@ -158,3 +158,61 @@ body.admin-page [hidden]{display:none!important}
  .admin-news-row button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+
+/* Homologação oficial das partidas / MD3 */
+.review-nav-badge{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:23px;padding:3px 6px;background:#f6df72;color:#172113;border-radius:50%;font-size:10px;font-weight:900}
+.review-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:18px 0}
+.review-summary-card{display:flex;flex-direction:column;gap:5px;padding:20px 24px;border:1px solid #4e6650;border-top:3px solid #ffe16e;border-radius:9px;background:#1b281e}
+.review-summary-card strong{font:900 42px/.9 'Barlow Condensed',Impact,sans-serif;color:#ffe17a}
+.review-summary-card span{font-size:11px;color:#d3e2cc;font-weight:800}
+.review-guidance{border:1px solid #6a774c;border-radius:8px;background:#29301e;color:#edf0d9;padding:16px 20px;font-size:12px;line-height:1.8;margin:16px 0}
+.review-guidance b{color:#ffeb8c}
+.review-toolbar{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin:21px 0 15px}
+.review-toolbar label{display:grid;gap:7px;color:#d8e7ce;font-size:10px;font-weight:900;letter-spacing:.5px;min-width:180px}
+.review-toolbar select{color-scheme:dark;display:block;width:100%;min-height:42px;border:1px solid #72836d;border-radius:6px;background:#101b13;color:#f2f7e9;padding:9px 13px}
+.review-toolbar option{background:#18261b;color:#fff}
+.review-toolbar #review-status{font-size:12px;color:#cbdcc8;line-height:1.5}
+.review-list{display:grid;gap:16px;margin-bottom:21px}
+.review-empty{padding:34px 18px;background:#1b271d;border:1px dashed #657c60;border-radius:9px;text-align:center;color:#d2e2ce;font-size:13px}
+.review-series{background:#17221a;border:1px solid #4e604d;border-radius:11px;padding:23px;min-width:0}
+.review-series.pending{border-left:4px solid #ffe078}
+.review-series.approved{border-left:4px solid #91e5a9}
+.review-series.rejected{border-left:4px solid #e7a29d}
+.review-series-top{display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.review-series-top>div{min-width:0}
+.review-series h3{margin:6px 0 5px;font-size:clamp(28px,3vw,37px);color:#ffedab;overflow-wrap:anywhere}
+.review-series h3 span{color:#abc2a5}
+.review-series-top p{margin:0;color:#bfd2ba;font-size:11px;overflow-wrap:anywhere}
+.review-badge{white-space:normal;text-align:center;padding:7px 11px;border:1px solid #8b8444;border-radius:6px;color:#fff0ae;background:#36351e;font-size:10px;font-weight:900}
+.review-badge.approved{background:#223b27;border-color:#52895b;color:#b0f4bc}
+.review-badge.rejected{background:#442725;border-color:#965f58;color:#ffc3b9}
+.review-score{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 17px;margin:18px 0;padding:16px;border:1px solid #506249;border-radius:7px;background:linear-gradient(100deg,#243624,#2e301b,#392526)}
+.review-score span{font-size:13px;font-weight:900;color:#f3f7e6;max-width:230px;overflow-wrap:anywhere}
+.review-score strong{font:900 46px/.9 'Barlow Condensed',Impact,sans-serif;color:#ffe37c;white-space:nowrap}
+.review-roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-bottom:13px}
+.review-roster>div{background:#202e23;border:1px solid #475c47;border-radius:7px;padding:13px;min-width:0}
+.review-roster b{font-size:12px;color:#ffe8a1}
+.review-roster p{margin:6px 0 0;color:#d0dfcb;font-size:11px;overflow-wrap:anywhere}
+.review-games{display:grid;gap:7px}
+.review-game{border:1px solid #405542;border-radius:7px;background:#1d2920;padding:11px 14px}
+.review-game-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px}
+.review-game-heading b{color:#ffe08b;font-size:13px}
+.review-game-heading span{color:#e5f1dd}
+.review-game details{margin-top:6px}
+.review-game summary{font-size:11px;font-weight:800;color:#c9dbbb;cursor:pointer}
+.review-game-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}
+.review-game-details>div{background:#152019;padding:10px;border-radius:6px;min-width:0}
+.review-game-details b{color:#ffe491;font-size:10px}
+.review-game-details p{color:#deead5;font-size:11px;overflow-wrap:anywhere;margin:5px 0 0}
+.review-note{font-size:12px;color:#f1e6c4;background:#2c3020;border:1px solid #5b6c45;border-radius:6px;padding:11px 14px;margin:16px 0}
+.review-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.review-actions button{min-height:41px;border-radius:6px;padding:9px 14px;font-weight:900;font-size:11px}
+.review-actions .review-reject,.review-actions .review-reopen{color:#ffcfc8;background:#3b2625;border:1px solid #926158}
+.review-actions .review-reopen{color:#ffe5aa;background:#36301f;border-color:#978443}
+.review-actions a{border:1px solid #647a61;border-radius:6px;background:#2a382b;padding:10px 14px;color:#e6f1df;font-size:11px;font-weight:900}
+.review-actions a:hover{background:#39513b}
+.review-approved-note{font-size:12px;font-weight:900;color:#a2f3af}
+.review-actions button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:760px){.review-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.review-summary-card{padding:13px}.review-summary-card strong{font-size:34px}.review-series{padding:14px}.review-roster,.review-game-details{grid-template-columns:1fr}}
+@media(max-width:480px){.review-summary{grid-template-columns:1fr}.review-summary-card{flex-direction:row;align-items:center;gap:15px}.review-actions>*{width:100%;text-align:center}.review-series h3{font-size:28px}.review-score{flex-direction:column;gap:5px}.review-score strong{font-size:43px}.review-toolbar label{width:100%}}
