@@ -50,11 +50,15 @@
       const rankRows=await get('/rest/v1/cmim_rank?id=eq.1&select=data,version');
       const data=rankRows?.[0]?.data;
       if(!data || !Array.isArray(data.players))throw Error('O histórico do ranking ainda não está disponível.');
-      let profiles=[];
+      let profiles=[], playerMeta=[];
       try{
         const response=await get('/rest/v1/cmim_profiles?select=nick,tag,lane,tier,avatar_url,rank_player_id&limit=1000');
         profiles=Array.isArray(response)?response:[];
       }catch{ /* A classificação pública continua disponível mesmo sem perfis. */ }
+      try{
+        const response=await get('/rest/v1/cmim_player_meta?select=rank_player_id,tier,lane,riot_tag,champion_tags&limit=1000');
+        playerMeta=Array.isArray(response)?response:[];
+      }catch{ /* Legacy rankings remain visible if metadata is unavailable. */ }
       const seasons=[...(data.seasons||[])].sort((a,b)=>Date.parse(b.createdAt||0)-Date.parse(a.createdAt||0));
       // Sempre preferir o último campeonato encerrado ao falar em colocação final.
       const lastClosed=seasons.find(s=>s.status==='closed');
@@ -62,13 +66,18 @@
       const complete=Boolean(lastClosed);
       const placements=computePlacement(data,season);
       const byId=new Map(profiles.filter(p=>p.rank_player_id).map(p=>[p.rank_player_id,p]));
+      const metaById=new Map(playerMeta.map(p=>[String(p.rank_player_id),p]));
       const byNick=new Map(profiles.map(p=>[slug(p.nick),p]));
       state.players=data.players.filter(p=>p&&p.id&&p.nick).map(p=>{
-        const profile=profileFor(p,byId,byNick),placement=placements.get(p.id);
-        const tier=['S','A','B','C','D','E','F'].includes(profile?.tier)?profile.tier:null;
-        const tag=/^[A-Z0-9]{3,6}$/.test(String(profile?.tag||''))?profile.tag:null;
-        const lane=['TOP','JG','MID','ADC','SUP'].includes(profile?.lane)?profile.lane:null;
-        return {id:p.id,nick:p.nick,tier,tag,lane,avatar:sanitizeAvatar(profile?.avatar_url),position:placement?.position||null,points:placement?.points??null};
+        const profile=profileFor(p,byId,byNick),meta=metaById.get(String(p.id)),placement=placements.get(p.id);
+        const tierCandidate=meta?.tier||profile?.tier;
+        const tier=['S','A','B','C','D','E','F'].includes(tierCandidate)?tierCandidate:null;
+        const tagCandidate=meta?.riot_tag||profile?.tag;
+        const tag=/^[A-Za-z0-9]{3,6}$/.test(String(tagCandidate||''))?tagCandidate:null;
+        const laneCandidate=meta?.lane||profile?.lane;
+        const lane=['TOP','JG','MID','ADC','SUP'].includes(laneCandidate)?laneCandidate:null;
+        const champions=Array.isArray(meta?.champion_tags)?meta.champion_tags.filter(x=>typeof x==='string'&&x.length<=24).slice(0,5):[];
+        return {id:p.id,nick:p.nick,tier,tag,lane,champions,avatar:sanitizeAvatar(profile?.avatar_url),position:placement?.position||null,points:placement?.points??null};
       });
       state.loaded=true;state.error=false;state.season=season;state.status=complete?'closed':'active';
       if(counter)counter.textContent=state.players.length;
@@ -112,13 +121,15 @@
     target.innerHTML=list.map((p,i)=>{
       const avatar=p.avatar?'<img src="'+esc(p.avatar)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span>'+esc(p.nick.slice(0,2).toUpperCase())+'</span>';
       const badge=p.tier?'<span class="tier-pill" style="--tier-color:'+colors[p.tier]+'">'+esc(p.tier)+'</span>':'<span class="tier-pill unknown">A definir</span>';
+      const champHtml=p.champions?.length?'<span class="champion-list">'+p.champions.map(c=>'<span class="champion-chip">'+esc(c)+'</span>').join('')+'</span>':'';
       const tag=p.tag?'<span class="riot-tag">#'+esc(p.tag)+'</span>':'<span class="riot-tag subtle">Sem tag vinculada</span>';
       const lane=p.lane?'<span class="lane-pill">'+esc(p.lane)+'</span>':'<span class="unspecified">Não informada</span>';
       const position=p.position?'<strong class="ranking-place '+(p.position<=3?'place-top':'')+'">'+p.position+'º</strong><small>'+(isFinal?'Posição final':'Posição parcial')+' · '+number(p.points)+' pts</small>':'<strong class="ranking-place none">—</strong><small>Sem posição nesta temporada</small>';
-      return '<tr><td class="roster-index">'+String(i+1).padStart(2,'0')+'</td><td><div class="player-cell"><div class="player-avatar">'+avatar+'</div><div><b>'+esc(p.nick)+'</b>'+tag+'</div></div></td><td>'+badge+'</td><td>'+lane+'</td><td class="position-cell">'+position+'</td></tr>';
+      return '<tr><td class="roster-index">'+String(i+1).padStart(2,'0')+'</td><td><div class="player-cell"><div class="player-avatar">'+avatar+'</div><div><b>'+esc(p.nick)+'</b>'+tag+champHtml+'</div></div></td><td>'+badge+'</td><td>'+lane+'</td><td class="position-cell">'+position+'</td></tr>';
     }).join('');
   }
   for(const key of ['players-search','players-tier','players-scope','players-sort'])$(key)?.addEventListener(key==='players-search'?'input':'change',renderPlayers);
   $('players-retry')?.addEventListener('click',loadPlayers);
+  window.CMIMPortalPlayers={reload:loadPlayers,getPlayers:()=>state.players.map(p=>({...p})),getSeason:()=>state.season};
   document.addEventListener('DOMContentLoaded',loadPlayers,{once:true});
 })();
