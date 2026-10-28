@@ -184,7 +184,7 @@
         if(window.innerWidth<840)window.scrollTo({top:0,behavior:'smooth'});
       }
       tabs.forEach(b=>b.addEventListener('click',()=>activate(b.dataset.adminTab)));
-      activate('matches');
+      activate(new URLSearchParams(location.search).get('tab')||'matches');
     })();
   </script>
 </body>
