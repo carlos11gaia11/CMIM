@@ -12,6 +12,7 @@
   <title>CMIM — Central da Comunidade</title>
   <link rel="stylesheet" href="./portal-extra.css">
   <script defer src="./portal-players.js"></script>
+  <script defer src="./portal-admin.js"></script>
   <style>
     :root{--bg:#0b0d0c;--surface:#141816;--panel:#191e1a;--line:#343b33;--yellow:#ffe03b;--cream:#f6f6ef;--muted:#b1b9ae;--green:#a4e2a7;--blue:#70c7eb;--red:#fd8180}
     *{box-sizing:border-box}
@@ -113,7 +114,7 @@
   <header class="site-header">
     <div class="wrap topbar">
       <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./cmim.jpeg" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
-      <nav class="nav" aria-label="Menu principal"><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="#regras">REGRAS</a><a href="#historia">HISTÓRIA</a><a href="#redes">REDES</a><span class="live"><i></i> PORTAL CMIM</span></nav>
+      <nav class="nav" aria-label="Menu principal"><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="#regras">REGRAS</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><button id="portal-admin-button" class="portal-admin-entry" type="button">⚙ ACESSO ADMIN</button>
     </div>
   </header>
   <main>
@@ -132,7 +133,7 @@
         <span class="topmark">● COMUNIDADE MAIS INSALUBRE DO MUNDO</span>
         <img src="./cmim.jpeg" alt="Logo oficial da CMIM">
         <span class="side-tag">COME BACK EDITION</span>
-        <div class="bottommark"><div><small>NASCEU DO ZERO. VOLTOU MAIS FORTE.</small><strong>PLAY · COMPETE · REPEAT</strong></div><small>EST. CMIM</small></div>
+        <div class="bottommark"><div class="hero-art-strap">NASCEU DO ZERO. VOLTOU MAIS FORTE.</div><div class="hero-art-words"><strong>PLAY.</strong><strong>COMPETE.</strong><strong>REPEAT.</strong></div><span class="hero-art-edition">CMIM / 2026</span></div>
       </div>
     </section>
     <div class="wrap divider"></div>
@@ -164,6 +165,31 @@
       <div class="feature-strip" aria-label="Pilares do CMIM"><div><strong>COMUNIDADE</strong><span>Um lugar para reunir os jogadores</span></div><div><strong>COMPETIÇÃO</strong><span>Quem joga, deixa a marca no ranking</span></div><div><strong>CONEXÃO</strong><span>Ferramentas acessíveis pelo navegador</span></div></div>
     </section>
 
+
+    <section class="wrap portal-section about-section" id="sobre" aria-labelledby="about-title">
+      <div class="section-head">
+        <div><div class="portal-label">NÃO É SÓ UMA FILA DE CUSTOM</div><h2 id="about-title">BEM-VINDO À <span class="yellow">IN-HOUSE MAIS DIFERENTE.</span></h2>
+        <p class="portal-subtitle">CMIM significa Comunidade Mais Insalubre do Mundo. Uma comunidade de League of Legends que nasceu da vontade de juntar a galera, competir de verdade e transformar cada noite de partida em história.</p></div>
+        <p>Não queremos ser a maior comunidade. Queremos ter uma identidade que só quem joga aqui entende.</p>
+      </div>
+      <div class="about-intro pane">
+        <div><span class="portal-label">NOSSA ESSÊNCIA</span><h3>UMA PARTIDA É SÓ O COMEÇO.</h3>
+          <p>A CMIM vai além de juntar dez pessoas no Rift. Aqui você entra numa comunidade de in-house com rivalidades saudáveis, escalações inesperadas, momentos de resenha e um sistema que valoriza evolução, presença e história.</p>
+          <p>Existem regras, ranking por temporada, ferramentas que facilitam as partidas e um espaço para reconhecer quem marcou a comunidade. Não importa se você acabou de chegar ou se estava no começo: sempre há lugar para mais uma história.</p>
+        </div>
+        <div class="about-side"><b>CMIM</b><span>COMUNIDADE MAIS INSALUBRE DO MUNDO</span><strong>DE VOLTA ÀS RAÍZES</strong></div>
+      </div>
+      <div class="about-features">
+        <article><div class="about-feature-icon">S → F</div><h3>TIERS ÚNICOS</h3><p>Uma classificação própria para equilibrar as equipes e reconhecer a evolução dos jogadores. O tier CMIM não é simplesmente uma cópia do elo solo queue.</p></article>
+        <article><div class="about-feature-icon">♜</div><h3>CONSELHO DE TIERS</h3><p>O conceito do Conselho de Tiers faz parte da identidade da comunidade: avaliar os jogadores com critério, discutir equilíbrio e manter as partidas competitivas.</p></article>
+        <article><div class="about-feature-icon">⌘</div><h3>FERRAMENTAS INTERATIVAS</h3><p>Draft de jogadores, seleção de campeões, ranking com pontuação e uma central online para manter todo mundo conectado — sem depender de planilhas espalhadas.</p></article>
+        <article><div class="about-feature-icon">N°</div><h3>CMIM NEWS</h3><p>Nosso próprio jornal. Notícias, destaques, entrevistas e as histórias das noites mais insalubres vão ganhar espaço além do chat.</p></article>
+      </div>
+    </section>
+    <section class="wrap portal-section" id="news" aria-labelledby="news-title">
+      <div class="section-head"><div><div class="portal-label">O JORNAL DA COMUNIDADE</div><h2 id="news-title">CMIM <span class="yellow">NEWS.</span></h2><p class="portal-subtitle">Tudo o que acontece dentro e fora do Rift merece uma manchete. Acompanhe as edições publicadas pelo time administrativo.</p></div><p>Resultados, rivalidades, novos nomes, reportagens e histórias dos nossos jogadores.</p></div>
+      <div id="cmim-news-grid" class="news-grid" aria-live="polite"><div class="news-empty"><h3>CMIM NEWS</h3><p>Carregando as edições...</p></div></div>
+    </section>
     <section class="wrap portal-section" id="jogadores" aria-labelledby="players-title">
       <div class="section-head">
         <div><div class="portal-label">A COMUNIDADE EM CAMPO · TODOS OS TEMPOS</div><h2 id="players-title">QUEM JÁ VESTIU A <span class="yellow">CAMISA DO CMIM.</span></h2>
@@ -233,11 +259,11 @@
       </div>
     </section>
     <section class="wrap portal-section" id="redes" aria-labelledby="social-title">
-      <div class="section-head"><div><div class="portal-label">MAIS QUE UM SITE, UMA GALERA</div><h2 id="social-title">ENCONTRE A <span class="yellow">COMUNIDADE.</span></h2></div><p>Acompanhe os encontros e transmissões. Os demais canais serão adicionados assim que os convites oficiais forem disponibilizados.</p></div>
+      <div class="section-head"><div><div class="portal-label">MAIS QUE UM SITE, UMA GALERA</div><h2 id="social-title">ENCONTRE A <span class="yellow">COMUNIDADE.</span></h2></div><p>Acompanhe os encontros e transmissões. Discord e Instagram serão adicionados quando os endereços oficiais estiverem disponíveis.</p></div>
       <div class="social-grid">
         <a class="social" href="https://www.twitch.tv/11gaia11br" target="_blank" rel="noopener noreferrer"><span>● TRANSMISSÕES</span><strong>TWITCH</strong><span>As MD3 e as noites da comunidade ao vivo.</span><small>TWITCH.TV/11GAIA11BR ↗</small></a>
         <div class="social pending"><span>◉ COMUNIDADE</span><strong>DISCORD</strong><span>Conversas, filas e convites.</span><small>AGUARDANDO LINK OFICIAL</small></div>
-        <div class="social pending"><span>◎ GRUPOS</span><strong>WHATSAPP</strong><span>Chamadas e avisos da galera.</span><small>AGUARDANDO LINK OFICIAL</small></div>
+        <a class="social" href="https://chat.whatsapp.com/BpxO0ByWcTNH1ktkL1EvzM" target="_blank" rel="noopener noreferrer"><span>◎ GRUPO OFICIAL</span><strong>WHATSAPP</strong><span>Entre no grupo da comunidade e acompanhe chamadas, in-house e avisos.</span><small>ENTRAR NO GRUPO ↗</small></a>
         <div class="social pending"><span>◇ NOVIDADES</span><strong>INSTAGRAM</strong><span>Momentos, anúncios e destaques.</span><small>AGUARDANDO PERFIL OFICIAL</small></div>
       </div>
     </section>
@@ -252,5 +278,63 @@
     <section class="closing"><div class="wrap closing-inner"><div><div class="mini yellow">DE VOLTA ÀS RAÍZES</div><h2>O CMIM É FEITO POR QUEM JOGA.</h2><p>Sem milhões de jogadores. Só a nossa comunidade e muitas histórias para contar.</p></div><a class="button primary" href="./draft.html">COMEÇAR UM DRAFT <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></a></div></section>
   </main>
   <footer class="wrap footer"><span>CMIM © 2026 · COMUNIDADE MAIS INSALUBRE DO MUNDO · FEITO PARA A COMUNIDADE.</span><span>GG WP · <a href="https://www.twitch.tv/11gaia11br" target="_blank" rel="noopener noreferrer">ACOMPANHE AS LIVES ↗</a></span></footer>
+
+  <dialog id="portal-admin-dialog" class="admin-dialog" aria-label="Painel administrativo do CMIM">
+    <div class="admin-shell">
+      <div class="admin-top"><div><span class="portal-label">CENTRAL ADMINISTRATIVA</span><h2>GERENCIAR CMIM<span class="yellow">.</span></h2></div><button type="button" id="portal-admin-close" class="admin-close" aria-label="Fechar painel">✕</button></div>
+      <p class="admin-intro">Acesso com as <b>mesmas credenciais e permissões do administrador da tabela de pontuação.</b> Visitantes não podem alterar tiers nem publicar notícias.</p>
+      <section id="admin-login-view">
+        <form id="portal-login" class="admin-login-grid">
+          <label>E-MAIL DO ADMINISTRADOR<input name="email" type="email" placeholder="E-mail do administrador" autocomplete="username" required></label>
+          <label>SENHA<input name="password" type="password" placeholder="Sua senha" autocomplete="current-password" required></label>
+          <p id="admin-login-error" class="admin-error" role="alert"></p>
+          <button type="submit" class="admin-main-button">ENTRAR NO PAINEL →</button>
+        </form>
+      </section>
+      <section id="admin-management-view" hidden>
+        <div class="admin-status"><span>● ADMINISTRADOR AUTORIZADO</span><button id="portal-logout" type="button">Sair da conta</button></div>
+        <div class="admin-block">
+          <div class="admin-block-head"><div><span class="portal-label">CONSELHO DE TIERS / FICHA DO PLAYER</span><h3>EDITAR JOGADORES</h3></div><small id="admin-player-count">Carregando...</small></div>
+          <label>JOGADOR DO RANKING<select id="admin-player-select"><option value="">Selecione um jogador...</option></select></label>
+          <form id="admin-player-form" hidden>
+            <h4 id="admin-player-name">Jogador</h4>
+            <div class="admin-fields">
+              <label>TIER CMIM<select id="admin-tier" name="tier"><option value="">Não definido</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select></label>
+              <label>LANE PRINCIPAL<select id="admin-lane" name="lane"><option value="">Não informada</option><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+              <label>TAG RIOT (SEM #)<input id="admin-riot-tag" name="tag" maxlength="6" placeholder="BR1"></label>
+              <label>CAMPEÕES / ESPECIALIDADES<input id="admin-champions" name="champions" maxlength="124" placeholder="Yasuo, Ahri, Zed (até 5)"></label>
+            </div>
+            <p class="admin-muted">O tier e a lane fazem parte da ficha CMIM, independentemente do ranking da solo queue. As alterações aparecem na lista pública de jogadores.</p>
+            <div class="admin-actions"><small id="admin-player-feedback" role="status"></small><button type="submit" class="admin-main-button">SALVAR FICHA DO JOGADOR</button></div>
+          </form>
+        </div>
+        <div class="admin-block">
+          <div class="admin-block-head"><div><span class="portal-label">CADASTRO E INSCRIÇÃO</span><h3>ADICIONAR AO RANKING</h3></div><small id="admin-season-name">Carregando temporada...</small></div>
+          <div class="admin-add-grid">
+            <form id="admin-create-player"><label>NOVO NICK<input name="nick" type="text" minlength="2" maxlength="32" required placeholder="Nick do jogador"></label><button type="submit">CRIAR E INSCREVER</button></form>
+            <form id="admin-enroll-player"><label>JOGADOR JÁ CADASTRADO<select id="admin-existing-player" required><option value="">Selecione um jogador...</option></select></label><button type="submit">INSCREVER NA TEMPORADA</button></form>
+          </div>
+          <p class="admin-muted">Os cadastros e inscrições seguem as mesmas validações do ranking, incluindo nicks parecidos, duplicações e temporada ativa. Para estatísticas, resultados ou exclusão, use o <a href="./ranking.html">painel do Ranking CMIM ↗</a>.</p>
+        </div>
+        <div class="admin-block">
+          <div class="admin-block-head"><div><span class="portal-label">JORNAL DA COMUNIDADE</span><h3>PUBLICAR NO CMIM NEWS</h3></div><small>Editor administrativo</small></div>
+          <form id="admin-create-news" class="admin-news-form">
+            <label>MANCHETE<input name="title" maxlength="140" minlength="5" required placeholder="A noite que mudou o CMIM..."></label>
+            <label>RESUMO<input name="excerpt" maxlength="280" minlength="3" required placeholder="Uma frase de destaque para o portal"></label>
+            <label>REPORTAGEM<textarea name="body" minlength="3" maxlength="25000" rows="5" required placeholder="Escreva a notícia completa..."></textarea></label>
+            <div class="admin-fields"><label>EDITORIA<select name="category"><option>Comunicado</option><option>Campeonato</option><option>Comunidade</option><option>Entrevista</option></select></label>
+              <label>URL DA IMAGEM (HTTPS, OPCIONAL)<input name="image_url" type="url" placeholder="https://..."></label></div>
+            <label class="admin-check"><input name="published" type="checkbox" value="1" checked> Publicar imediatamente no portal</label>
+            <div class="admin-actions"><span class="admin-muted">Você também pode salvar como rascunho.</span><button type="submit" class="admin-main-button">SALVAR EDIÇÃO</button></div>
+          </form>
+          <div class="admin-news-list"><h4>ÚLTIMAS EDIÇÕES</h4><div id="admin-news-list"><p class="admin-muted">Carregando...</p></div></div>
+        </div>
+      </section>
+    </div>
+  </dialog>
+  <dialog id="cmim-news-reader" class="news-reader" aria-label="Ler reportagem CMIM News">
+    <div><button id="news-reader-close" class="news-reader-close" type="button">✕ FECHAR</button><span id="news-reader-category" class="portal-label"></span><h2 id="news-reader-title"></h2><p id="news-reader-body"></p></div>
+  </dialog>
+  <div id="portal-flash" class="portal-flash" hidden role="status"></div>
 </body>
 </html>
