@@ -4,12 +4,12 @@
 @media(max-width:840px){.stats{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.filters button{grid-column:1/-1}}@media(max-width:510px){main{padding:35px 0}.stats{gap:8px}.stat,.panel{padding:15px}.stat strong{font-size:37px}.filters{grid-template-columns:1fr}.filters button{grid-column:auto}}
 </style></head><body>
 <header><div class="wrap"><a class="brand" href="./"><img src="./cmim.jpeg" alt="CMIM"> CMIM <span style="color:var(--yellow)">IN-HOUSE</span></a><nav><a href="./">PORTAL</a><a href="./ranking.html">RANKING</a><a href="./relatorios.html">RELATÓRIOS</a><a href="./draft.html?jogar=1" class="play">▶ JOGAR</a></nav></div></header>
-<main class="wrap"><div class="eyebrow">ESTATÍSTICAS REAIS · PARTIDAS CONFIRMADAS</div><h1>O RIFT TEM <span>MEMÓRIA.</span></h1><p class="lead">Campeões mais jogados e banidos, win rate, pick rate, ban rate e os jogadores que mais utilizaram cada campeão. Todos os números vêm dos relatórios permanentes de jogos confirmados pelos dois capitães.</p>
+<main class="wrap"><div class="eyebrow">ESTATÍSTICAS REAIS · PARTIDAS APROVADAS PELO ADM</div><h1>O RIFT TEM <span>MEMÓRIA.</span></h1><p class="lead">Campeões mais jogados e banidos, win rate, pick rate, ban rate e os jogadores que mais utilizaram cada campeão. Todos os números vêm exclusivamente das partidas confirmadas pelos dois capitães <strong>e aprovadas pelo administrador</strong>.</p>
 <div class="stats"><div class="stat"><strong id="games">—</strong><small>JOGOS SALVOS</small></div><div class="stat"><strong id="picks">—</strong><small>PICKS</small></div><div class="stat"><strong id="bans">—</strong><small>BANS</small></div><div class="stat"><strong id="champions">—</strong><small>CAMPEÕES JOGADOS</small></div></div>
 <section class="panel"><div class="eyebrow">DADOS DA COMUNIDADE</div><h2>ESTATÍSTICAS POR <span>TEMPORADA.</span></h2><p>Escolha uma temporada e filtre pelo nome do campeão ou do jogador.</p><div class="filters"><label>TEMPORADA<select id="season"><option value="all">Todas as temporadas</option></select></label><label>PESQUISAR<input id="search" placeholder="Campeão ou nick..." type="search" autocomplete="off"></label><button type="button" id="refresh" class="primary">ATUALIZAR ↻</button></div>
 <div id="status" class="notice" role="status" aria-live="polite">Carregando dados do Supabase...</div>
 <div class="table-scroll"><table><thead><tr><th>CAMPEÃO</th><th>PICKS / PICK RATE</th><th>BANS / BAN RATE</th><th>WIN RATE</th><th>JOGADORES QUE MAIS USARAM</th></tr></thead><tbody id="rows"><tr><td colspan="5" class="empty">Buscando dados confirmados...</td></tr></tbody></table></div>
-<p class="note"><b>Taxas:</b> pick rate = jogos com esse campeão escolhido ÷ jogos totais; ban rate = jogos com esse campeão banido ÷ jogos totais; win rate = vitórias do time que escolheu o campeão ÷ picks desse campeão. Para partidas ainda não confirmadas, nenhuma estatística é inventada.</p></section>
+<p class="note"><b>Taxas:</b> pick rate = jogos com esse campeão escolhido ÷ jogos totais; ban rate = jogos com esse campeão banido ÷ jogos totais; win rate = vitórias do time que escolheu o campeão ÷ picks desse campeão. Partidas pendentes ou rejeitadas não entram em nenhum cálculo.</p></section>
 <div class="bottom"><div><h2>JÁ É HORA DA PRÓXIMA MD3.</h2><p>Monte os times, faça o draft e registre os resultados no ecossistema CMIM.</p></div><a href="./draft.html?jogar=1" class="play">▶ JOGAR AGORA</a></div></main><footer><div class="wrap">CMIM © 2026 · COMUNIDADE MAIS INSALUBRE DO MUNDO</div></footer>
 <script>
 (()=>{'use strict';
@@ -39,7 +39,7 @@ function render(){
  $('picks').textContent=games.reduce((s,g)=>s+(g.picks?.length||0),0);
  $('bans').textContent=games.reduce((s,g)=>s+(g.bans?.filter(b=>b.champion)?.length||0),0);
  $('champions').textContent=entries.filter(c=>c.picks).length;
- $('status').textContent=games.length?games.length+' partida(s) confirmada(s) nesta seleção.':'Ainda não há partidas confirmadas para este filtro. As estatísticas aparecem após a primeira MD3.';
+ $('status').textContent=games.length?games.length+' partida(s) aprovadas pelo administrador nesta seleção.':'Ainda não há partidas aprovadas para este filtro. As estatísticas aparecem após o ADM homologar uma MD3.';
  const filtered=entries.filter(c=>!query||normalize(c.id).includes(query)||[...c.players.values()].some(p=>normalize(p.nick).includes(query)));
  const tbody=$('rows');tbody.replaceChildren();
  if(!filtered.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.className='empty';td.textContent='Nenhum registro para esta temporada ou busca.';tr.append(td);tbody.append(tr);return}
@@ -61,7 +61,7 @@ async function load(){
  $('status').textContent='Consultando histórico...';
  try{
  const [data,rank]=await Promise.all([
-  get('/rest/v1/cmim_draft_game_reports?select=game,season_id,season_name,winner_side,picks,bans&order=confirmed_at.desc&limit=2000'),
+  get('/rest/v1/cmim_draft_game_reports?review_status=eq.approved&select=game,season_id,season_name,winner_side,picks,bans&order=confirmed_at.desc&limit=2000'),
   get('/rest/v1/cmim_rank?id=eq.1&select=data')]);
  reports=Array.isArray(data)?data:[];
  const seasons=new Map((rank?.[0]?.data?.seasons||[]).map(s=>[String(s.id),s.name]));
