@@ -108,7 +108,7 @@
       jsonFetch('/rest/v1/cmim_rank?id=eq.1&select=data,version',{secured:true}),
       jsonFetch('/rest/v1/cmim_player_meta?select=rank_player_id,tier,lane,riot_tag,champion_tags&limit=1000',{secured:true}),
       jsonFetch('/rest/v1/cmim_portal_news?select=id,title,category,published,created_at&order=created_at.desc&limit=50',{secured:true}),
-      jsonFetch('/rest/v1/cmim_draft_game_reports?select=room_id,game,season_id,season_name,mode,winner_side,winner_team,teams,picks,bans,confirmed_at,review_status,review_note,reviewed_at&order=confirmed_at.desc&limit=1000',{secured:true})
+      jsonFetch('/rest/v1/cmim_draft_game_reports?select=room_id,game,season_id,season_name,mode,winner_side,winner_team,teams,picks,bans,series_games,confirmed_at,review_status,review_note,reviewed_at&order=confirmed_at.desc&limit=1000',{secured:true})
     ]);
     state.rank=rows?.[0]?.data||{players:[],seasons:[]};state.version=rows?.[0]?.version??0;
     state.metadata=Array.isArray(metadata)?metadata:[];
@@ -227,13 +227,16 @@
       const aw=group.games.filter(g=>g.winner_team===teamA).length,
             bw=group.games.filter(g=>g.winner_team===teamB).length;
       group.teamA=teamA;group.teamB=teamB;group.aw=aw;group.bw=bw;
+      group.seriesGames=Number(first?.series_games)||3;
+      group.requiredWins=(group.seriesGames+1)/2;
       group.season=first?.season_name||'Temporada não vinculada';
       group.seasonId=first?.season_id||null;
       group.status=group.games.some(g=>g.review_status==='rejected')?'rejected':
         group.games.every(g=>g.review_status==='approved')?'approved':'pending';
-      group.complete=group.games.length>=2&&group.games.length<=3&&
-        group.games.every((g,index)=>g.game===index+1)&&Math.max(aw,bw)===2&&
-        (group.games.length===2?Math.min(aw,bw)===0:Math.min(aw,bw)===1);
+      group.complete=[1,3,5].includes(group.seriesGames)&&
+        group.games.length<=group.seriesGames&&
+        group.games.every((g,index)=>g.game===index+1&&Number(g.series_games)===group.seriesGames)&&
+        Math.max(aw,bw)===group.requiredWins&&Math.min(aw,bw)<group.requiredWins;
       group.reason=group.games.find(g=>g.review_note)?.review_note||'';
       group.date=group.games[0]?.confirmed_at||null;
       return group;
@@ -272,15 +275,15 @@
       const players=(g.games[0]?.teams||[]).map(team=>'<div><b>'+esc(team.name)+'</b><p>'+esc((team.players||[]).join(' · '))+'</p></div>').join('');
       let actions='';
       if(g.status==='pending')actions='<button class="review-approve admin-main-button" type="button" data-review-room="'+esc(g.id)+'" '+
-        (!g.complete||state.reviewBusy?'disabled':'')+'>✓ APROVAR MD3 E LANÇAR PONTOS</button>'+
+        (!g.complete||state.reviewBusy?'disabled':'')+'>✓ APROVAR MD'+g.seriesGames+' E LANÇAR PONTOS</button>'+
         '<button class="review-reject" type="button" data-reject-room="'+esc(g.id)+'">Rejeitar partidas</button>';
       if(g.status==='rejected')actions='<button class="review-reopen" type="button" data-reopen-room="'+esc(g.id)+'">Reabrir análise</button>';
       if(g.status==='approved')actions='<span class="review-approved-note">✓ Contabilizada no ranking e nas estatísticas.</span>';
       const note=g.status==='rejected'?'Motivo da rejeição: '+esc(g.reason):
-        !g.complete?'A aprovação será liberada quando a MD3 terminar em 2×0 ou 2×1.':
+        !g.complete?'A aprovação será liberada quando a MD'+g.seriesGames+' terminar com '+g.requiredWins+' vitória(s).':
         'MD3 concluída e pronta para a conferência do administrador.';
       return '<article class="review-series '+g.status+'"><div class="review-series-top">'+
-        '<div><span class="admin-eyebrow">MD3 · '+esc(g.season)+'</span><h3>'+teamA+' <span>×</span> '+teamB+'</h3>'+
+        '<div><span class="admin-eyebrow">MD'+g.seriesGames+' · '+esc(g.season)+'</span><h3>'+teamA+' <span>×</span> '+teamB+'</h3>'+
         '<p>Confirmados: '+g.games.length+' jogo(s) · Sala: '+esc(g.id.slice(0,8))+'…</p></div>'+
         '<span class="review-badge '+g.status+'">'+label+'</span></div>'+
         '<div class="review-score"><span>'+teamA+'</span><strong>'+g.aw+' × '+g.bw+'</strong><span>'+teamB+'</span></div>'+
@@ -296,8 +299,8 @@
   async function approveRoom(room){
     if(!state.admin||state.reviewBusy)return;
     const group=reviewGroups().find(g=>g.id===room);
-    if(!group||group.status!=='pending'||!group.complete)return flash('A MD3 precisa estar concluída e pendente.',true);
-    if(!confirm('APROVAR A MD3 '+group.aw+'×'+group.bw+'?\\n\\n'+group.teamA+' x '+group.teamB+
+    if(!group||group.status!=='pending'||!group.complete)return flash('A série precisa estar concluída e pendente.',true);
+    if(!confirm('APROVAR A MD'+group.seriesGames+' '+group.aw+'×'+group.bw+'?\\n\\n'+group.teamA+' x '+group.teamB+
       '\\nEsta ação atribuirá os pontos no ranking oficial e liberará picks/bans/win rate nas estatísticas. Não é possível aprovar novamente.'))return;
     state.reviewBusy=true;renderReviewQueue();
     $('review-status').textContent='Validando elenco e lançando a pontuação no banco...';
@@ -306,7 +309,7 @@
         secured:true,method:'POST',body:JSON.stringify({p_room:room,p_expected_version:state.version})
       });
       await loadAdminData();
-      flash('✓ MD3 '+result.score+' aprovada! Pontuação e estatísticas oficiais atualizadas.');
+      flash('✓ '+result.format+' ('+result.score+') aprovada! Ranking e estatísticas atualizados.');
     }catch(error){
       flash('Não foi possível aprovar: '+error.message+'. Confira se os dez nicks estão inscritos na temporada.',true);
     }finally{state.reviewBusy=false;renderReviewQueue();}
