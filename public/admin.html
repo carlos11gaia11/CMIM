@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b110e">
+  <meta name="description" content="Painel administrativo CMIM — gestão de jogadores, tiers, inscrições e CMIM News.">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./admin-ui.css">
+  <title>CMIM | Administração</title>
+  <script defer src="./portal-admin.js"></script>
+</head>
+<body class="admin-page">
+  <div class="admin-layout">
+    <aside class="admin-sidebar" aria-label="Navegação administrativa">
+      <a href="./" class="admin-brand">
+        <img src="./cmim.jpeg" alt="Logo CMIM">
+        <span><strong>CMIM<span>.</span></strong><small>PAINEL ADMINISTRATIVO</small></span>
+      </a>
+      <div class="admin-sidebar-label">PAINEL DE CONTROLE</div>
+      <nav class="admin-side-nav" aria-label="Módulos de administração">
+        <button type="button" class="current" data-admin-tab="players"><span class="nav-icon">♙</span><span>Jogadores e tiers</span></button>
+        <button type="button" data-admin-tab="register"><span class="nav-icon">✚</span><span>Cadastro e inscrições</span></button>
+        <button type="button" data-admin-tab="news"><span class="nav-icon">▣</span><span>CMIM News</span></button>
+      </nav>
+      <div class="admin-sidebar-label">ACESSOS RÁPIDOS</div>
+      <nav class="admin-side-nav sub-nav">
+        <a href="./"><span class="nav-icon">⌂</span><span>Voltar ao portal</span></a>
+        <a href="./ranking.html"><span class="nav-icon">▥</span><span>Tabela de pontuação</span></a>
+        <a href="./selecao.html"><span class="nav-icon">⚔</span><span>Seleção de campeões</span></a>
+      </nav>
+      <div class="admin-side-bottom"><span class="status-indicator"></span><span>ACESSO RESTRITO<br><small>Protegido pelo Supabase</small></span></div>
+    </aside>
+    <div class="admin-workspace">
+      <header class="admin-topbar">
+        <div class="topbar-breadcrumb"><a href="./">CMIM</a><span>/</span><b>Administração</b></div>
+        <div class="topbar-actions"><span class="topbar-secure">● ÁREA RESTRITA</span><a href="./">← Ir para o site</a></div>
+      </header>
+      <main class="admin-main">
+        <div class="admin-page-heading">
+          <div><span class="admin-eyebrow">CENTRAL DA COMUNIDADE</span><h1>Administração <em>CMIM.</em></h1>
+            <p>Gerencie os jogadores, os tiers da in-house, as inscrições e as publicações do CMIM News.</p></div>
+          <div class="admin-heading-mark">CMIM<br><span>MANAGEMENT</span></div>
+        </div>
+        <div id="admin-login-view" class="login-layout">
+          <section class="login-card" aria-labelledby="login-title">
+            <div class="login-icon">🔒</div>
+            <span class="admin-eyebrow">IDENTIFICAÇÃO OBRIGATÓRIA</span>
+            <h2 id="login-title">Acesso administrativo</h2>
+            <p>Use o <strong>mesmo e-mail e senha do administrador do Ranking CMIM</strong>. Apenas usuários autorizados podem alterar os dados da comunidade.</p>
+            <form id="portal-login" class="admin-form login-fields">
+              <label for="login-email">E-mail administrativo<input id="login-email" name="email" type="email" placeholder="nome@exemplo.com" autocomplete="username" required></label>
+              <label for="login-password">Senha<input id="login-password" name="password" type="password" placeholder="Sua senha do ranking" autocomplete="current-password" required></label>
+              <p id="admin-login-error" class="admin-error" role="alert"></p>
+              <button type="submit" class="admin-main-button">ENTRAR NO PAINEL <span aria-hidden="true">→</span></button>
+            </form>
+          </section>
+          <aside class="login-aside">
+            <div class="login-aside-badge">CONTROLE / CMIM 2026</div>
+            <h2>UM SÓ PAINEL.<br><em>TODA A COMUNIDADE.</em></h2>
+            <p>Tiers transparentes, jogadores organizados e o jornal oficial da in-house. As alterações são registradas diretamente no Supabase.</p>
+            <div class="login-aside-footer"><span>♙ Jogadores</span><span>♜ Conselho de tiers</span><span>▣ CMIM News</span></div>
+          </aside>
+        </div>
+        <div id="admin-management-view" hidden>
+          <div class="admin-access-row">
+            <span><i></i> ADMINISTRADOR AUTORIZADO · BANCO CMIM</span>
+            <button id="portal-logout" type="button">Encerrar sessão</button>
+          </div>
+          <section id="admin-tab-players" class="admin-tab-content" aria-label="Gerenciar jogadores e tiers">
+            <div class="module-heading">
+              <div><span class="admin-eyebrow">MÓDULO 01 / CONSELHO DE TIERS</span><h2>Jogadores &amp; Tiers</h2><p>Selecione um nick do ranking e edite a classificação CMIM. As alterações aparecem na lista pública do portal.</p></div>
+              <div class="heading-badge" id="admin-player-count">Buscando jogadores...</div>
+            </div>
+            <section class="admin-card">
+              <header class="card-header"><div><span class="card-step">01</span><div><h3>Selecione um jogador</h3><p>Os jogadores cadastrados na tabela de pontuação ficam disponíveis aqui.</p></div></div></header>
+              <div class="card-body">
+                <label for="admin-player-select">JOGADOR DO HISTÓRICO<select id="admin-player-select" class="wide-select"><option value="">Selecione um jogador...</option></select></label>
+                <p class="field-help">O cadastro do jogador no ranking é independente da classificação do Conselho de Tiers.</p>
+              </div>
+            </section>
+            <form id="admin-player-form" class="admin-card" hidden>
+              <header class="card-header">
+                <div><span class="card-step">02</span><div><h3 id="admin-player-name">Editar ficha</h3><p>Preencha somente o que você realmente sabe sobre o jogador.</p></div></div>
+                <span class="card-header-tag">FICHA DO JOGADOR</span>
+              </header>
+              <div class="card-body">
+                <div class="admin-fields">
+                  <label for="admin-tier">TIER CMIM<select id="admin-tier" name="tier"><option value="">Não definido</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select><span class="field-help">Classificação própria, de S a F.</span></label>
+                  <label for="admin-lane">POSIÇÃO PRINCIPAL<select id="admin-lane" name="lane"><option value="">Não informada</option><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select><span class="field-help">Rota preferida do jogador.</span></label>
+                  <label for="admin-riot-tag">TAG RIOT (SEM #)<input id="admin-riot-tag" name="tag" maxlength="6" placeholder="Exemplo: BR1"><span class="field-help">3 a 6 letras ou números.</span></label>
+                  <label for="admin-champions">CAMPEÕES DE DESTAQUE<input id="admin-champions" name="champions" maxlength="124" placeholder="Ex.: Yasuo, Ahri, Zed"><span class="field-help">Separe por vírgula; máximo de 5.</span></label>
+                </div>
+                <div class="form-notice"><strong>Conselho de Tiers</strong> — Os tiers do CMIM são internos da comunidade e não representam automaticamente o elo ranqueado do League of Legends.</div>
+              </div>
+              <footer class="form-footer"><small id="admin-player-feedback" role="status"></small><button type="submit" class="admin-main-button">SALVAR ALTERAÇÕES →</button></footer>
+            </form>
+          </section>
+          <section id="admin-tab-register" class="admin-tab-content" hidden aria-label="Cadastro de participantes">
+            <div class="module-heading"><div><span class="admin-eyebrow">MÓDULO 02 / GESTÃO DE PARTICIPANTES</span><h2>Cadastro &amp; Inscrições</h2><p>Adicione novos nomes ao ranking ou inscreva jogadores já cadastrados na temporada ativa.</p></div></div>
+            <div class="admin-season-card"><div><span>TERMINAL DA TEMPORADA</span><strong id="admin-season-name">Carregando temporada...</strong></div><a href="./ranking.html">Gerenciar temporadas ↗</a></div>
+            <div class="admin-register-grid">
+              <section class="admin-card"><header class="card-header"><div><span class="card-step">01</span><div><h3>Novo jogador</h3><p>Registre um nick novo e já inscreva na temporada ativa.</p></div></div></header>
+                <form id="admin-create-player" class="card-body admin-form">
+                  <label for="admin-new-nick">NICK DO JOGADOR<input id="admin-new-nick" name="nick" type="text" minlength="2" maxlength="32" placeholder="Digite o nick" required></label>
+                  <p class="field-help">Usa a mesma validação do Ranking CMIM, incluindo duplicidade de nick.</p>
+                  <button type="submit" class="admin-main-button">CRIAR E INSCREVER →</button>
+                </form>
+              </section>
+              <section class="admin-card"><header class="card-header"><div><span class="card-step">02</span><div><h3>Jogador do histórico</h3><p>Inscreva alguém que já participou do ranking em outra ocasião.</p></div></div></header>
+                <form id="admin-enroll-player" class="card-body admin-form">
+                  <label for="admin-existing-player">JOGADOR EXISTENTE<select id="admin-existing-player" required><option value="">Selecione um jogador...</option></select></label>
+                  <p class="field-help">Os jogadores já inscritos não aparecem nesta lista.</p>
+                  <button type="submit" class="admin-main-button">INSCREVER NA TEMPORADA →</button>
+                </form>
+              </section>
+            </div>
+            <div class="form-notice"><strong>Resultados e pontuação:</strong> a edição de partidas, pontos e exclusões continua na <a href="./ranking.html">tabela de pontuação ↗</a> para preservar as regras existentes.</div>
+          </section>
+          <section id="admin-tab-news" class="admin-tab-content" hidden aria-label="Gerenciar CMIM News">
+            <div class="module-heading"><div><span class="admin-eyebrow">MÓDULO 03 / REDAÇÃO</span><h2>CMIM News</h2><p>Escreva reportagens, prepare rascunhos e publique as notícias oficiais da comunidade.</p></div><div class="heading-badge">JORNAL OFICIAL</div></div>
+            <section class="admin-card">
+              <header class="card-header"><div><span class="card-step">N</span><div><h3>Nova edição</h3><p>Use uma manchete curta e uma reportagem completa para a página inicial.</p></div></div></header>
+              <form id="admin-create-news" class="card-body admin-form">
+                <label for="news-title-input">MANCHETE<input id="news-title-input" name="title" maxlength="140" minlength="5" required placeholder="A noite em que o Rift parou..."></label>
+                <label for="news-excerpt-input">RESUMO / LINHA FINA<textarea id="news-excerpt-input" name="excerpt" maxlength="280" minlength="3" rows="2" required placeholder="Resumo que aparecerá no cartão da notícia."></textarea></label>
+                <label for="news-body-input">REPORTAGEM COMPLETA<textarea id="news-body-input" name="body" minlength="3" maxlength="25000" rows="9" required placeholder="Conte a história com começo, meio e fim..."></textarea></label>
+                <div class="admin-fields">
+                  <label for="news-category">CATEGORIA<select id="news-category" name="category"><option>Comunicado</option><option>Campeonato</option><option>Comunidade</option><option>Entrevista</option></select></label>
+                  <label for="news-image">IMAGEM DE CAPA (URL HTTPS)<input id="news-image" name="image_url" type="url" placeholder="https://..."><span class="field-help">Opcional.</span></label>
+                </div>
+                <label class="admin-checkbox"><input name="published" type="checkbox" checked><span>Publicar imediatamente no CMIM News</span></label>
+                <div class="form-footer inside"><span class="field-help">Desmarque para salvar como rascunho.</span><button type="submit" class="admin-main-button">SALVAR REPORTAGEM →</button></div>
+              </form>
+            </section>
+            <section class="admin-card">
+              <header class="card-header"><div><span class="card-step">▣</span><div><h3>Edições cadastradas</h3><p>Controle rapidamente quais notícias estão públicas.</p></div></div></header>
+              <div id="admin-news-list" class="card-body"><p>Carregando notícias...</p></div>
+            </section>
+          </section>
+        </div>
+      </main>
+      <footer class="admin-footer"><span>CMIM © 2026 — ADMINISTRAÇÃO DA COMUNIDADE</span><a href="./">RETORNAR AO PORTAL ↗</a></footer>
+    </div>
+  </div>
+  <div id="portal-flash" class="portal-flash" hidden role="status"></div>
+  <script>
+    (() => {
+      const tabs=[...document.querySelectorAll('[data-admin-tab]')];
+      const panels={players:document.getElementById('admin-tab-players'),register:document.getElementById('admin-tab-register'),news:document.getElementById('admin-tab-news')};
+      function activate(name){
+        if(!panels[name])name='players';
+        tabs.forEach(b=>{const on=b.dataset.adminTab===name;b.classList.toggle('current',on);b.setAttribute('aria-current',on?'page':'false')});
+        Object.entries(panels).forEach(([id,p])=>p.hidden=id!==name);
+        if(window.innerWidth<840)window.scrollTo({top:0,behavior:'smooth'});
+      }
+      tabs.forEach(b=>b.addEventListener('click',()=>activate(b.dataset.adminTab)));
+      activate('players');
+    })();
+  </script>
+</body>
+</html>
