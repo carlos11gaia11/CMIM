@@ -1,7 +1,2 @@
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
-};
-
-export default config;
+// O CMIM utiliza CSS próprio, sem Tailwind. Não carregar plugins desnecessários.
+export default { plugins: {} };
