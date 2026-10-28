@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <title>CMIM — Central da Comunidade</title>
+  <link rel="stylesheet" href="./portal-extra.css">
+  <script defer src="./portal-players.js"></script>
   <style>
     :root{--bg:#0b0d0c;--surface:#141816;--panel:#191e1a;--line:#343b33;--yellow:#ffe03b;--cream:#f6f6ef;--muted:#b1b9ae;--green:#a4e2a7;--blue:#70c7eb;--red:#fd8180}
     *{box-sizing:border-box}
@@ -111,7 +113,7 @@
   <header class="site-header">
     <div class="wrap topbar">
       <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./cmim.jpeg" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
-      <nav class="nav" aria-label="Menu principal"><a href="#ferramentas">FERRAMENTAS</a><a href="#em-breve">NOVIDADES</a><a href="https://www.twitch.tv/11gaia11br" target="_blank" rel="noopener noreferrer">TRANSMISSÕES ↗</a><span class="live"><i></i> COMUNIDADE ONLINE</span></nav>
+      <nav class="nav" aria-label="Menu principal"><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="#regras">REGRAS</a><a href="#historia">HISTÓRIA</a><a href="#redes">REDES</a><span class="live"><i></i> PORTAL CMIM</span></nav>
     </div>
   </header>
   <main>
@@ -122,9 +124,9 @@
         <p class="hero-copy">A comunidade mais insalubre do mundo tem uma nova casa. Monte times, dispute o topo do ranking e prepare o draft de campeões. Tudo começa por aqui.</p>
         <div class="hero-actions">
           <a class="button primary" href="#ferramentas">EXPLORAR FERRAMENTAS <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></a>
-          <a class="button" href="./selecao.html">SELEÇÃO DE CAMPEÕES <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m8 16 8-8M10 8h6v6"/></svg></a>
+          <a class="button" href="#jogadores">VER JOGADORES <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m8 16 8-8M10 8h6v6"/></svg></a>
         </div>
-        <div class="hero-meta"><span>03 FERRAMENTAS DISPONÍVEIS</span><span>FEITO PARA A COMUNIDADE</span></div>
+        <div class="hero-meta"><span>03 FERRAMENTAS DISPONÍVEIS</span><span><b id="total-players">—</b> JOGADORES NO HISTÓRICO</span><span>DESDE 12.02.2025</span></div>
       </div>
       <div class="hero-art" aria-label="Símbolo da Comunidade Mais Insalubre do Mundo">
         <span class="topmark">● COMUNIDADE MAIS INSALUBRE DO MUNDO</span>
@@ -160,6 +162,84 @@
         </a>
       </div>
       <div class="feature-strip" aria-label="Pilares do CMIM"><div><strong>COMUNIDADE</strong><span>Um lugar para reunir os jogadores</span></div><div><strong>COMPETIÇÃO</strong><span>Quem joga, deixa a marca no ranking</span></div><div><strong>CONEXÃO</strong><span>Ferramentas acessíveis pelo navegador</span></div></div>
+    </section>
+
+    <section class="wrap portal-section" id="jogadores" aria-labelledby="players-title">
+      <div class="section-head">
+        <div><div class="portal-label">A COMUNIDADE EM CAMPO · TODOS OS TEMPOS</div><h2 id="players-title">QUEM JÁ VESTIU A <span class="yellow">CAMISA DO CMIM.</span></h2>
+          <p class="portal-subtitle">Todos os jogadores já cadastrados no histórico do Ranking CMIM, inclusive quem não participa da temporada atual.</p></div>
+        <p>Nick, tag Riot, tier e última posição conhecida — só com dados realmente registrados.</p>
+      </div>
+      <div class="player-summary">
+        <div class="player-stat-set"><div class="player-stat"><b id="playersTotal">—</b><span>jogadores no histórico</span></div><div class="player-stat"><b id="playersRanked">—</b><span>com posição na temporada de referência</span></div></div>
+        <span id="playersSeason">Buscando temporada...</span>
+      </div>
+      <div class="pane players-panel">
+        <div class="players-controls">
+          <label>BUSCAR JOGADOR<input id="players-search" type="search" placeholder="Digite um nick, tag ou lane..." autocomplete="off" maxlength="75" aria-label="Buscar jogador"></label>
+          <label>TIER<select id="players-tier" aria-label="Filtrar tier"><option value="all">Todos os tiers</option><option value="S">Tier S</option><option value="A">Tier A</option><option value="B">Tier B</option><option value="C">Tier C</option><option value="D">Tier D</option><option value="E">Tier E</option><option value="F">Tier F</option></select></label>
+          <label>PARTICIPAÇÃO<select id="players-scope" aria-label="Filtrar participação"><option value="all">Todos os jogadores</option><option value="ranked">Com posição registrada</option><option value="unranked">Sem posição na temporada</option><option value="tagged">Com tag vinculada</option></select></label>
+          <label>ORDENAR<select id="players-sort" aria-label="Ordenar jogadores"><option value="rank">Posição na temporada</option><option value="nick">Nick A–Z</option><option value="tier">Tier S–F</option></select></label>
+          <button id="players-retry" type="button" title="Buscar atualização do Supabase">↻ ATUALIZAR</button>
+        </div>
+        <div id="players-status" role="status" aria-live="polite">Carregando lista de jogadores do ranking...</div>
+        <div class="player-table-wrap">
+          <table class="players-table">
+            <thead><tr><th>#</th><th>JOGADOR / TAG</th><th>TIER</th><th>LANE</th><th>ÚLTIMA CLASSIFICAÇÃO</th></tr></thead>
+            <tbody id="players-body"><tr><td colspan="5" class="roster-empty">Conectando ao banco de dados do CMIM...</td></tr></tbody>
+          </table>
+        </div>
+        <p class="players-note"><span id="players-count">Carregando...</span> · <strong>Tier, tag e lane dependem de perfil vinculado.</strong> A ausência desses dados não significa que o jogador não tenha elo. A colocação é final somente em temporadas encerradas.</p>
+      </div>
+      <div class="hero-actions" style="margin-top:18px"><a class="button" href="./ranking.html">VER TABELA DE PONTUAÇÃO COMPLETA →</a></div>
+    </section>
+    <section class="wrap portal-section" id="regras" aria-labelledby="rules-title">
+      <div class="section-head">
+        <div><div class="portal-label">O CÓDIGO DA COMUNIDADE</div><h2 id="rules-title">OS 10 <span class="yellow">MANDAMENTOS DO CMIM.</span></h2></div>
+        <p>O regulamento que sustenta nossas filas, partidas e a resenha. Vale para quem já estava aqui e para quem acaba de chegar.</p>
+      </div>
+      <div class="rule-intro">
+        <div class="pane rule-copy"><h3>RESPEITA A FILA. RESPEITA O JOGO.</h3><p>Competitividade, rivalidade e muita resenha fazem parte do CMIM. Trollagem proposital, desrespeito e abandonar partidas não fazem. Estes mandamentos orientam os encontros da comunidade.</p></div>
+        <aside class="rule-info"><strong>OS HORÁRIOS SÃO SAGRADOS.</strong><span>Até 10 minutos de tolerância de entrada, pausa de até 10 minutos por equipe e intervalo máximo de 15 minutos entre séries.</span></aside>
+      </div>
+      <div class="commandments">
+        <article class="commandment"><span class="commandment-num">I</span><div><h3>NÃO COMETERÁS CRIMES NEM FARÁS APOLOGIA.</h3><p>Conteúdos criminosos e apologia não fazem parte da comunidade.</p></div></article>
+        <article class="commandment"><span class="commandment-num">II</span><div><h3>NÃO TROLARÁS DE PROPÓSITO.</h3><p>Comprometa-se com a partida e com os outros jogadores.</p></div></article>
+        <article class="commandment"><span class="commandment-num">III</span><div><h3>RESPEITARÁS OS HORÁRIOS.</h3><p>Respeite a chamada e a tolerância de até 10 minutos.</p></div></article>
+        <article class="commandment"><span class="commandment-num">IV</span><div><h3>NÃO DARÁS FF, NEM QUITARÁS.</h3><p>Partida iniciada é partida para jogar até o final.</p></div></article>
+        <article class="commandment"><span class="commandment-num">V</span><div><h3>RESPEITARÁS O PRÓXIMO.</h3><p>Zoação não é desculpa para hostilidade e ofensas.</p></div></article>
+        <article class="commandment"><span class="commandment-num">VI</span><div><h3>NÃO JOGARÁS MUTADO.</h3><p>Comunicação é parte da experiência da equipe.</p></div></article>
+        <article class="commandment"><span class="commandment-num">VII</span><div><h3>NÃO EXCEDERÁS A PAUSA SAGRADA.</h3><p>Cada equipe tem, no máximo, 10 minutos de pausa.</p></div></article>
+        <article class="commandment"><span class="commandment-num">VIII</span><div><h3>NÃO DEMORARÁS ENTRE AS SÉRIES.</h3><p>O intervalo entre séries é limitado a 15 minutos.</p></div></article>
+        <article class="commandment"><span class="commandment-num">IX</span><div><h3>NÃO FUGIRÁS DA FILA NA ÚLTIMA HORA.</h3><p>Não abandone a fila na última hora antes do encontro.</p></div></article>
+        <article class="commandment"><span class="commandment-num">X</span><div><h3>TERÁS O ESPÍRITO DA CMIM.</h3><p>Jogue para competir, se divertir e manter a comunidade viva.</p></div></article>
+      </div>
+    </section>
+    <section class="wrap portal-section" id="historia" aria-labelledby="history-title">
+      <div class="section-head"><div><div class="portal-label">UMA HISTÓRIA DE JOGO, AMIZADE E RETORNO</div><h2 id="history-title">NOSSA HISTÓRIA <span class="yellow">NÃO ACABOU.</span></h2></div><p>Começamos pequenos. Criamos histórias que ninguém esqueceu. E voltamos por quem fez parte delas.</p></div>
+      <div class="history-banner">
+        <div><div class="portal-label">COMUNIDADE MAIS INSALUBRE DO MUNDO</div>
+          <h3>UM DIA, FIZEMOS HISTÓRIA. AGORA, VOLTAMOS ÀS RAÍZES.</h3>
+          <p>Em <strong>12 de fevereiro de 2025</strong>, a CMIM nasceu do zero: gente reunida para jogar League of Legends, viver rivalidades, formar times e criar histórias em partidas personalizadas.</p>
+          <p>Com o tempo, o movimento esfriou, os encontros ficaram raros e muita coisa pareceu se apagar. Mas a lembrança da comunidade nunca foi embora.</p>
+          <p>Então, como conta a nossa lenda, <strong>um rato caiu em uma máquina do tempo</strong> e trouxe de volta a esperança. Em <strong>27 de outubro de 2026</strong>, a CMIM anunciou o retorno. Não para juntar milhões de jogadores — mas para reencontrar uma parte da galera e reviver a alegria que fez tudo valer a pena.</p>
+        </div>
+        <div class="history-visual"><img src="./cmim.jpeg" alt="Símbolo da comunidade CMIM" loading="lazy"><small>DE VOLTA ÀS RAÍZES · 2026</small></div>
+      </div>
+      <div class="timeline">
+        <article><span class="date">12.02.2025 · O INÍCIO</span><h3>DO ZERO À COMUNIDADE</h3><p>Os primeiros encontros, os primeiros times e uma identidade própria entre amigos de League of Legends.</p></article>
+        <article><span class="date">O INTERVALO · A MEMÓRIA</span><h3>O SILÊNCIO NÃO APAGOU TUDO</h3><p>As partidas pararam de acontecer como antes, mas as histórias e os nomes continuaram vivos.</p></article>
+        <article><span class="date">27.10.2026 · COME BACK</span><h3>O PRIMEIRO ENCONTRO</h3><p>A volta às raízes, com uma MD3 em live e uma nova casa para draft, ranking e comunidade.</p></article>
+      </div>
+    </section>
+    <section class="wrap portal-section" id="redes" aria-labelledby="social-title">
+      <div class="section-head"><div><div class="portal-label">MAIS QUE UM SITE, UMA GALERA</div><h2 id="social-title">ENCONTRE A <span class="yellow">COMUNIDADE.</span></h2></div><p>Acompanhe os encontros e transmissões. Os demais canais serão adicionados assim que os convites oficiais forem disponibilizados.</p></div>
+      <div class="social-grid">
+        <a class="social" href="https://www.twitch.tv/11gaia11br" target="_blank" rel="noopener noreferrer"><span>● TRANSMISSÕES</span><strong>TWITCH</strong><span>As MD3 e as noites da comunidade ao vivo.</span><small>TWITCH.TV/11GAIA11BR ↗</small></a>
+        <div class="social pending"><span>◉ COMUNIDADE</span><strong>DISCORD</strong><span>Conversas, filas e convites.</span><small>AGUARDANDO LINK OFICIAL</small></div>
+        <div class="social pending"><span>◎ GRUPOS</span><strong>WHATSAPP</strong><span>Chamadas e avisos da galera.</span><small>AGUARDANDO LINK OFICIAL</small></div>
+        <div class="social pending"><span>◇ NOVIDADES</span><strong>INSTAGRAM</strong><span>Momentos, anúncios e destaques.</span><small>AGUARDANDO PERFIL OFICIAL</small></div>
+      </div>
     </section>
     <section class="wrap soon-section" id="em-breve">
       <div class="mini yellow">NOS PRÓXIMOS CAPÍTULOS</div><h2>MAIS FERRAMENTAS <span class="yellow">EM BREVE.</span></h2>
