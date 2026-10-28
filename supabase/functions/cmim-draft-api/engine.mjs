@@ -153,6 +153,6 @@ export function apply(s,action,role,champions=[],now=Date.now()) {
  return next;
 }
 export function cleanPresentation(p={}) {
- const url=v=>{try{const u=new URL(v);return u.protocol==='https:'&&u.href.length<2048&&u.pathname.toLowerCase().endsWith('.mp4')?u.href:''}catch{return ''}};
- return {name:String(p?.name||'CMIM DRAFT').slice(0,40),color:/^#[0-9a-f]{6}$/i.test(p?.color)?p.color:'#ffe000',logo:cleanLogo(p?.logo),layout:['classic','vertical','horizontal','cinema','compact','worlds','broadcast'].includes(p?.layout)?p.layout:'classic',specMode:['events','video','both'].includes(p?.specMode)?p.specMode:'both',music:url(p?.music),video:url(p?.video),banSound:url(p?.banSound),pickSound:url(p?.pickSound),volume:Math.max(0,Math.min(1,Number(p?.volume??0.5))),animations:p?.animations!==false,intensity:['soft','normal','epic'].includes(p?.intensity)?p.intensity:'epic'};
+ const url=(v,allowMp3=false)=>{try{const u=new URL(v);const path=u.pathname.toLowerCase();return u.protocol==='https:'&&u.href.length<2048&&(path.endsWith('.mp4')||(allowMp3&&path.endsWith('.mp3')))?u.href:''}catch{return ''}};
+ return {name:String(p?.name||'CMIM DRAFT').slice(0,40),color:/^#[0-9a-f]{6}$/i.test(p?.color)?p.color:'#ffe000',logo:cleanLogo(p?.logo),layout:['classic','vertical','horizontal','cinema','compact','worlds','broadcast'].includes(p?.layout)?p.layout:'classic',specMode:['events','video','both'].includes(p?.specMode)?p.specMode:'both',music:url(p?.music,true),video:url(p?.video),banSound:url(p?.banSound),pickSound:url(p?.pickSound),volume:Math.max(0,Math.min(1,Number(p?.volume??0.5))),animations:p?.animations!==false,intensity:['soft','normal','epic'].includes(p?.intensity)?p.intensity:'epic'};
 }
