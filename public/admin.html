@@ -22,7 +22,8 @@
       </a>
       <div class="admin-sidebar-label">PAINEL DE CONTROLE</div>
       <nav class="admin-side-nav" aria-label="Módulos de administração">
-        <button type="button" class="current" data-admin-tab="players"><span class="nav-icon">♙</span><span>Jogadores e tiers</span></button>
+        <button type="button" class="current" data-admin-tab="matches"><span class="nav-icon">✓</span><span>Aprovação de partidas</span><span id="review-nav-badge" class="review-nav-badge" hidden>0</span></button>
+        <button type="button" data-admin-tab="players"><span class="nav-icon">♙</span><span>Jogadores e tiers</span></button>
         <button type="button" data-admin-tab="register"><span class="nav-icon">✚</span><span>Cadastro e inscrições</span></button>
         <button type="button" data-admin-tab="news"><span class="nav-icon">▣</span><span>CMIM News</span></button>
       </nav>
@@ -62,7 +63,7 @@
             <div class="login-aside-badge">CONTROLE / CMIM 2026</div>
             <h2>UM SÓ PAINEL.<br><em>TODA A COMUNIDADE.</em></h2>
             <p>Tiers transparentes, jogadores organizados e o jornal oficial da in-house. As alterações são registradas diretamente no Supabase.</p>
-            <div class="login-aside-footer"><span>♙ Jogadores</span><span>♜ Conselho de tiers</span><span>▣ CMIM News</span></div>
+            <div class="login-aside-footer"><span>✓ Aprovação de partidas</span><span>♙ Jogadores</span><span>♜ Conselho de tiers</span><span>▣ CMIM News</span></div>
           </aside>
         </div>
         <div id="admin-management-view" hidden>
@@ -70,6 +71,31 @@
             <span><i></i> ADMINISTRADOR AUTORIZADO · BANCO CMIM</span>
             <button id="portal-logout" type="button">Encerrar sessão</button>
           </div>
+
+          <section id="admin-tab-matches" class="admin-tab-content" aria-label="Aprovação das partidas">
+            <div class="module-heading"><div><span class="admin-eyebrow">MÓDULO 01 / HOMOLOGAÇÃO OFICIAL</span>
+              <h2>Aprovação de partidas</h2>
+              <p>Confira os jogos, os vencedores validados pelos dois capitães e os jogadores. Uma MD3 só entra no ranking e nas estatísticas <strong>depois da sua aprovação</strong>.</p>
+              </div><button id="review-refresh" class="admin-main-button" type="button">↻ ATUALIZAR LISTA</button>
+            </div>
+            <div class="review-summary" aria-label="Resumo das revisões">
+              <div class="review-summary-card"><strong id="review-pending-count">—</strong><span>Aguardando aprovação</span></div>
+              <div class="review-summary-card"><strong id="review-approved-count">—</strong><span>MD3 aprovadas</span></div>
+              <div class="review-summary-card"><strong id="review-rejected-count">—</strong><span>MD3 rejeitadas</span></div>
+            </div>
+            <div class="review-guidance"><b>Como funciona:</b> os dois capitães concordam com cada resultado → a MD3 entra nesta fila → o ADM confere e aprova → o CMIM lança os pontos e libera as estatísticas. Se houver alguma irregularidade, rejeite informando o motivo. Uma MD3 já aprovada não pode ser contabilizada novamente.</div>
+            <div class="review-toolbar">
+              <label for="review-filter">EXIBIR<select id="review-filter">
+                <option value="pending">Pendentes</option>
+                <option value="approved">Aprovadas</option>
+                <option value="rejected">Rejeitadas</option>
+                <option value="all">Todas</option>
+              </select></label>
+              <span id="review-status" role="status">Carregando partidas do Supabase...</span>
+            </div>
+            <div id="review-list" class="review-list"><div class="review-empty">Conferindo a fila de partidas...</div></div>
+            <div class="form-notice"><strong>Segurança:</strong> só a conta ADM do Ranking CMIM pode aprovar ou rejeitar. A aprovação da MD3 e a atualização da tabela são feitas juntas no Supabase; se houver algum erro, nenhuma das duas é aplicada.</div>
+          </section>
           <section id="admin-tab-players" class="admin-tab-content" aria-label="Gerenciar jogadores e tiers">
             <div class="module-heading">
               <div><span class="admin-eyebrow">MÓDULO 01 / CONSELHO DE TIERS</span><h2>Jogadores &amp; Tiers</h2><p>Selecione um nick do ranking e edite a classificação CMIM. As alterações aparecem na lista pública do portal.</p></div>
@@ -150,15 +176,15 @@
   <script>
     (() => {
       const tabs=[...document.querySelectorAll('[data-admin-tab]')];
-      const panels={players:document.getElementById('admin-tab-players'),register:document.getElementById('admin-tab-register'),news:document.getElementById('admin-tab-news')};
+      const panels={matches:document.getElementById('admin-tab-matches'),players:document.getElementById('admin-tab-players'),register:document.getElementById('admin-tab-register'),news:document.getElementById('admin-tab-news')};
       function activate(name){
-        if(!panels[name])name='players';
+        if(!panels[name])name='matches';
         tabs.forEach(b=>{const on=b.dataset.adminTab===name;b.classList.toggle('current',on);b.setAttribute('aria-current',on?'page':'false')});
         Object.entries(panels).forEach(([id,p])=>p.hidden=id!==name);
         if(window.innerWidth<840)window.scrollTo({top:0,behavior:'smooth'});
       }
       tabs.forEach(b=>b.addEventListener('click',()=>activate(b.dataset.adminTab)));
-      activate('players');
+      activate('matches');
     })();
   </script>
 </body>
