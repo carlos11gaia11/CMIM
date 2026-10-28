@@ -76,3 +76,27 @@ header nav .portal-link:hover{background:#342d13;border-color:#ffd72a;color:#ffe
 .result-field select{min-height:46px;background:#151d16!important;color:#f3f7ef!important;border:1px solid #71825d;border-radius:6px;padding:10px 12px;max-width:100%}
 .result-field select option{background:#152117;color:#f8fcef}
 @media(max-width:650px){.result-vote-banner{align-items:stretch}.result-vote-banner .primary{width:100%}.result-vote-status{flex-direction:column}.result-vote-status span{width:100%}.previous-games .report-txt-button{margin:10px 0}}
+
+
+/* Jornada Jogar do CMIM — faixa clara e responsiva no Draft Arena */
+.pilot-progress-notice{
+ display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+ gap:12px 22px;margin:12px auto 22px;padding:17px 20px;
+ border:1px solid #a89a47;border-left:4px solid #ffe376;border-radius:9px;
+ background:linear-gradient(110deg,#33311b,#202a20);
+ color:#f2f6e8;box-shadow:0 10px 35px #0003;
+}
+.pilot-progress-notice b{display:block;color:#ffe585;white-space:normal;font-size:12px;font-weight:900;letter-spacing:.55px}
+.pilot-progress-notice span{color:#e1e9d8;font-size:12px;line-height:1.5;max-width:600px;flex:1 1 310px}
+.pilot-progress-notice a{
+ display:inline-flex;align-items:center;justify-content:center;
+ border:1px solid #ffe376;background:#ffe376;color:#191c11;
+ border-radius:6px;padding:11px 15px;font-size:11px;font-weight:900;
+ text-decoration:none;white-space:normal;text-align:center;
+}
+.pilot-progress-notice a:hover{background:#fff1ab}
+@media(max-width:650px){
+ .pilot-progress-notice{margin:9px 0 17px;padding:14px;flex-direction:column;align-items:stretch}
+ .pilot-progress-notice span{flex:auto;max-width:none}
+ .pilot-progress-notice a{width:100%}
+}
