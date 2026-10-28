@@ -9,7 +9,7 @@ main{padding:52px 0 72px}.eyebrow{font-weight:900;letter-spacing:1.5px;color:var
 </style></head><body>
 <header><div class="wrap"><a class="brand" href="./"><img src="./cmim.jpeg" alt="CMIM"> CMIM · <span style="color:var(--yellow)">PONTUAÇÃO</span></a><a href="./inhouse.html" class="back">← IN-HOUSE</a></div></header>
 <main class="wrap"><div class="eyebrow">ECOSSISTEMA CMIM · VERSÃO OFICIAL · ETAPA 3/3</div><h1>MD3 <em>E PONTUAÇÃO.</em></h1>
-<p class="lead">Confira o placar que os dois capitães confirmaram e veja como ele se transforma em pontos na temporada. <b>Nenhum ponto entra no ranking sem a aprovação do administrador.</b></p>
+<p class="lead">Confira o placar que os dois capitães confirmaram e veja como ele se transforma em pontos na temporada. As partidas e estatísticas ficam pendentes até a aprovação do ADM. <b>Nenhum ponto entra no ranking sem a aprovação do administrador.</b></p>
 <section class="card"><form id="finder" class="form"><label>SALA DA MD3<input id="room" placeholder="Cole o link ou ID da sala" required></label><button type="submit" class="primary">CONSULTAR RESULTADOS →</button></form><div class="status" id="status">Informe uma sala que já tenha relatórios de partidas.</div></section>
 <div id="results" hidden>
 <section class="card"><div class="eyebrow">RESULTADOS REAIS ARQUIVADOS</div><h2>Resultado da série</h2><div id="scoreboard" class="scoreboard"></div><div id="game-list" class="rows"></div><p id="season-info" class="badge"></p></section>
@@ -17,7 +17,7 @@ main{padding:52px 0 72px}.eyebrow{font-weight:900;letter-spacing:1.5px;color:var
 <section class="card"><div class="eyebrow">PASSO FINAL · ADMINISTRADOR</div><h2>Validar pontuação no ranking</h2><p>Os pontos só serão gravados após conferir a temporada, os dez jogadores e o placar. O mesmo ID de sala nunca poderá ser pontuado duas vezes.</p>
 <div id="admin-box"><form id="login" class="login"><label>E-MAIL ADMINISTRATIVO<input id="email" type="email" autocomplete="username" required></label><label>SENHA DO RANKING<input id="password" type="password" autocomplete="current-password" required></label><button type="submit" class="primary">ENTRAR COMO ADMINISTRADOR</button></form></div>
 <div id="publish-controls" hidden><div class="notice">Atenção: esta ação altera a classificação real da temporada ativa. Confirme somente após conferir a MD3.</div><label style="display:flex;gap:9px;align-items:center;margin:15px 0"><input id="approve" type="checkbox" style="accent-color:#ffe476;height:18px;width:18px"> Eu conferi o placar e os dez jogadores</label><button id="publish" class="primary" type="button">CONFIRMAR E LANÇAR MD3 NO RANKING →</button></div>
-<div class="status" id="admin-status" role="status">Faça login com a mesma conta ADM da tabela de pontuação para habilitar esta etapa.</div><div class="actions"><a href="./ranking.html">VER RANKING COMPLETO →</a><a href="./relatorios.html">BAIXAR TXT →</a></div></section>
+<div class="status" id="admin-status" role="status">Faça login com a mesma conta ADM da tabela de pontuação para habilitar esta etapa.</div><div class="actions"><a href="./admin.html?tab=matches" style="border-color:#e7c65e;color:#ffe999">✓ APROVAR NO PAINEL ADM →</a><a href="./ranking.html">VER RANKING COMPLETO →</a><a href="./relatorios.html">BAIXAR TXT →</a></div></section>
 </div></main><footer><div class="wrap">CMIM © 2026 · REGISTRO ADMINISTRATIVO DE MD3</div></footer>
 <script>
 (()=>{'use strict';
