@@ -43,3 +43,13 @@
 .decision-banner strong {font-size:13px;color:var(--yellow);}
 .decision-banner span,.decision-banner small {font-size:12px;color:#ccc;}
 @media(max-width:800px){.adjust-stage{min-height:370px}.adjust-countdown{font-size:90px}.decision-banner{align-items:stretch}.decision-banner button{width:100%}}
+
+/* Correção consensual de picks */
+.change-champion-button{width:calc(100% - 8px);margin:4px 4px 2px;padding:7px 10px;font-size:9px;letter-spacing:.3px;background:#232118;border:1px solid #796721;color:#ffe476;display:flex}
+.change-champion-button:hover{background:#332c19}
+.change-banner{margin:14px 0;border:1px solid #a28e29;border-left:4px solid var(--yellow);background:linear-gradient(105deg,#282411,#151716)}
+.change-banner>div:first-child strong{color:var(--yellow)}
+.change-buttons{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.change-buttons button{min-width:95px}
+.change-buttons strong{font-family:Barlow Condensed,Arial,sans-serif;color:var(--yellow);font-size:26px}
+@media(max-width:700px){.change-banner{flex-direction:column;align-items:stretch}.change-buttons{width:100%;justify-content:flex-start}}
