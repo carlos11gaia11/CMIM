@@ -1,0 +1,113 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101a12"><title>CMIM · Pontuação MD3 · Piloto</title><link rel="icon" href="./favicon.svg"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800;900&family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#101810;--panel:#1b281d;--border:#536a50;--yellow:#ffe476;--white:#f5faee}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#806f2a29,transparent 36%),var(--bg);color:var(--white);font:14px/1.7 Barlow,Arial,sans-serif}input,button{font:inherit}a{color:inherit;text-decoration:none}a:hover{color:var(--yellow)}a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+.wrap{width:min(1050px,calc(100% - 36px));margin:auto}header{padding:18px 0;background:#142017;border-bottom:1px solid var(--border)}header .wrap{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:12px;font:900 27px Barlow Condensed,Impact,sans-serif}.brand img{width:46px;height:46px;object-fit:cover;border-radius:9px}.back{font-weight:900;font-size:11px;border:1px solid #698067;padding:10px 17px;border-radius:6px}
+main{padding:52px 0 72px}.eyebrow{font-weight:900;letter-spacing:1.5px;color:var(--yellow);font-size:11px}h1,h2,h3{font-family:Barlow Condensed,Impact,sans-serif;line-height:1.08}h1{font-size:clamp(48px,7vw,78px);margin:10px 0}h1 em{font-style:normal;color:var(--yellow)}.lead{max-width:800px;font-size:15px;color:#d3e0cd;margin:12px 0 25px}
+.card{border:1px solid var(--border);border-radius:11px;background:var(--panel);padding:24px;margin:17px 0}.card h2{font-size:32px;margin:0 0 13px;color:#ffeb9d}.card p{color:#cfddca;font-size:12px;margin:6px 0 17px}.form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}.form label,.login label{display:grid;gap:7px;font-size:11px;font-weight:900;color:#e2eedd}.form input,.login input{width:100%;min-width:0;min-height:47px;border:1px solid #769071;border-radius:6px;background:#0d1b12!important;color:#f4fff1!important;padding:11px 13px}.form input::placeholder,.login input::placeholder{color:#a4bba6}button.primary{background:var(--yellow);color:#151b11;border:1px solid var(--yellow);border-radius:6px;min-height:47px;padding:11px 19px;font-weight:900;cursor:pointer;white-space:normal}button.primary:disabled{opacity:.55;cursor:wait}.status{border:1px solid #6a7549;background:#2b311f;color:#eee6bd;border-radius:7px;padding:13px 15px;font-size:12px;margin:18px 0}.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin:20px 0}.side{padding:17px;background:#1e3026;border:1px solid #56775e;border-radius:9px;min-width:0}.side.red{background:#372526;border-color:#8a5a58}.side small{display:block;font-size:10px;letter-spacing:.7px;color:#d5e3cf;font-weight:900}.side h3{font-size:29px;margin:10px 0;color:#fff2ba;overflow-wrap:anywhere}.side .points{font:900 37px Barlow Condensed,Impact,sans-serif;color:var(--yellow)}.versus{font:900 30px Barlow Condensed,Impact,sans-serif;color:#a3b69f}.rows{overflow:auto}.rows table{border-collapse:collapse;width:100%;min-width:580px}th,td{padding:11px 12px;text-align:left;border-bottom:1px solid #465b47;font-size:12px}th{background:#263829;color:#ecebdd;font-size:10px;letter-spacing:.7px}.muted{color:#b8c9b5}.good{color:#a3f3b9}.warn{color:#ffb89c}.pill{font-size:10px;border:1px solid #74864b;background:#353a1f;border-radius:6px;padding:6px 10px;color:#ffed9e;font-weight:900}.notice{background:#2d2d1e;border:1px solid #817640;border-radius:8px;padding:15px;color:#eee5c7;font-size:12px}.login{display:grid;gap:13px;max-width:480px}.login .status{margin:0}.badge{color:#d4e7cd;font-weight:850;font-size:12px}.actions{display:flex;gap:13px;flex-wrap:wrap;align-items:center}.actions a{border:1px solid #678064;border-radius:7px;padding:11px 16px;background:#263729;font-weight:900;font-size:11px}.hint{color:#b6cab2;font-size:11px;margin:12px 0}footer{padding:22px 0;border-top:1px solid #455947;color:#b3cbb0;font-size:11px}
+@media(max-width:650px){main{padding:33px 0}.card{padding:17px}.form{grid-template-columns:1fr}.scoreboard{grid-template-columns:1fr}.versus{text-align:center}.side h3{font-size:25px}}
+</style></head><body>
+<header><div class="wrap"><a class="brand" href="./"><img src="./cmim.jpeg" alt="CMIM"> CMIM · <span style="color:var(--yellow)">PONTUAÇÃO</span></a><a href="./inhouse.html" class="back">← IN-HOUSE</a></div></header>
+<main class="wrap"><div class="eyebrow">ECOSSISTEMA CMIM · PILOTO · ETAPA 3/3</div><h1>MD3 <em>CONFIRMADA.</em></h1>
+<p class="lead">Confira o placar que os dois capitães confirmaram e veja como ele se transforma em pontos na temporada. <b>Nenhum ponto entra no ranking sem a aprovação do administrador.</b></p>
+<section class="card"><form id="finder" class="form"><label>SALA DA MD3<input id="room" placeholder="Cole o link ou ID da sala" required></label><button type="submit" class="primary">CONSULTAR RESULTADOS →</button></form><div class="status" id="status">Informe uma sala que já tenha relatórios de partidas.</div></section>
+<div id="results" hidden>
+<section class="card"><div class="eyebrow">RESULTADOS REAIS ARQUIVADOS</div><h2>Resultado da série</h2><div id="scoreboard" class="scoreboard"></div><div id="game-list" class="rows"></div><p id="season-info" class="badge"></p></section>
+<section class="card"><div class="eyebrow">PRÉVIA DA TABELA OFICIAL</div><h2>Pontos previstos</h2><p>Segue a regra MD3 do ranking: jogos, vitórias, derrotas e bônus de MD3 para a equipe vencedora. MVP e Bagre permanecem em branco.</p><div id="point-table" class="rows"></div><div id="roster-status" class="notice"></div></section>
+<section class="card"><div class="eyebrow">PASSO FINAL · ADMINISTRADOR</div><h2>Validar pontuação no ranking</h2><p>Os pontos só serão gravados após conferir a temporada, os dez jogadores e o placar. O mesmo ID de sala nunca poderá ser pontuado duas vezes.</p>
+<div id="admin-box"><form id="login" class="login"><label>E-MAIL ADMINISTRATIVO<input id="email" type="email" autocomplete="username" required></label><label>SENHA DO RANKING<input id="password" type="password" autocomplete="current-password" required></label><button type="submit" class="primary">ENTRAR COMO ADMINISTRADOR</button></form></div>
+<div id="publish-controls" hidden><div class="notice">Atenção: esta ação altera a classificação real da temporada ativa. Confirme somente após conferir a MD3.</div><label style="display:flex;gap:9px;align-items:center;margin:15px 0"><input id="approve" type="checkbox" style="accent-color:#ffe476;height:18px;width:18px"> Eu conferi o placar e os dez jogadores</label><button id="publish" class="primary" type="button">CONFIRMAR E LANÇAR MD3 NO RANKING →</button></div>
+<div class="status" id="admin-status" role="status">Faça login com a mesma conta ADM da tabela de pontuação para habilitar esta etapa.</div><div class="actions"><a href="./ranking.html">VER RANKING COMPLETO →</a><a href="./relatorios.html">BAIXAR TXT →</a></div></section>
+</div></main><footer><div class="wrap">CMIM © 2026 · REGISTRO ADMINISTRATIVO DE MD3</div></footer>
+<script>
+(()=>{'use strict';
+const BASE='https://klpvidxhzofbwstvvxib.supabase.co',KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn';
+const $=id=>document.getElementById(id);
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+let room='',reports=[],rank=null,rankVersion=0,session=null,valid=false;
+try{session=JSON.parse(sessionStorage.getItem('cmim_session')||'null')}catch{}
+function extract(x){if(UUID.test(x?.trim()))return x.trim();try{const a=new URL(x);const id=a.searchParams.get('room');return UUID.test(id)?id:null}catch{return null}}
+async function api(path,opts={}){const r=await fetch(BASE+path,{...opts,cache:'no-store',headers:{apikey:KEY,'Content-Type':'application/json',...opts.headers}});const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.message||data.error||data.details||'Erro '+r.status);return data}
+function node(tag,content,cls){const e=document.createElement(tag);e.textContent=content??'';if(cls)e.className=cls;return e}
+function points(wins,losses,md3){return ((wins+losses)*.5+wins*2-losses*3+md3*3).toLocaleString('pt-BR',{maximumFractionDigits:1})}
+function buildTable(headers,rows,target){
+ const t=document.createElement('table'),head=document.createElement('tr');
+ for(const h of headers)head.append(node('th',h));
+ const thead=document.createElement('thead');thead.append(head);t.append(thead);
+ const tb=document.createElement('tbody');
+ for(const row of rows){const tr=document.createElement('tr');for(const val of row)tr.append(node('td',val));tb.append(tr)}
+ t.append(tb);target.replaceChildren(t);
+}
+async function queryRoom(x){
+ room=extract(x);if(!room){$('status').textContent='Informe um ID de sala válido.';return}
+ $('room').value=room;history.replaceState(null,'','?room='+encodeURIComponent(room));
+ $('status').textContent='Consultando os resultados confirmados...';$('results').hidden=true;
+ try{
+  [reports,rank]=await Promise.all([
+   api('/rest/v1/cmim_draft_game_reports?room_id=eq.'+encodeURIComponent(room)+'&select=game,season_id,season_name,winner_side,winner_team,teams,confirmed_at&order=game.asc'),
+   api('/rest/v1/cmim_rank?id=eq.1&select=data,version')]);
+  rankVersion=rank?.[0]?.version??0;
+  if(!reports.length){$('status').textContent='Ainda não há jogos confirmados. Finalize a MD3 com os dois capitães.';return}
+  const initial=reports[0],teamA=initial.teams?.[0],teamB=initial.teams?.[1];
+  if(!teamA||!teamB)throw Error('Relatório sem escalação');
+  const aw=reports.filter(r=>r.winner_team===teamA.name).length,bw=reports.filter(r=>r.winner_team===teamB.name).length;
+  valid=reports.length>=2&&reports.length<=3&&Math.max(aw,bw)===2&&
+     (reports.length===2?Math.min(aw,bw)===0:Math.min(aw,bw)===1)&&
+     reports.every((r,i)=>r.game===i+1);
+  const box=$('scoreboard');box.replaceChildren();
+  const left=node('div','', 'side');left.append(node('small','EQUIPE A'),node('h3',teamA.name),node('div',aw+' VITÓRIA(S)','points'));
+  const versus=node('div','×','versus');
+  const right=node('div','','side red');right.append(node('small','EQUIPE B'),node('h3',teamB.name),node('div',bw+' VITÓRIA(S)','points'));
+  box.append(left,versus,right);
+  buildTable(['JOGO','VENCEDOR CONFIRMADO','DATA'],reports.map(r=>[String(r.game),r.winner_team,new Date(r.confirmed_at).toLocaleString('pt-BR')]),$('game-list'));
+  $('season-info').textContent='Temporada vinculada: '+(initial.season_name||'Não informada');
+  const roster=new Set((rank?.[0]?.data?.seasons||[]).find(s=>s.id===initial.season_id)?.roster||[]);
+  const players=rank?.[0]?.data?.players||[];
+  const known=new Map(players.map(p=>[p.key||norm(p.nick),p]));
+  const nicklist=[...(teamA.players||[]).map(n=>({name:n,w:aw,l:bw,bonus:aw>bw?1:0})),...(teamB.players||[]).map(n=>({name:n,w:bw,l:aw,bonus:bw>aw?1:0}))];
+  const missing=nicklist.filter(n=>{const p=known.get(norm(n.name));return !p||!roster.has(p.id)}).map(p=>p.name);
+  buildTable(['JOGADOR','JOGOS','VITÓRIAS','DERROTAS','BÔNUS MD3','PONTOS PREVISTOS'],nicklist.map(n=>[n.name,String(n.w+n.l),String(n.w),String(n.l),String(n.bonus),points(n.w,n.l,n.bonus)]),$('point-table'));
+  $('roster-status').textContent=!valid?'Série em andamento: os pontos só podem ser publicados depois do 2x0 ou 2x1.':
+   missing.length?'Verifique o ranking: estes nicks não estão inscritos na temporada vinculada: '+missing.join(', '):
+   'Jogadores localizados no ranking. O ADM poderá validar o lançamento.';
+  $('status').textContent=valid?'Série concluída: '+aw+'×'+bw+'. O ranking ainda não foi alterado.':'Série em andamento: '+aw+'×'+bw+'.';
+  $('results').hidden=false;
+  if(session?.access_token)await adminCheck();
+  else{$('admin-box').hidden=false;$('publish-controls').hidden=true}
+  $('publish').disabled=!valid||missing.length>0;
+ }catch(e){$('status').textContent='Erro ao carregar a sala: '+e.message}
+}
+async function adminCheck(){
+ try{
+ const user=await api('/auth/v1/user',{headers:{Authorization:'Bearer '+session.access_token}});
+ if(!user.app_metadata?.cmim_admin)throw Error('Este usuário não é ADM.');
+ $('admin-box').hidden=true;$('publish-controls').hidden=false;
+ $('admin-status').textContent='Conta ADM validada. Confira os dados antes de lançar.';
+ const previous=await api('/rest/v1/cmim_pilot_rank_sync?room_id=eq.'+encodeURIComponent(room)+'&select=room_id,score',{headers:{Authorization:'Bearer '+session.access_token}});
+ if(previous.length){$('publish').disabled=true;$('approve').disabled=true;$('admin-status').textContent='✓ MD3 já lançada no ranking: '+previous[0].score+'. Não é possível duplicar.'}
+ }catch(e){$('admin-box').hidden=false;$('publish-controls').hidden=true;$('admin-status').textContent='Para publicar pontos, faça login novamente como ADM.'}
+}
+$('login').addEventListener('submit',async ev=>{
+ ev.preventDefault();$('admin-status').textContent='Validando permissões...';
+ try{
+  session=await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});
+  if(!session.user?.app_metadata?.cmim_admin)throw Error('Essa conta não é administradora.');
+  sessionStorage.setItem('cmim_session',JSON.stringify(session));$('password').value='';
+  await adminCheck();
+ }catch(e){session=null;$('admin-status').textContent='Falha de login: '+e.message}
+});
+$('publish').addEventListener('click',async()=>{
+ if(!valid||!$('approve').checked){$('admin-status').textContent='Confira a MD3 e marque a confirmação do ADM.';return}
+ const b=$('publish');b.disabled=true;$('admin-status').textContent='Registrando pontuação, aguarde a resposta do banco...';
+ try{
+  if(!session?.access_token)throw Error('Entre como administrador.');
+  const result=await api('/rest/v1/rpc/cmim_pilot_publish',{method:'POST',headers:{Authorization:'Bearer '+session.access_token},body:JSON.stringify({p_room:room,p_expected_version:rankVersion})});
+  $('admin-status').textContent='✓ SUCESSO! MD3 '+result.score+' lançada oficialmente no ranking. Evento '+result.eventId;
+  $('approve').disabled=true;
+ }catch(e){b.disabled=false;$('admin-status').textContent='Não foi possível lançar: '+e.message+'. Verifique a temporada e atualize os dados.'}
+});
+$('finder').addEventListener('submit',ev=>{ev.preventDefault();queryRoom($('room').value)});
+const preset=new URLSearchParams(location.search).get('room');if(preset)queryRoom(preset);
+})();
+</script></body></html>
