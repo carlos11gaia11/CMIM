@@ -1,1 +1,175 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="description" content="CMIM Draft Arena • Blue Side, Red Side e Espectadores"/><link rel="icon" type="image/svg+xml" href="./favicon.svg"/><title>CMIM • Draft Arena</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0d0c">
+  <meta name="description" content="CMIM — Comunidade Mais Insalubre do Mundo. Central de ferramentas: draft de jogadores, ranking e seleção de campeões de League of Legends.">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>CMIM — Central da Comunidade</title>
+  <style>
+    :root{--bg:#0b0d0c;--surface:#141816;--panel:#191e1a;--line:#343b33;--yellow:#ffe03b;--cream:#f6f6ef;--muted:#b1b9ae;--green:#a4e2a7;--blue:#70c7eb;--red:#fd8180}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;min-width:320px;background:var(--bg);color:var(--cream);font:15px Barlow,system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+    body:before{content:"";position:absolute;z-index:-1;top:0;left:0;right:0;height:850px;background:radial-gradient(ellipse at 72% 12%,#615a191f,transparent 40%),radial-gradient(ellipse at 15% 36%,#2f3e2925,transparent 45%)}
+    a{color:inherit;text-decoration:none}
+    a:focus-visible,button:focus-visible{outline:3px solid var(--yellow);outline-offset:4px}
+    button{font:inherit}
+    .wrap{width:min(1240px,calc(100% - 64px));margin-inline:auto}
+    .mini{font-size:11px;letter-spacing:2.4px;font-weight:800;text-transform:uppercase}
+    .yellow{color:var(--yellow)}
+    .site-header{border-bottom:1px solid #353c34;background:#0c100deb;position:relative;z-index:2;backdrop-filter:blur(15px)}
+    .topbar{height:84px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+    .identity{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+    .identity img{height:53px;width:53px;object-fit:cover;border:1px solid #655d2a;border-radius:10px;background:#222a19}
+    .identity span{display:block;font:900 31px/.8 "Barlow Condensed",Impact,sans-serif;letter-spacing:1.4px}
+    .identity small{display:block;color:#c3cbb7;font-size:9px;letter-spacing:2.2px;font-weight:800;margin-top:10px}
+    .nav{display:flex;align-items:center;gap:28px;color:#c3c8bd;font-size:12px;font-weight:800;letter-spacing:.5px}
+    .nav a:hover{color:var(--yellow)}
+    .nav .live{display:inline-flex;align-items:center;gap:9px;color:#f0e8bd;font-size:10px;border:1px solid #5b5832;background:#262719;padding:10px 14px;border-radius:5px}
+    .live i,.eyebrow i{height:7px;width:7px;display:inline-block;border-radius:50%;background:#b7e38b;box-shadow:0 0 12px #b8e38b91}
+    .hero{min-height:542px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(330px,.9fr);gap:54px;align-items:center;padding:72px 0 74px}
+    .eyebrow{display:flex;align-items:center;gap:12px;color:var(--yellow);font-size:11px;font-weight:800;letter-spacing:2.8px}
+    .eyebrow i{background:var(--yellow);box-shadow:0 0 12px #ffe03b88}
+    h1,h2,h3,p{margin-top:0}
+    h1,h2,h3{font-family:"Barlow Condensed",Impact,sans-serif}
+    .hero h1{font-size:clamp(63px,7vw,103px);font-weight:900;line-height:.92;letter-spacing:-1.2px;margin:23px 0}
+    .hero h1 em{font-style:normal;color:var(--yellow)}
+    .hero-copy{font-size:17px;line-height:1.8;max-width:570px;color:#c2c9bd;margin:0 0 28px}
+    .hero-actions{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+    .button{display:inline-flex;align-items:center;justify-content:center;gap:14px;min-height:52px;padding:12px 19px;border-radius:5px;border:1px solid #707466;background:#242b23;color:var(--cream);font-size:12px;font-weight:900;letter-spacing:1px;transition:transform .18s,background .18s,border-color .18s}
+    .button:hover{transform:translateY(-3px);background:#333c30;border-color:#b5bba4}
+    .button svg{width:17px;height:17px}
+    .button.primary{background:var(--yellow);border-color:var(--yellow);color:#141710;box-shadow:0 10px 35px #ffe03b15}
+    .button.primary:hover{background:#ffeb7c;box-shadow:0 10px 32px #ffe03b27}
+    .hero-meta{display:flex;gap:22px;align-items:center;margin-top:31px;font-size:11px;font-weight:750;color:#9eaa98;letter-spacing:.6px;flex-wrap:wrap}
+    .hero-meta span:before{content:"";display:inline-block;width:5px;height:5px;background:var(--yellow);margin-right:9px;vertical-align:middle;border-radius:50%}
+    .hero-art{position:relative;isolation:isolate;height:396px;border:1px solid #50543d;border-radius:13px;background:linear-gradient(155deg,#242919 0%,#111713 62%,#191b14);box-shadow:0 30px 90px #0008;overflow:hidden;display:grid;place-items:center}
+    .hero-art:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#080c0b64,transparent 65%),repeating-linear-gradient(90deg,transparent 0 71px,#acaa5120 72px),repeating-linear-gradient(0deg,transparent 0 71px,#acaa5120 72px);opacity:.55}
+    .hero-art:after{content:"";position:absolute;border:1px solid #f4db5152;width:305px;height:305px;border-radius:50%;transform:rotate(-28deg) scaleX(1.13);box-shadow:0 0 50px #ffe03b20,inset 0 0 55px #ffe03b0e}
+    .hero-art img{width:65%;height:75%;object-fit:contain;filter:drop-shadow(0 10px 35px #070905);position:relative;z-index:1;border-radius:12px;mix-blend-mode:lighten}
+    .hero-art .topmark{position:absolute;top:18px;left:20px;z-index:2;display:flex;gap:8px;align-items:center;color:#f0dc82;font-size:9px;letter-spacing:2px;font-weight:800}
+    .hero-art .bottommark{position:absolute;bottom:22px;left:23px;right:23px;z-index:2;display:flex;justify-content:space-between;align-items:end;border-top:1px solid #73734655;padding-top:14px}
+    .hero-art .bottommark strong{font:900 35px/.9 "Barlow Condensed",Impact,sans-serif;letter-spacing:2px}
+    .hero-art .bottommark small{color:#c2c7ac;font-size:9px;letter-spacing:1.3px;font-weight:800}
+    .side-tag{position:absolute;top:48px;right:19px;writing-mode:vertical-rl;letter-spacing:3px;font-size:10px;font-weight:800;color:#cec987}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,#5d604e 9%,#5d604e 91%,transparent)}
+    .section{padding:59px 0}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:25px;margin-bottom:26px}
+    .section-head h2{font-size:clamp(38px,4vw,56px);line-height:.98;letter-spacing:.2px;margin:9px 0 0}
+    .section-head p{color:#b2bbb1;max-width:315px;font-size:13px;margin:0}
+    .tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .tool{min-height:340px;background:linear-gradient(145deg,#1d231d,#151a17);border:1px solid #414b3f;border-radius:11px;overflow:hidden;position:relative;display:flex;flex-direction:column;padding:24px;transition:transform .2s,background .2s,border-color .2s,box-shadow .2s}
+    .tool:hover{transform:translateY(-6px);border-color:#b8a83d;background:linear-gradient(140deg,#292d20,#1c211a);box-shadow:0 24px 55px #0007,0 0 25px #f0cd3013}
+    .tool:focus-visible{outline-offset:5px}
+    .tool:before{content:"";position:absolute;right:-64px;top:-80px;height:250px;width:250px;border-radius:50%;background:radial-gradient(circle,var(--glow),transparent 68%);pointer-events:none}
+    .tool.featured{border-top:3px solid var(--yellow);padding-top:22px}
+    .tool:not(.featured){border-top:3px solid var(--accent)}
+    .tool-top{display:flex;align-items:center;justify-content:space-between}
+    .tool-no{font-size:11px;letter-spacing:2px;font-weight:900;color:#c3cfbd}
+    .tool-badge{font-size:9px;letter-spacing:1px;font-weight:900;border-radius:30px;padding:6px 10px;border:1px solid #6f7838;color:#e7d979;background:#353623}
+    .tool-badge.blue{border-color:#466f83;color:#91d3f5;background:#23323b}
+    .tool-badge.green{border-color:#437653;color:#a6e9ad;background:#21362b}
+    .tool-icon{height:61px;width:61px;display:grid;place-items:center;border:1px solid #747d44;background:#31331e;border-radius:10px;margin:25px 0 17px;color:var(--accent)}
+    .tool-icon svg{width:30px;height:30px}
+    .tool h3{font-size:35px;line-height:1.02;letter-spacing:.3px;margin:0 0 12px}
+    .tool p{font-size:13px;line-height:1.7;color:#bbc4b9;margin:0 0 26px}
+    .tool-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #505a488a;margin-top:auto;padding-top:15px;font-size:11px;letter-spacing:.7px;font-weight:900;color:#eff4e9}
+    .tool-foot svg{width:18px;height:18px;color:var(--accent);transition:transform .18s}
+    .tool:hover .tool-foot svg{transform:translateX(5px)}
+    .tool .micro{display:block;margin-top:8px;color:#9ea997;font-weight:700;letter-spacing:1px;font-size:10px}
+    .feature-strip{margin-top:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#475040;border:1px solid #475040;border-radius:10px;overflow:hidden}
+    .feature-strip div{background:#151a16;padding:22px 27px}
+    .feature-strip strong{display:block;font:800 23px "Barlow Condensed",Impact,sans-serif;color:#e9eddd;letter-spacing:.6px}
+    .feature-strip span{font-size:11px;color:#afbaa8}
+    .soon-section{padding:34px 0 62px}
+    .soon-section h2{font-size:30px;margin:0 0 17px}
+    .soon-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+    .soon-card{display:flex;align-items:center;gap:15px;border:1px dashed #51594f;background:#151916;padding:17px 20px;border-radius:7px;color:#c2ccc0}
+    .soon-card b{font-size:12px;letter-spacing:.2px}
+    .soon-card p{margin:3px 0 0;font-size:11px;color:#9fac9e}
+    .soon-card .symbol{font-size:23px;color:#d0bb57}
+    .soon-card small{margin-left:auto;color:#b6b29a;font-size:9px;font-weight:800;letter-spacing:.8px;white-space:nowrap}
+    .closing{background:#1b201a;border-top:1px solid #3d453a;border-bottom:1px solid #3d453a}
+    .closing-inner{padding:35px 0;display:flex;align-items:center;justify-content:space-between;gap:25px}
+    .closing h2{font-size:31px;margin:2px 0 3px}
+    .closing p{font-size:12px;color:#b8c1b2;margin:0}
+    .footer{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:26px 0 33px;color:#9ea998;font-size:11px;letter-spacing:.4px}
+    .footer a{color:#e1d570}
+    @media(max-width:1030px){.hero{grid-template-columns:1fr .8fr;gap:30px}.hero h1{font-size:73px}.tool-grid{gap:13px}.tool{padding:18px}.tool h3{font-size:29px}.soon-card{padding:13px}}
+    @media(max-width:800px){.wrap{width:min(100% - 36px,680px)}.nav{gap:12px}.nav a:not(.live){display:none}.topbar{height:77px}.hero{grid-template-columns:1fr;padding:46px 0}.hero h1{font-size:clamp(58px,12vw,86px)}.hero-art{height:310px;max-width:550px}.hero-copy{max-width:620px}.tool-grid{grid-template-columns:1fr}.tool{min-height:270px}.tool-icon{margin:14px 0}.feature-strip{grid-template-columns:1fr}.soon-grid{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column}.closing-inner{align-items:flex-start;flex-direction:column}}
+    @media(max-width:470px){.identity img{width:45px;height:45px}.identity span{font-size:26px}.identity small{font-size:7px;letter-spacing:1.3px}.nav .live{font-size:9px;padding:8px}.hero h1{font-size:58px}.hero-actions .button{width:100%;justify-content:space-between}.hero-meta{gap:12px}.section{padding:40px 0}.section-head h2{font-size:42px}.hero-art{height:265px}.soon-card small{font-size:8px}.footer{flex-direction:column;align-items:flex-start}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap topbar">
+      <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./cmim.jpeg" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
+      <nav class="nav" aria-label="Menu principal"><a href="#ferramentas">FERRAMENTAS</a><a href="#em-breve">NOVIDADES</a><a href="https://www.twitch.tv/11gaia11br" target="_blank" rel="noopener noreferrer">TRANSMISSÕES ↗</a><span class="live"><i></i> COMUNIDADE ONLINE</span></nav>
+    </div>
+  </header>
+  <main>
+    <section class="wrap hero" aria-labelledby="hero-title">
+      <div>
+        <div class="eyebrow"><i></i> DE VOLTA ÀS RAÍZES · 2026</div>
+        <h1 id="hero-title">A ARENA É<br><em>NOSSA.</em></h1>
+        <p class="hero-copy">A comunidade mais insalubre do mundo tem uma nova casa. Monte times, dispute o topo do ranking e prepare o draft de campeões. Tudo começa por aqui.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#ferramentas">EXPLORAR FERRAMENTAS <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></a>
+          <a class="button" href="./selecao.html">SELEÇÃO DE CAMPEÕES <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m8 16 8-8M10 8h6v6"/></svg></a>
+        </div>
+        <div class="hero-meta"><span>03 FERRAMENTAS DISPONÍVEIS</span><span>FEITO PARA A COMUNIDADE</span></div>
+      </div>
+      <div class="hero-art" aria-label="Símbolo da Comunidade Mais Insalubre do Mundo">
+        <span class="topmark">● COMUNIDADE MAIS INSALUBRE DO MUNDO</span>
+        <img src="./cmim.jpeg" alt="Logo oficial da CMIM">
+        <span class="side-tag">COME BACK EDITION</span>
+        <div class="bottommark"><div><small>NO RIFT. NO RULES. JUST CMIM.</small><strong>PLAY · COMPETE · REPEAT</strong></div><small>EST. CMIM</small></div>
+      </div>
+    </section>
+    <div class="wrap divider"></div>
+    <section class="wrap section" id="ferramentas" aria-labelledby="tools-title">
+      <div class="section-head"><div><div class="mini yellow">SUA CENTRAL DE JOGO</div><h2 id="tools-title">ESCOLHA SUA <span class="yellow">PRÓXIMA JOGADA.</span></h2></div><p>Três ferramentas diferentes, um só lugar. Clique para entrar — cada uma tem seu próprio funcionamento.</p></div>
+      <div class="tool-grid">
+        <a class="tool featured" style="--accent:#ffe03b;--glow:#e1be262e" href="./draft.html" aria-label="Abrir Draft de equipes">
+          <div class="tool-top"><span class="tool-no">FERRAMENTA / 01</span><span class="tool-badge">DISPONÍVEL</span></div>
+          <div class="tool-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m4 20 7-7m-4-4 8 8M14 4l6 6m-1-7 2 2-5 5-2-2 5-5ZM3 19l2 2 5-5-2-2-5 5ZM4 4l16 16"/></svg></div>
+          <h3>DRAFT DE<br>EQUIPES</h3><p>Monte os elencos com 2 ou 4 times, organize jogadores por lane e tier e escolha os participantes no estilo Snake Draft.</p>
+          <div class="tool-foot">ABRIR DRAFT DE JOGADORES <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></div>
+          <span class="micro">10 OU 20 JOGADORES · SNAKE DRAFT</span>
+        </a>
+        <a class="tool" style="--accent:#a6e9ad;--glow:#4cbb6a20" href="./ranking.html" aria-label="Abrir Tabela de pontuação">
+          <div class="tool-top"><span class="tool-no">FERRAMENTA / 02</span><span class="tool-badge green">RANKING ONLINE</span></div>
+          <div class="tool-icon" style="border-color:#4b7452;background:#1d3224"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 20h16M7 17v-5h3v5m2 0V7h3v10m2 0v-9h3v9M3 6l4-3 4 3 5-4 5 3"/></svg></div>
+          <h3>TABELA DE<br>PONTUAÇÃO</h3><p>Acompanhe a classificação, os pontos e o histórico. Veja temporadas, MD3, MVPs, penalidades e quem está no topo.</p>
+          <div class="tool-foot">CONSULTAR CLASSIFICAÇÃO <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></div>
+          <span class="micro">TEMPORADAS · RESULTADOS · HISTÓRICO</span>
+        </a>
+        <a class="tool" style="--accent:#7cc7ec;--glow:#3787bb28" href="./selecao.html" aria-label="Abrir Seleção de campeões">
+          <div class="tool-top"><span class="tool-no">FERRAMENTA / 03</span><span class="tool-badge blue">MULTIPLAYER</span></div>
+          <div class="tool-icon" style="border-color:#41677b;background:#1c303b"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m12 2 7 7-7 13L5 9l7-7ZM5 9h14M9 9l3 13 3-13M9 9l3-7 3 7"/></svg></div>
+          <h3>SELEÇÃO DE<br>CAMPEÕES</h3><p>Crie a sala, compartilhe os links Blue e Red, faça bans e picks ao vivo e acompanhe tudo pela visão de espectador.</p>
+          <div class="tool-foot">ENTRAR NA ARENA DE PICKS <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></div>
+          <span class="micro">BLUE SIDE · RED SIDE · ESPECTADOR</span>
+        </a>
+      </div>
+      <div class="feature-strip" aria-label="Pilares do CMIM"><div><strong>COMUNIDADE</strong><span>Um lugar para reunir os jogadores</span></div><div><strong>COMPETIÇÃO</strong><span>Quem joga, deixa a marca no ranking</span></div><div><strong>CONEXÃO</strong><span>Ferramentas acessíveis pelo navegador</span></div></div>
+    </section>
+    <section class="wrap soon-section" id="em-breve">
+      <div class="mini yellow">NOS PRÓXIMOS CAPÍTULOS</div><h2>MAIS FERRAMENTAS <span class="yellow">EM BREVE.</span></h2>
+      <div class="soon-grid">
+        <div class="soon-card"><span class="symbol">◷</span><div><b>Calendário de partidas</b><p>Encontros e torneios da comunidade</p></div><small>EM BREVE</small></div>
+        <div class="soon-card"><span class="symbol">▤</span><div><b>Resultados e confrontos</b><p>Histórico das noites do CMIM</p></div><small>EM BREVE</small></div>
+        <div class="soon-card"><span class="symbol">♛</span><div><b>Hall da fama</b><p>Os grandes nomes de cada temporada</p></div><small>EM BREVE</small></div>
+      </div>
+    </section>
+    <section class="closing"><div class="wrap closing-inner"><div><div class="mini yellow">DE VOLTA ÀS RAÍZES</div><h2>O CMIM É FEITO POR QUEM JOGA.</h2><p>Sem milhões de jogadores. Só a nossa comunidade e muitas histórias para contar.</p></div><a class="button primary" href="./draft.html">COMEÇAR UM DRAFT <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></a></div></section>
+  </main>
+  <footer class="wrap footer"><span>CMIM © 2026 · COMUNIDADE MAIS INSALUBRE DO MUNDO · FEITO PARA A COMUNIDADE.</span><span>GG WP · <a href="https://www.twitch.tv/11gaia11br" target="_blank" rel="noopener noreferrer">ACOMPANHE AS LIVES ↗</a></span></footer>
+</body>
+</html>
