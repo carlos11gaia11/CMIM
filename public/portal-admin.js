@@ -6,7 +6,7 @@
   const SESSION='cmim_session';
   const $=id=>document.getElementById(id);
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
-  const state={session:null,admin:false,rank:null,version:null,metadata:[],news:[],loading:false};
+  const state={session:null,admin:false,rank:null,version:null,metadata:[],news:[],reports:[],loading:false,reviewBusy:false};
   try{state.session=JSON.parse(sessionStorage.getItem(SESSION)||'null')}catch{}
   const tierList=['S','A','B','C','D','E','F'];
   const laneList=['TOP','JG','MID','ADC','SUP'];
@@ -104,15 +104,17 @@
   const metaFor=id=>state.metadata.find(m=>m.rank_player_id===id)||null;
   async function loadAdminData(){
     if(!state.admin)return;
-    const [rows,metadata,news]=await Promise.all([
+    const [rows,metadata,news,reports]=await Promise.all([
       jsonFetch('/rest/v1/cmim_rank?id=eq.1&select=data,version',{secured:true}),
       jsonFetch('/rest/v1/cmim_player_meta?select=rank_player_id,tier,lane,riot_tag,champion_tags&limit=1000',{secured:true}),
-      jsonFetch('/rest/v1/cmim_portal_news?select=id,title,category,published,created_at&order=created_at.desc&limit=50',{secured:true})
+      jsonFetch('/rest/v1/cmim_portal_news?select=id,title,category,published,created_at&order=created_at.desc&limit=50',{secured:true}),
+      jsonFetch('/rest/v1/cmim_draft_game_reports?select=room_id,game,season_id,season_name,mode,winner_side,winner_team,teams,picks,bans,confirmed_at,review_status,review_note,reviewed_at&order=confirmed_at.desc&limit=1000',{secured:true})
     ]);
     state.rank=rows?.[0]?.data||{players:[],seasons:[]};state.version=rows?.[0]?.version??0;
     state.metadata=Array.isArray(metadata)?metadata:[];
     state.news=Array.isArray(news)?news:[];
-    renderAdminPlayerOptions();renderNewsManager();
+    state.reports=Array.isArray(reports)?reports:[];
+    renderAdminPlayerOptions();renderNewsManager();renderReviewQueue();
   }
   function renderAdminPlayerOptions(){
     const select=$('admin-player-select'),existing=$('admin-existing-player');
@@ -210,6 +212,128 @@
     catch(e){flash(e.message,true);}
     finally{button.disabled=false;}
   }
+
+  function reviewGroups(){
+    const groups=new Map();
+    for(const row of state.reports){
+      const id=row.room_id;
+      if(!groups.has(id))groups.set(id,{id,games:[]});
+      groups.get(id).games.push(row);
+    }
+    return [...groups.values()].map(group=>{
+      group.games.sort((a,b)=>a.game-b.game);
+      const first=group.games[0],teams=first?.teams||[];
+      const teamA=String(teams[0]?.name||'Equipe A'),teamB=String(teams[1]?.name||'Equipe B');
+      const aw=group.games.filter(g=>g.winner_team===teamA).length,
+            bw=group.games.filter(g=>g.winner_team===teamB).length;
+      group.teamA=teamA;group.teamB=teamB;group.aw=aw;group.bw=bw;
+      group.season=first?.season_name||'Temporada não vinculada';
+      group.seasonId=first?.season_id||null;
+      group.status=group.games.some(g=>g.review_status==='rejected')?'rejected':
+        group.games.every(g=>g.review_status==='approved')?'approved':'pending';
+      group.complete=group.games.length>=2&&group.games.length<=3&&
+        group.games.every((g,index)=>g.game===index+1)&&Math.max(aw,bw)===2&&
+        (group.games.length===2?Math.min(aw,bw)===0:Math.min(aw,bw)===1);
+      group.reason=group.games.find(g=>g.review_note)?.review_note||'';
+      group.date=group.games[0]?.confirmed_at||null;
+      return group;
+    }).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+  }
+  function renderReviewQueue(){
+    const box=$('review-list');if(!box)return;
+    const groups=reviewGroups();
+    const counts={pending:0,approved:0,rejected:0};
+    for(const g of groups)counts[g.status]++;
+    $('review-pending-count').textContent=counts.pending;
+    $('review-approved-count').textContent=counts.approved;
+    $('review-rejected-count').textContent=counts.rejected;
+    const badge=$('review-nav-badge');
+    if(badge){badge.textContent=String(counts.pending);badge.hidden=counts.pending===0;}
+    const filter=$('review-filter')?.value||'pending';
+    const list=groups.filter(g=>filter==='all'||g.status===filter);
+    $('review-status').textContent=list.length+' série(s) exibida(s) · '+counts.pending+' aguardando decisão.';
+    if(!list.length){
+      box.innerHTML='<div class="review-empty">'+(filter==='pending'?
+        'Tudo em dia! Nenhuma série aguardando aprovação. As próximas MD3 aparecerão aqui quando os capitães registrarem os resultados.':
+        'Não há partidas nessa categoria.')+'</div>';
+      return;
+    }
+    box.innerHTML=list.map(g=>{
+      const label=g.status==='approved'?'✓ APROVADA':g.status==='rejected'?'✕ REJEITADA':
+        g.complete?'● AGUARDANDO ADM':'◷ SÉRIE EM ANDAMENTO';
+      const teamA=esc(g.teamA),teamB=esc(g.teamB);
+      const games=g.games.map(game=>{
+        const banNames=(game.bans||[]).map(b=>b.champion).filter(Boolean);
+        const picks=(game.picks||[]).map(p=>[p.nick,p.champion].filter(Boolean).join(' · '));
+        return '<div class="review-game"><div class="review-game-heading"><b>Jogo '+Number(game.game)+'</b><span>Vencedor: '+esc(game.winner_team)+'</span></div>'+
+          '<details><summary>Conferir picks, bans e jogadores</summary><div class="review-game-details"><div><b>PICKS / NICKS</b><p>'+esc(picks.join(' | '))+'</p></div>'+
+          '<div><b>BANS</b><p>'+esc(banNames.join(', '))+'</p></div></div></details></div>';
+      }).join('');
+      const players=(g.games[0]?.teams||[]).map(team=>'<div><b>'+esc(team.name)+'</b><p>'+esc((team.players||[]).join(' · '))+'</p></div>').join('');
+      let actions='';
+      if(g.status==='pending')actions='<button class="review-approve admin-main-button" type="button" data-review-room="'+esc(g.id)+'" '+
+        (!g.complete||state.reviewBusy?'disabled':'')+'>✓ APROVAR MD3 E LANÇAR PONTOS</button>'+
+        '<button class="review-reject" type="button" data-reject-room="'+esc(g.id)+'">Rejeitar partidas</button>';
+      if(g.status==='rejected')actions='<button class="review-reopen" type="button" data-reopen-room="'+esc(g.id)+'">Reabrir análise</button>';
+      if(g.status==='approved')actions='<span class="review-approved-note">✓ Contabilizada no ranking e nas estatísticas.</span>';
+      const note=g.status==='rejected'?'Motivo da rejeição: '+esc(g.reason):
+        !g.complete?'A aprovação será liberada quando a MD3 terminar em 2×0 ou 2×1.':
+        'MD3 concluída e pronta para a conferência do administrador.';
+      return '<article class="review-series '+g.status+'"><div class="review-series-top">'+
+        '<div><span class="admin-eyebrow">MD3 · '+esc(g.season)+'</span><h3>'+teamA+' <span>×</span> '+teamB+'</h3>'+
+        '<p>Confirmados: '+g.games.length+' jogo(s) · Sala: '+esc(g.id.slice(0,8))+'…</p></div>'+
+        '<span class="review-badge '+g.status+'">'+label+'</span></div>'+
+        '<div class="review-score"><span>'+teamA+'</span><strong>'+g.aw+' × '+g.bw+'</strong><span>'+teamB+'</span></div>'+
+        '<div class="review-roster">'+players+'</div>'+
+        '<div class="review-games">'+games+'</div>'+
+        '<div class="review-note">'+note+'</div>'+
+        '<div class="review-actions">'+actions+'<a href="./relatorios.html?room='+encodeURIComponent(g.id)+'" target="_blank" rel="noopener noreferrer">↗ Abrir relatórios TXT</a></div></article>';
+    }).join('');
+    box.querySelectorAll('[data-review-room]').forEach(button=>button.addEventListener('click',()=>approveRoom(button.dataset.reviewRoom)));
+    box.querySelectorAll('[data-reject-room]').forEach(button=>button.addEventListener('click',()=>reviewRoom(button.dataset.rejectRoom,'reject')));
+    box.querySelectorAll('[data-reopen-room]').forEach(button=>button.addEventListener('click',()=>reviewRoom(button.dataset.reopenRoom,'reopen')));
+  }
+  async function approveRoom(room){
+    if(!state.admin||state.reviewBusy)return;
+    const group=reviewGroups().find(g=>g.id===room);
+    if(!group||group.status!=='pending'||!group.complete)return flash('A MD3 precisa estar concluída e pendente.',true);
+    if(!confirm('APROVAR A MD3 '+group.aw+'×'+group.bw+'?\\n\\n'+group.teamA+' x '+group.teamB+
+      '\\nEsta ação atribuirá os pontos no ranking oficial e liberará picks/bans/win rate nas estatísticas. Não é possível aprovar novamente.'))return;
+    state.reviewBusy=true;renderReviewQueue();
+    $('review-status').textContent='Validando elenco e lançando a pontuação no banco...';
+    try{
+      const result=await jsonFetch('/rest/v1/rpc/cmim_pilot_publish',{
+        secured:true,method:'POST',body:JSON.stringify({p_room:room,p_expected_version:state.version})
+      });
+      await loadAdminData();
+      flash('✓ MD3 '+result.score+' aprovada! Pontuação e estatísticas oficiais atualizadas.');
+    }catch(error){
+      flash('Não foi possível aprovar: '+error.message+'. Confira se os dez nicks estão inscritos na temporada.',true);
+    }finally{state.reviewBusy=false;renderReviewQueue();}
+  }
+  async function reviewRoom(room,decision){
+    if(!state.admin||state.reviewBusy)return;
+    const group=reviewGroups().find(g=>g.id===room);
+    if(!group||!['reject','reopen'].includes(decision))return;
+    let reason=null;
+    if(decision==='reject'){
+      reason=prompt('Por que a MD3 será rejeitada? Informe o motivo (obrigatório, até 400 caracteres).');
+      if(reason===null)return;
+      reason=reason.trim();
+      if(!reason)return flash('A rejeição precisa de um motivo.',true);
+    }else if(!confirm('Reabrir esta MD3 para análise? Ela continuará fora das estatísticas até ser aprovada.'))return;
+    state.reviewBusy=true;renderReviewQueue();
+    try{
+      await jsonFetch('/rest/v1/rpc/cmim_review_draft_series',{
+        secured:true,method:'POST',
+        body:JSON.stringify({p_room:room,p_action:decision,p_reason:reason})
+      });
+      await loadAdminData();
+      flash(decision==='reject'?'A série foi rejeitada e não contará no ranking.':'A série voltou à fila de análise.');
+    }catch(error){flash('Erro ao revisar: '+error.message,true);}
+    finally{state.reviewBusy=false;renderReviewQueue();}
+  }
+
   function renderNewsManager(){
     const target=$('admin-news-list');if(!target)return;
     target.innerHTML=state.news.length?state.news.map(n=>
@@ -281,6 +405,10 @@
     }
   }
   // No portal o link leva a uma pagina completa; o antigo modal nao e usado.
+  $('review-filter')?.addEventListener('change',renderReviewQueue);
+  $('review-refresh')?.addEventListener('click',()=>{
+    loadAdminData().then(()=>flash('Fila de partidas atualizada.')).catch(e=>flash('Erro ao atualizar: '+e.message,true));
+  });
   $('portal-admin-button')?.addEventListener('click',event=>{
     event.preventDefault();location.href='./admin.html';
   });
