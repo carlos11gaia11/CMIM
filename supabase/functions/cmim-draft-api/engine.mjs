@@ -10,13 +10,13 @@ export const CHANGE_SECONDS = 10;
 export function initial(config={}) {
  const duration = [20,30,45,60,90].includes(Number(config.duration)) ? Number(config.duration) : 30;
  const teams = ['B','R'].map((side,i)=>({name:String(config.teams?.[i]?.name||`Time ${i+1}`).slice(0,40),logo:cleanLogo(config.teams?.[i]?.logo),players:Array.from({length:5},(_,j)=>String(config.teams?.[i]?.players?.[j]||['Top','Jungle','Mid','ADC','Support'][j]).slice(0,24))}));
- return {sideOwners:['B','R'],ready:[false,false],swapDuration:ADJUST_SECONDS,swapDeadline:0,lanes:[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']],presentation:cleanPresentation(config.presentation),teams,mode:['Normal','Fearless','Ironman'].includes(config.mode)?config.mode:'Normal',games:Math.max(1,Math.min(5,Math.trunc(Number(config.games))||1)),duration,disabled:Array.isArray(config.disabled)?config.disabled.filter(x=>typeof x==='string').slice(0,200):[],first:config.first==='R'?'R':'B',game:1,history:[],actions:[],started:false,paused:false,remaining:duration,deadline:0,score:[0,0],swaps:[[0,1,2,3,4],[0,1,2,3,4]],pendingDecision:null,changeRequest:null,lastEvent:null};
+ return {sideOwners:['B','R'],ready:[false,false],swapDuration:ADJUST_SECONDS,swapDeadline:0,lanes:[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']],presentation:cleanPresentation(config.presentation),teams,mode:['Normal','Fearless','Ironman'].includes(config.mode)?config.mode:'Normal',games:Math.max(1,Math.min(5,Math.trunc(Number(config.games))||1)),duration,disabled:Array.isArray(config.disabled)?config.disabled.filter(x=>typeof x==='string').slice(0,200):[],first:config.first==='R'?'R':'B',game:1,history:[],actions:[],started:false,paused:false,remaining:duration,deadline:0,score:[0,0],swaps:[[0,1,2,3,4],[0,1,2,3,4]],pendingDecision:null,changeRequest:null,resultVotes:{B:null,R:null},lastConfirmedResult:null,season:config.season||null,lastEvent:null};
 }
 export function cleanLogo(value) {return typeof value==='string' && value.length<600000 && /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(value)?value:''}
 export function turn(s) { const t=ORDER[s.actions.length]; return t ? {side:s.first==='R'?(t[0]==='B'?'R':'B'):t[0],type:t[1]} : null; }
 export function roleFor(s,identity){if(!['B','R'].includes(identity))return identity;return (s.sideOwners||['B','R'])[0]===identity?'B':'R';}
 export function locked(s) {return new Set([...s.disabled,...s.actions.filter(a=>a.champion).map(a=>a.champion),...s.history.flatMap(g=>g.actions.filter(a=>s.mode==='Ironman'||(s.mode==='Fearless'&&a.type==='pick')).map(a=>a.champion)).filter(Boolean)]);}
-const decisions=new Set(['undo','reset','next','finish']);
+const decisions=new Set(['undo','reset']);
 export function apply(s,action,role,champions=[],now=Date.now()) {
  const next=structuredClone(s),captain=['B','R'].includes(role);
  const needCaptain=()=>{if(!captain)throw Error('Somente os capitães podem fazer isso.');};
@@ -75,18 +75,47 @@ export function apply(s,action,role,champions=[],now=Date.now()) {
   next.lastEvent={side:role,type:'pick',champion:action.champion,correction:true,id:crypto.randomUUID()};
   restoreClock();return next;
  }
+ // Cada capitao registra o vencedor sem simplesmente aceitar o voto adversario.
+ if(action.type==='report_result'){
+  needCaptain();
+  if(!next.started||next.finished||turn(next)||!next.swapDeadline||now<next.swapDeadline)
+   throw Error('Aguarde o fim do draft e dos 30 segundos de ajustes.');
+  if(next.changeRequest)throw Error('Conclua primeiro a solicitacao de troca.');
+  if(!['B','R'].includes(action.winner))throw Error('Escolha um vencedor valido.');
+  next.resultVotes??={B:null,R:null};
+  next.resultVotes[role]={winner:action.winner,invertSides:next.game<next.games&&action.invertSides===true,at:now};
+  const blue=next.resultVotes.B,red=next.resultVotes.R;
+  if(!blue||!red)return next;
+  // Divergencia bloqueia a transicao; ambos podem reenviar sua escolha.
+  if(blue.winner!==red.winner||blue.invertSides!==red.invertSides)return next;
+  const winner=blue.winner,invertSides=blue.invertSides;
+  next.lastConfirmedResult={game:next.game,winner,at:now};
+  next.score[winner==='B'?0:1]++;
+  next.pendingDecision=null;
+  next.resultVotes={B:null,R:null};
+  if(next.game>=next.games){
+   next.finished=true;next.finalWinner=winner;
+  }else{
+   next.history.push({game:next.game,actions:next.actions,winner,teams:next.teams,swaps:next.swaps,lanes:next.lanes,confirmedAt:now});
+   if(invertSides){
+    next.teams=[...next.teams].reverse();
+    next.score=[...next.score].reverse();
+    next.sideOwners=[...(next.sideOwners||['B','R'])].reverse();
+   }
+   next.game++;next.first=next.first==='B'?'R':'B';
+   next.ready=[false,false];next.swapDeadline=0;
+   next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];
+   next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;
+   next.swaps=[[0,1,2,3,4],[0,1,2,3,4]];next.changeRequest=null;
+  }
+  return next;
+ }
  // Comandos que mudam a partida exigem aprovação dos dois capitães, sem Master.
  if(decisions.has(action.type)) {
   needCaptain();
   if(action.type==='undo'&&(!next.actions.length||next.finished))throw Error('Não há ações para desfazer.');
   if(action.type==='reset'&&(!next.started||next.finished))throw Error('Não é possível reiniciar este jogo.');
-  if(['next','finish'].includes(action.type)) {
-   if(turn(next)||next.finished||now<(next.swapDeadline||0)||!next.swapDeadline)throw Error('Aguarde a conclusão do draft e dos 30 segundos de ajustes.');
-   if(action.type==='next'&&next.game>=next.games)throw Error('Esta é a última partida.');
-   if(action.type==='finish'&&next.game!==next.games)throw Error('Ainda há partidas pendentes.');
-   if(!['B','R'].includes(action.winner))throw Error('Escolha o vencedor.');
-  }
-  const vote={type:action.type,...(['next','finish'].includes(action.type)?{winner:action.winner,invertSides:action.type==='next'&&action.invertSides===true}:{})};
+  const vote={type:action.type};
   if(!next.pendingDecision||JSON.stringify(next.pendingDecision.action)!==JSON.stringify(vote)||next.pendingDecision.by===role) {
    if(next.pendingDecision?.by===role&&JSON.stringify(next.pendingDecision.action)===JSON.stringify(vote))throw Error('Sua solicitação já foi enviada. Aguarde o outro capitão.');
    next.pendingDecision={action:vote,by:role};
@@ -115,14 +144,8 @@ export function apply(s,action,role,champions=[],now=Date.now()) {
   else {next.paused=true;next.remaining=0;}
  }
  else if(action.type==='pause') {needCaptain();if(!next.started||!turn(next))throw Error('Nenhum turno ativo.');next.paused=!next.paused;if(next.paused)next.remaining=Math.max(0,(next.deadline-now)/1000);else next.deadline=now+(next.remaining>0?next.remaining:next.duration)*1000;}
- else if(action.type==='undo') {next.swapDeadline=0;next.actions.pop();next.paused=false;next.deadline=now+next.duration*1000;next.lastEvent=null;}
- else if(action.type==='finish') {next.score[action.winner==='B'?0:1]++;next.finished=true;next.finalWinner=action.winner;}
- else if(action.type==='reset') {next.ready=[false,false];next.swapDeadline=0;next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;next.swaps=[[0,1,2,3,4],[0,1,2,3,4]];next.changeRequest=null;}
- else if(action.type==='next') {
-  next.score[action.winner==='B'?0:1]++;next.history.push({game:next.game,actions:next.actions,winner:action.winner,teams:next.teams,swaps:next.swaps,lanes:next.lanes});
-  if(action.invertSides===true){next.teams=[...next.teams].reverse();next.score=[...next.score].reverse();next.sideOwners=[...(next.sideOwners||['B','R'])].reverse();}
-  next.game++;next.first=next.first==='B'?'R':'B';next.ready=[false,false];next.swapDeadline=0;next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;next.swaps=[[0,1,2,3,4],[0,1,2,3,4]];next.changeRequest=null;
- }
+ else if(action.type==='undo') {next.resultVotes={B:null,R:null};next.lastConfirmedResult=null;next.swapDeadline=0;next.actions.pop();next.paused=false;next.deadline=now+next.duration*1000;next.lastEvent=null;}
+ else if(action.type==='reset') {next.ready=[false,false];next.swapDeadline=0;next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;next.swaps=[[0,1,2,3,4],[0,1,2,3,4]];next.changeRequest=null;next.resultVotes={B:null,R:null};next.lastConfirmedResult=null;}
  else if(action.type==='lane') {const i=action.side==='R'?1:0;if(!captain||role!==action.side)throw Error('Você só pode ajustar seu time.');if(turn(next)||next.finished||!next.swapDeadline||now>=next.swapDeadline)throw Error('Tempo de ajustes encerrado.');if(!Number.isInteger(action.player)||action.player<0||action.player>4||!['TOP','JGL','MID','ADC','SUP'].includes(action.lane))throw Error('Posição inválida.');next.lanes??=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];const j=next.lanes[i].indexOf(action.lane);[next.lanes[i][action.player],next.lanes[i][j]]=[next.lanes[i][j],next.lanes[i][action.player]];}
  else if(action.type==='swap') {const i=action.side==='R'?1:0;if(!captain||role!==action.side)throw Error('Você só pode trocar seu time.');if(turn(next)||next.finished||!next.swapDeadline||now>=next.swapDeadline)throw Error('Trocas disponíveis somente nos 30 segundos de ajustes.');if(!Number.isInteger(action.a)||!Number.isInteger(action.b)||action.a<0||action.a>4||action.b<0||action.b>4)throw Error('Posição inválida.');[next.swaps[i][action.a],next.swaps[i][action.b]]=[next.swaps[i][action.b],next.swaps[i][action.a]];}
  else if(action.type==='teams') {needCaptain();if(next.started)throw Error('Times só podem ser editados antes do draft.');next.teams=initial({...next,teams:action.teams}).teams;next.ready=[false,false];}
