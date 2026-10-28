@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101a12"><title>CMIM · Pontuação Oficial da MD3</title><link rel="icon" href="./favicon.svg"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800;900&family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101a12"><title>CMIM · Pontuação Oficial da Série</title><link rel="icon" href="./favicon.svg"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800;900&family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;--bg:#101810;--panel:#1b281d;--border:#536a50;--yellow:#ffe476;--white:#f5faee}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#806f2a29,transparent 36%),var(--bg);color:var(--white);font:14px/1.7 Barlow,Arial,sans-serif}input,button{font:inherit}a{color:inherit;text-decoration:none}a:hover{color:var(--yellow)}a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
@@ -8,12 +8,12 @@ main{padding:52px 0 72px}.eyebrow{font-weight:900;letter-spacing:1.5px;color:var
 @media(max-width:650px){main{padding:33px 0}.card{padding:17px}.form{grid-template-columns:1fr}.scoreboard{grid-template-columns:1fr}.versus{text-align:center}.side h3{font-size:25px}}
 </style></head><body>
 <header><div class="wrap"><a class="brand" href="./"><img src="./cmim.jpeg" alt="CMIM"> CMIM · <span style="color:var(--yellow)">PONTUAÇÃO</span></a><a href="./inhouse.html" class="back">← IN-HOUSE</a></div></header>
-<main class="wrap"><div class="eyebrow">ECOSSISTEMA CMIM · VERSÃO OFICIAL · ETAPA 3/3</div><h1>MD3 <em>E PONTUAÇÃO.</em></h1>
+<main class="wrap"><div class="eyebrow">ECOSSISTEMA CMIM · VERSÃO OFICIAL · ETAPA 3/3</div><h1>SÉRIE <em>E PONTUAÇÃO.</em></h1>
 <p class="lead">Confira o placar que os dois capitães confirmaram e veja como ele se transforma em pontos na temporada. As partidas e estatísticas ficam pendentes até a aprovação do ADM. <b>Nenhum ponto entra no ranking sem a aprovação do administrador.</b></p>
-<section class="card"><form id="finder" class="form"><label>SALA DA MD3<input id="room" placeholder="Cole o link ou ID da sala" required></label><button type="submit" class="primary">CONSULTAR RESULTADOS →</button></form><div class="status" id="status">Informe uma sala que já tenha relatórios de partidas.</div></section>
+<section class="card"><form id="finder" class="form"><label>SALA DA SÉRIE<input id="room" placeholder="Cole o link ou ID da sala" required></label><button type="submit" class="primary">CONSULTAR RESULTADOS →</button></form><div class="status" id="status">Informe uma sala que já tenha relatórios de partidas.</div></section>
 <div id="results" hidden>
 <section class="card"><div class="eyebrow">RESULTADOS REAIS ARQUIVADOS</div><h2>Resultado da série</h2><div id="scoreboard" class="scoreboard"></div><div id="game-list" class="rows"></div><p id="season-info" class="badge"></p></section>
-<section class="card"><div class="eyebrow">PRÉVIA DA TABELA OFICIAL</div><h2>Pontos previstos</h2><p>Segue a regra MD3 do ranking: jogos, vitórias, derrotas e bônus de MD3 para a equipe vencedora. MVP e Bagre permanecem em branco.</p><div id="point-table" class="rows"></div><div id="roster-status" class="notice"></div></section>
+<section class="card"><div class="eyebrow">PRÉVIA DA TABELA OFICIAL</div><h2>Pontos previstos</h2><p>Segue a regra atual do ranking: jogos, vitórias, derrotas e bônus de vitória da série. MVP e Bagre permanecem em branco.</p><div id="point-table" class="rows"></div><div id="roster-status" class="notice"></div></section>
 <section class="card"><div class="eyebrow">PASSO FINAL · ADMINISTRADOR</div><h2>Validar pontuação no ranking</h2><p>Os pontos só serão gravados após conferir a temporada, os dez jogadores e o placar. O mesmo ID de sala nunca poderá ser pontuado duas vezes.</p>
 <div id="admin-box"><form id="login" class="login"><label>E-MAIL ADMINISTRATIVO<input id="email" type="email" autocomplete="username" required></label><label>SENHA DO RANKING<input id="password" type="password" autocomplete="current-password" required></label><button type="submit" class="primary">ENTRAR COMO ADMINISTRADOR</button></form></div>
 <div id="publish-controls" hidden><div class="notice">Atenção: esta ação altera a classificação real da temporada ativa. Confirme somente após conferir a MD3.</div><label style="display:flex;gap:9px;align-items:center;margin:15px 0"><input id="approve" type="checkbox" style="accent-color:#ffe476;height:18px;width:18px"> Eu conferi o placar e os dez jogadores</label><button id="publish" class="primary" type="button">CONFIRMAR E LANÇAR MD3 NO RANKING →</button></div>
@@ -45,16 +45,17 @@ async function queryRoom(x){
  $('status').textContent='Consultando os resultados confirmados...';$('results').hidden=true;
  try{
   [reports,rank]=await Promise.all([
-   api('/rest/v1/cmim_draft_game_reports?room_id=eq.'+encodeURIComponent(room)+'&select=game,season_id,season_name,winner_side,winner_team,teams,confirmed_at&order=game.asc'),
+   api('/rest/v1/cmim_draft_game_reports?room_id=eq.'+encodeURIComponent(room)+'&select=game,season_id,season_name,winner_side,winner_team,teams,series_games,confirmed_at&order=game.asc'),
    api('/rest/v1/cmim_rank?id=eq.1&select=data,version')]);
   rankVersion=rank?.[0]?.version??0;
   if(!reports.length){$('status').textContent='Ainda não há jogos confirmados. Finalize a MD3 com os dois capitães.';return}
   const initial=reports[0],teamA=initial.teams?.[0],teamB=initial.teams?.[1];
   if(!teamA||!teamB)throw Error('Relatório sem escalação');
   const aw=reports.filter(r=>r.winner_team===teamA.name).length,bw=reports.filter(r=>r.winner_team===teamB.name).length;
-  valid=reports.length>=2&&reports.length<=3&&Math.max(aw,bw)===2&&
-     (reports.length===2?Math.min(aw,bw)===0:Math.min(aw,bw)===1)&&
-     reports.every((r,i)=>r.game===i+1);
+  const seriesGames=Number(initial.series_games)||3,needed=(seriesGames+1)/2;
+  $('season-info').textContent='MD'+seriesGames+' · '+(initial.season_name||'Temporada não informada');
+  valid=[1,3,5].includes(seriesGames)&&reports.length<=seriesGames&&Math.max(aw,bw)===needed&&
+     Math.min(aw,bw)<needed&&reports.every((r,i)=>r.game===i+1&&Number(r.series_games)===seriesGames);
   const box=$('scoreboard');box.replaceChildren();
   const left=node('div','', 'side');left.append(node('small','EQUIPE A'),node('h3',teamA.name),node('div',aw+' VITÓRIA(S)','points'));
   const versus=node('div','×','versus');
@@ -67,11 +68,11 @@ async function queryRoom(x){
   const known=new Map(players.map(p=>[p.key||norm(p.nick),p]));
   const nicklist=[...(teamA.players||[]).map(n=>({name:n,w:aw,l:bw,bonus:aw>bw?1:0})),...(teamB.players||[]).map(n=>({name:n,w:bw,l:aw,bonus:bw>aw?1:0}))];
   const missing=nicklist.filter(n=>{const p=known.get(norm(n.name));return !p||!roster.has(p.id)}).map(p=>p.name);
-  buildTable(['JOGADOR','JOGOS','VITÓRIAS','DERROTAS','BÔNUS MD3','PONTOS PREVISTOS'],nicklist.map(n=>[n.name,String(n.w+n.l),String(n.w),String(n.l),String(n.bonus),points(n.w,n.l,n.bonus)]),$('point-table'));
-  $('roster-status').textContent=!valid?'Série em andamento: os pontos só podem ser publicados depois do 2x0 ou 2x1.':
+  buildTable(['JOGADOR','JOGOS','VITÓRIAS','DERROTAS','BÔNUS DA SÉRIE','PONTOS PREVISTOS'],nicklist.map(n=>[n.name,String(n.w+n.l),String(n.w),String(n.l),String(n.bonus),points(n.w,n.l,n.bonus)]),$('point-table'));
+  $('roster-status').textContent=!valid?'Série em andamento: a MD'+seriesGames+' só termina após '+needed+' vitória(s).':
    missing.length?'Verifique o ranking: estes nicks não estão inscritos na temporada vinculada: '+missing.join(', '):
    'Jogadores localizados no ranking. O ADM poderá validar o lançamento.';
-  $('status').textContent=valid?'Série concluída: '+aw+'×'+bw+'. O ranking ainda não foi alterado.':'Série em andamento: '+aw+'×'+bw+'.';
+  $('status').textContent=valid?'MD'+seriesGames+' concluída: '+aw+'×'+bw+'. O ranking ainda não foi alterado.':'Série em andamento: '+aw+'×'+bw+'.';
   $('results').hidden=false;
   if(session?.access_token)await adminCheck();
   else{$('admin-box').hidden=false;$('publish-controls').hidden=true}
@@ -85,7 +86,7 @@ async function adminCheck(){
  $('admin-box').hidden=true;$('publish-controls').hidden=false;
  $('admin-status').textContent='Conta ADM validada. Confira os dados antes de lançar.';
  const previous=await api('/rest/v1/cmim_pilot_rank_sync?room_id=eq.'+encodeURIComponent(room)+'&select=room_id,score',{headers:{Authorization:'Bearer '+session.access_token}});
- if(previous.length){$('publish').disabled=true;$('approve').disabled=true;$('admin-status').textContent='✓ MD3 já lançada no ranking: '+previous[0].score+'. Não é possível duplicar.'}
+ if(previous.length){$('publish').disabled=true;$('approve').disabled=true;$('admin-status').textContent='✓ Série já lançada no ranking: '+previous[0].score+'. Não é possível duplicar.'}
  }catch(e){$('admin-box').hidden=false;$('publish-controls').hidden=true;$('admin-status').textContent='Para publicar pontos, faça login novamente como ADM.'}
 }
 $('login').addEventListener('submit',async ev=>{
@@ -103,7 +104,7 @@ $('publish').addEventListener('click',async()=>{
  try{
   if(!session?.access_token)throw Error('Entre como administrador.');
   const result=await api('/rest/v1/rpc/cmim_pilot_publish',{method:'POST',headers:{Authorization:'Bearer '+session.access_token},body:JSON.stringify({p_room:room,p_expected_version:rankVersion})});
-  $('admin-status').textContent='✓ SUCESSO! MD3 '+result.score+' lançada oficialmente no ranking. Evento '+result.eventId;
+  $('admin-status').textContent='✓ SUCESSO! '+result.format+' '+result.score+' lançada oficialmente no ranking. Evento '+result.eventId;
   $('approve').disabled=true;
  }catch(e){b.disabled=false;$('admin-status').textContent='Não foi possível lançar: '+e.message+'. Verifique a temporada e atualize os dados.'}
 });
