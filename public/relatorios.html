@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101712">
+<title>CMIM — Relatórios de Partidas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--yellow:#ffe25a;--line:#4f624b;--bg:#0e1611;--text:#f2f6ec;--muted:#cad9c6}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 80% 0,#544c1f2d,transparent 42%),var(--bg);color:var(--text);font:15px/1.65 Barlow,Arial,sans-serif;min-width:320px}
+button,input{font:inherit}
+a{color:inherit;text-decoration:none}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+.wrap{max-width:1080px;width:calc(100% - 40px);margin:0 auto}
+header{padding:15px 0;background:#111c14;border-bottom:1px solid var(--line)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:13px}
+.brand img{width:43px;height:43px;object-fit:cover;border-radius:8px}
+.brand span{font:900 26px Barlow Condensed,Impact,sans-serif}
+.brand b{color:var(--yellow)}
+.back{border:1px solid var(--line);background:#253128;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:800}
+.back:hover{color:var(--yellow)}
+main{padding:56px 0 80px}
+.label{font-size:10px;letter-spacing:2px;font-weight:900;color:var(--yellow)}
+h1,h2,h3{font-family:Barlow Condensed,Impact,sans-serif;line-height:1.05}
+h1{font-size:clamp(49px,6vw,79px);margin:12px 0 16px}
+h1 em{color:var(--yellow);font-style:normal}
+.lead{font-size:15px;color:var(--muted);max-width:680px;margin:0 0 27px}
+.card{border:1px solid #4f604d;border-radius:10px;background:#18241b;padding:26px;margin:18px 0}
+.finder{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:13px}
+.finder label{display:grid;gap:7px;font-size:11px;letter-spacing:.5px;font-weight:900;color:#e3eedc;min-width:0}
+.finder input{min-height:48px;width:100%;background:#101d14;color:white;border:1px solid #73856d;border-radius:6px;padding:12px;font-size:13px}
+.finder input::placeholder{color:#a1b5a0}
+button.primary{background:var(--yellow);color:#131910;border:1px solid var(--yellow);border-radius:6px;font-weight:900;min-height:48px;padding:10px 19px;cursor:pointer;white-space:nowrap}
+button.primary:hover{background:#fff2a8}
+#status{font-size:12px;color:#dbe6d2;margin:15px 0 7px;min-height:20px}
+#results{display:grid;gap:14px;margin-top:24px}
+.report{background:#1c281e;border:1px solid #566853;border-left:4px solid var(--yellow);border-radius:9px;padding:23px}
+.report-top{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.report h2{font-size:31px;color:var(--yellow);margin:6px 0}
+.report p{color:#d5dfd0;margin:4px 0;font-size:13px}
+.report .tools{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.report button{border:1px solid #73896e;color:#f8f5d5;background:#29372a;padding:9px 15px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:900}
+.report button:hover{background:#394d3a}
+.tag{color:#a6ebb0;border:1px solid #4e7d51;border-radius:4px;padding:6px 11px;font-size:10px;font-weight:900}
+.empty{padding:30px;text-align:center;background:#1c281e;border:1px dashed #606c50;border-radius:9px;color:#c9d5bf}
+.tip{margin-top:23px;padding:19px 20px;border:1px solid #706a39;background:#2a291c;border-radius:7px;font-size:12px;color:#efe5b2}
+dialog{width:min(860px,calc(100% - 30px));max-height:85vh;overflow:auto;background:#162117;color:#ecf5e8;border:1px solid #72835b;border-radius:11px;padding:20px}
+dialog::backdrop{background:#000c}
+dialog .dialog-top{display:flex;justify-content:space-between;align-items:center;gap:20px}
+dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.7 monospace;padding:15px;background:#0b130e;border:1px solid #4e5d4a;border-radius:6px;color:#e8f0df}
+dialog button{padding:8px 12px;border:1px solid #73856e;background:#2b392d;color:#f2f7ea;border-radius:6px;cursor:pointer}
+footer{padding:25px 0;border-top:1px solid #3d513f;color:#acbca5;font-size:11px}
+@media(max-width:650px){main{padding:35px 0}.finder{grid-template-columns:1fr}.finder .primary{width:100%}.card{padding:17px}.report{padding:16px}}
+</style>
+</head>
+<body>
+<header><div class="wrap header-inner"><a class="brand" href="./"><img src="./cmim.jpeg" alt="Logo CMIM"><span>CMIM <b>RELATÓRIOS</b></span></a><a class="back" href="./">← PORTAL CMIM</a></div></header>
+<main class="wrap">
+<div class="label">ACERVO PERMANENTE · PARTIDAS IN-HOUSE</div>
+<h1>CADA PICK. <em>CADA HISTÓRIA.</em></h1>
+<p class="lead">Consulte e baixe os relatórios oficiais das partidas do CMIM. O arquivo TXT registra nicks, picks, bans, campeão de cada jogador, temporada e resultado validado pelos dois capitães.</p>
+<section class="card">
+<form id="lookup" class="finder">
+<label for="room-input">LINK OU ID DA SALA<input id="room-input" placeholder="Cole o link da sala ou seu ID" autocomplete="off" required></label>
+<button type="submit" class="primary">BUSCAR RELATÓRIOS →</button>
+</form>
+<div id="status" role="status" aria-live="polite">Os relatórios são gerados após os dois capitães confirmarem o mesmo vencedor.</div>
+</section>
+<div id="results" aria-live="polite"></div>
+<div class="tip"><b>Arquivos preservados:</b> a sala é excluída automaticamente após 24 horas, mas os relatórios das partidas confirmadas continuam disponíveis. Guarde o link ou o ID da sala para recuperar seus arquivos depois.</div>
+</main>
+<footer><div class="wrap">CMIM © 2026 · COMUNIDADE MAIS INSALUBRE DO MUNDO · RELATÓRIOS OFICIAIS</div></footer>
+<dialog id="preview"><div class="dialog-top"><h2>Relatório completo</h2><button id="close-preview" type="button">✕ Fechar</button></div><pre id="report-content"></pre></dialog>
+<script>
+(() => {
+'use strict';
+const API='https://klpvidxhzofbwstvvxib.supabase.co/functions/v1/cmim-draft-api';
+const KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn';
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const $=x=>document.getElementById(x);
+let entries=[],room='';
+function safe(str){return String(str||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));}
+function parseRoom(value){
+ const input=String(value||'').trim();
+ if(UUID.test(input))return input;
+ try{const u=new URL(input);const id=u.searchParams.get('room');if(id&&UUID.test(id))return id;}catch{}
+ return null;
+}
+function download(r){
+ const blob=new Blob(['\uFEFF'+r.report_txt],{type:'text/plain;charset=utf-8'});
+ const url=URL.createObjectURL(blob),anchor=document.createElement('a');
+ anchor.href=url;anchor.download='CMIM-relatorio-'+room.slice(0,8)+'-jogo-'+r.game+'.txt';
+ document.body.appendChild(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),2500);
+}
+function render(){
+ const target=$('results');target.replaceChildren();
+ if(!entries.length){target.innerHTML='<div class="empty">Ainda não há partidas confirmadas para esta sala.</div>';return;}
+ for(const item of entries){
+  const report=document.createElement('article');report.className='report';
+  const title=document.createElement('h2');title.textContent='Jogo '+item.game;
+  const label=document.createElement('span');label.className='tag';label.textContent='CONFIRMADO';
+  const head=document.createElement('div');head.className='report-top';head.append(title,label);
+  const about=document.createElement('p');about.textContent='Vencedor: '+item.winner_team+' · '+(item.winner_side==='B'?'Blue':'Red')+' Side';
+  const season=document.createElement('p');season.textContent='Temporada: '+(item.season_name||'Não vinculada');
+  const date=document.createElement('p');date.textContent='Data: '+new Date(item.confirmed_at).toLocaleString('pt-BR');
+  const tools=document.createElement('div');tools.className='tools';
+  const button=document.createElement('button');button.textContent='↓ BAIXAR TXT';button.onclick=()=>download(item);
+  const preview=document.createElement('button');preview.textContent='LER RELATÓRIO';
+  preview.onclick=()=>{$('report-content').textContent=item.report_txt;$('preview').showModal()};
+  tools.append(button,preview);report.append(head,about,season,date,tools);target.appendChild(report);
+ }
+}
+async function lookup(value){
+ const id=parseRoom(value);
+ if(!id){$('status').textContent='Cole um link de sala válido ou um ID UUID.';return;}
+ room=id;$('room-input').value=id;history.replaceState(null,'','?room='+encodeURIComponent(id));
+ $('status').textContent='Consultando relatórios do Supabase...';$('results').replaceChildren();
+ try{
+  const res=await fetch(API+'/reports/'+encodeURIComponent(id),{cache:'no-store',headers:{apikey:KEY}});
+  const json=await res.json();
+  if(!res.ok)throw Error(json.error||'Erro '+res.status);
+  entries=Array.isArray(json)?json:[];
+  $('status').textContent=entries.length+' relatório(s) encontrado(s) para esta sala.';
+  render();
+ }catch(e){$('status').textContent='Falha ao consultar: '+e.message;}
+}
+$('lookup').addEventListener('submit',e=>{e.preventDefault();lookup($('room-input').value)});
+$('close-preview').addEventListener('click',()=>$('preview').close());
+const preset=new URLSearchParams(location.search).get('room');
+if(preset)lookup(preset);
+})();
+</script>
+</body>
+</html>
