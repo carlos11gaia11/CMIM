@@ -65,7 +65,8 @@
     const button=$('portal-admin-button');if(button)button.textContent='⚙ PAINEL ADMIN';
   }
   async function openAdmin(){
-    $('portal-admin-dialog').showModal();
+    const popup=$('portal-admin-dialog');
+    if(popup)popup.showModal();
     if(state.admin){showManager();await loadAdminData().catch(e=>flash(e.message,true));}
     else showLogin();
   }
@@ -279,7 +280,10 @@
       box.innerHTML='<div class="news-empty"><h3>CMIM NEWS</h3><p>Não foi possível consultar as edições agora. Tente atualizar a página.</p></div>';
     }
   }
-  $('portal-admin-button')?.addEventListener('click',openAdmin);
+  // No portal o link leva a uma pagina completa; o antigo modal nao e usado.
+  $('portal-admin-button')?.addEventListener('click',event=>{
+    event.preventDefault();location.href='./admin.html';
+  });
   $('portal-admin-close')?.addEventListener('click',()=>$('portal-admin-dialog').close());
   $('portal-login')?.addEventListener('submit',login);
   $('portal-logout')?.addEventListener('click',logout);
@@ -290,5 +294,13 @@
   $('admin-create-news')?.addEventListener('submit',createNews);
   $('news-reader-close')?.addEventListener('click',()=>$('cmim-news-reader').close());
   loadNews();
-  if(state.session)verifySession().then(ok=>{if(ok){$('portal-admin-button').textContent='⚙ PAINEL ADMIN';}});
+  // O dashboard abre sozinho ao carregar, sem misturar formularios ao portal.
+  if($('admin-management-view')){
+    if(state.session){
+      verifySession().then(ok=>{
+        if(ok){showManager();return loadAdminData().catch(e=>flash(e.message,true));}
+        showLogin();
+      });
+    }else showLogin();
+  }
 })();
