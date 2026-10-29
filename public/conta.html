@@ -26,9 +26,32 @@
  const buttons=[...document.querySelectorAll('[data-mode]')];
  function show(which){buttons.forEach(b=>b.classList.toggle('active',b.dataset.mode===which));$('auth-login').hidden=which!=='login';$('auth-signup').hidden=which!=='signup';}
  buttons.forEach(b=>b.onclick=()=>show(b.dataset.mode));
- if(new URLSearchParams(location.search).get('register')==='1')show('signup');
- if(a.session()?.access_token){location.replace('./perfil.html');return;}
  function status(id,msg,bad=false){$(id).textContent=msg;$(id).classList.toggle('error',bad)}
+ const params=new URLSearchParams(location.search);
+ const callback=new URLSearchParams(location.hash.slice(1));
+ if(params.get('register')==='1')show('signup');
+ // Supabase redirects to this page with an implicit-flow session in the URL fragment.
+ // Remove the sensitive fragment from browser history immediately after reading it.
+ const callbackError=callback.get('error_description')||callback.get('error');
+ if(callbackError){
+   history.replaceState({},document.title,location.pathname+location.search);
+   status('login-status','A confirmação não pôde ser concluída: '+callbackError,true);
+ }else if(callback.has('access_token')&&callback.has('refresh_token')){
+   const expiresIn=Math.max(1,Number(callback.get('expires_in'))||3600);
+   a.save({
+     access_token:callback.get('access_token'),
+     refresh_token:callback.get('refresh_token'),
+     token_type:callback.get('token_type')||'bearer',
+     expires_in:expiresIn,
+     expires_at:Math.floor(Date.now()/1000)+expiresIn
+   });
+   history.replaceState({},document.title,location.pathname+'?confirmed=1');
+   location.replace('./perfil.html');
+   return;
+ }else if(params.get('confirmed')==='1'){
+   status('login-status','✓ Você voltou ao CMIM! Se confirmou o e-mail, entre para acessar seu perfil.');
+ }
+ if(a.session()?.access_token){location.replace('./perfil.html');return;}
  $('login-form').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button');btn.disabled=true;
   try{const f=new FormData(e.currentTarget);await a.signIn(f.get('email'),f.get('password'));location.assign('./perfil.html')}
   catch(err){status('login-status',err.message,true)}finally{btn.disabled=false}};
@@ -40,7 +63,7 @@
     const file=fd.get('avatar');if(file?.size){try{await a.uploadAvatar(file)}catch(err){status('signup-status','Conta criada, mas foto não enviada: '+err.message,true)}}
     location.assign('./perfil.html');
    }else{
-    status('signup-status','✓ Cadastro recebido! Confira seu e-mail para confirmar a conta. Após a confirmação, volte e faça login. Sua foto poderá ser enviada no perfil.');
+    status('signup-status','✓ Cadastro recebido! Confira seu e-mail para confirmar a conta. Ao clicar no link de confirmação, você será levado automaticamente de volta ao site do CMIM. Sua foto poderá ser enviada no perfil.');
     $('signup-form').reset();
    }
   }catch(err){status('signup-status',err.message,true)}finally{btn.disabled=false}};
