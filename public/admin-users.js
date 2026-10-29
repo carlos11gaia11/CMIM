@@ -32,27 +32,49 @@ async function fetchData(){
 let selectedRegisteredId=null;
 function displayRegistered(){
  const box=$('registered-players-list');if(!box)return;
- const search=String($('registered-players-search')?.value||'').toLocaleLowerCase('pt-BR');
- const records=state.profiles.filter(p=>(p.nick+'#'+p.tag).toLocaleLowerCase('pt-BR').includes(search));
+ const search=String($('registered-players-search')?.value||'').trim().toLocaleLowerCase('pt-BR');
+ const tier=$('registered-filter-tier')?.value||'',lane=$('registered-filter-lane')?.value||'',
+  elo=$('registered-filter-elo')?.value||'',rank=$('registered-filter-rank')?.value||'';
+ const records=state.profiles.filter(p=>{
+  const riot=(p.nick+'#'+p.tag).toLocaleLowerCase('pt-BR');
+  if(search&&!riot.includes(search))return false;
+  if(tier&&(tier==='NONE'?!!p.tier:p.tier!==tier))return false;
+  if(lane&&(lane==='NONE'?!!p.lane:p.lane!==lane))return false;
+  if(elo&&(elo==='NONE'?!!p.current_elo:p.current_elo!==elo))return false;
+  if(rank==='linked'&&!p.rank_player_id)return false;
+  if(rank==='unlinked'&&p.rank_player_id)return false;
+  return true;
+ });
  $('registered-players-count').textContent=state.profiles.length+' contas cadastradas · '+records.length+' exibidas';
  box.innerHTML=records.length?records.map(p=>
   '<button type="button" class="registered-player-row" data-registered-id="'+esc(p.id)+'">'+
   '<span class="registered-player-name">'+esc(p.nick+'#'+p.tag)+'</span>'+
-  '<span class="registered-player-detail">'+esc(p.lane||'Sem lane')+'</span>'+
+  '<span class="registered-player-detail">'+esc(p.lane||'Sem lane')+(p.secondary_lane?' / '+esc(p.secondary_lane):'')+'</span>'+
   '<span class="registered-player-detail">Elo: '+esc(p.current_elo||'Não informado')+'</span>'+
   '<span class="registered-player-tier">Pré: '+esc(p.initial_tier||'—')+' · Atual: '+esc(p.tier||'—')+'</span>'+
-  '<span class="registered-player-detail">'+(p.rank_verified_at?'✓ Ranking vinculado':'◷ Sem vínculo')+'</span></button>'
- ).join(''):'<p class="cmim-muted">Nenhum usuário corresponde à pesquisa.</p>';
+  '<span class="registered-player-detail">'+(p.rank_player_id?'✓ Ranking vinculado':'◷ Sem vínculo')+'</span></button>'
+ ).join(''):'<p class="cmim-muted">Nenhum usuário corresponde aos filtros.</p>';
  box.querySelectorAll('[data-registered-id]').forEach(b=>b.addEventListener('click',()=>openRegistered(b.dataset.registeredId)));
 }
 function openRegistered(id){
  const p=state.profiles.find(x=>x.id===id);if(!p)return;
  selectedRegisteredId=id;
  $('registered-tier-form').hidden=false;
- $('registered-tier-name').textContent='Editar tier · '+p.nick+'#'+p.tag;
- $('registered-tier-elo').value=p.current_elo||'Não informado';
+ $('registered-tier-name').textContent='Editar jogador · '+p.nick+'#'+p.tag;
+ $('registered-edit-name').value=state.private.find(x=>x.id===p.id)?.real_name||'';
+ $('registered-edit-phone').value=state.private.find(x=>x.id===p.id)?.phone_e164||'';
+ $('registered-edit-nick').value=p.nick||'';
+ $('registered-edit-tag').value=p.tag||'';
+ $('registered-edit-lane').value=p.lane||'MID';
+ $('registered-edit-secondary').value=p.secondary_lane||((p.lane==='SUP')?'MID':'SUP');
+ if($('registered-edit-secondary').value===$('registered-edit-lane').value)$('registered-edit-secondary').value=$('registered-edit-lane').value==='TOP'?'JG':'TOP';
+ $('registered-edit-elo').value=p.current_elo||'OURO';
  $('registered-tier-initial').value=p.initial_tier||'Não definido';
  $('registered-tier-current').value=p.tier||p.initial_tier||'D';
+ $('registered-edit-avatar').value=p.avatar_url||'';
+ $('registered-edit-bio').value=p.bio||'';
+ $('registered-edit-rank').innerHTML='<option value="">Sem vínculo ao Ranking</option>'+state.rank.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.nick||r.name||r.id)+'</option>').join('');
+ $('registered-edit-rank').value=p.rank_player_id||'';
  $('registered-tier-feedback').textContent='';
  $('registered-tier-form').scrollIntoView({block:'nearest',behavior:'smooth'});
 }
@@ -87,21 +109,44 @@ function renderAssigned(){
  $('manage-role-list').innerHTML=list.length?list.map(r=>'<span class="cmim-badge" style="display:inline-block;margin:4px">'+esc(state.defs.find(d=>d.slug===r.role_slug)?.label||r.role_slug)+'</span>').join(''):'<span style="color:#b7cdb5">Nenhum cargo extra atribuído.</span>';
 }
 $('registered-players-search')?.addEventListener('input',displayRegistered);
+['registered-filter-tier','registered-filter-lane','registered-filter-elo','registered-filter-rank'].forEach(id=>$(id)?.addEventListener('change',displayRegistered));
 $('registered-players-refresh')?.addEventListener('click',fetchData);
 $('registered-tier-form')?.addEventListener('submit',async event=>{
  event.preventDefault();
  const current=state.profiles.find(p=>p.id===selectedRegisteredId);
  if(!current)return status('Escolha um usuário cadastrado.',true);
- const tier=$('registered-tier-current').value;
- if(!['S','A','B','C','D','E','F'].includes(tier))return status('Tier inválido.',true);
- const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+ const tier=$('registered-tier-current').value,lane=$('registered-edit-lane').value,secondary=$('registered-edit-secondary').value;
+ if(lane===secondary){$('registered-tier-feedback').textContent='As lanes primária e secundária precisam ser diferentes.';return}
+ const phoneInput=$('registered-edit-phone').value.trim();
+ let phone=null;
+ if(phoneInput){
+  let digits=phoneInput.replace(/\D/g,'');
+  if(digits.startsWith('55')&&(digits.length===12||digits.length===13))digits=digits.slice(2);
+  if(!/^[1-9][0-9][0-9]{8,9}$/.test(digits)){$('registered-tier-feedback').textContent='Telefone inválido: informe DDD e 10 ou 11 dígitos.';return}
+  phone='+55'+digits;
+ }
+ const btn=event.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;
+ $('registered-tier-feedback').textContent='Salvando cadastro...';
  try{
-  await req('/rest/v1/cmim_profiles?id=eq.'+encodeURIComponent(current.id),{
-   method:'PATCH',body:{tier,updated_at:new Date().toISOString()}});
-  await fetchData();openRegistered(current.id);
-  $('registered-tier-feedback').textContent='✓ Tier atual salvo. Pré-tier inicial preservado.';
- }catch(error){$('registered-tier-feedback').textContent='Erro: '+error.message;status(error.message,true)}
- finally{button.disabled=false}
+  await req('/rest/v1/rpc/cmim_admin_update_player',{method:'POST',body:{
+   p_user:current.id,p_nick:$('registered-edit-nick').value.trim(),p_tag:$('registered-edit-tag').value.trim().toUpperCase(),
+   p_lane:lane,p_secondary_lane:secondary,p_current_elo:$('registered-edit-elo').value,p_tier:tier,
+   p_bio:$('registered-edit-bio').value.trim(),p_avatar_url:$('registered-edit-avatar').value.trim()||null,
+   p_real_name:$('registered-edit-name').value.trim(),p_phone_e164:phone
+  }});
+  const newRank=$('registered-edit-rank').value||null;
+  if((current.rank_player_id||null)!==newRank){
+   await req('/rest/v1/rpc/cmim_admin_profile_set',{method:'POST',body:{p_user:current.id,p_rank_player_id:newRank,p_tier:tier}});
+  }
+  await fetchData();
+  $('registered-tier-form').hidden=false;
+  openRegistered(current.id);
+  $('registered-tier-feedback').textContent='✓ Alterações salvas. Pré-tier original preservado.';
+  status('Cadastro de '+$('registered-edit-nick').value.trim()+' atualizado com sucesso.');
+ }catch(error){
+  $('registered-tier-feedback').textContent='Não foi possível salvar: '+error.message;
+  status('Falha ao atualizar jogador: '+error.message,true);
+ }finally{btn.disabled=false}
 });
 document.querySelector('[data-admin-tab="players"]')?.addEventListener('click',fetchData);
 $('manage-user-select')?.addEventListener('change',showUser);
