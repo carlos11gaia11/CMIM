@@ -97,6 +97,13 @@ Deno.serve(async req=>{
    if(req.method==='GET') return response({state:safeState(row.state,role),revision:Number(row.revision),role});
    if(req.method==='POST') {
     if(role==='viewer') return fail('Link de espectador: somente leitura.',403);
+    // Registros manuais assumem a conclusão off-site: a sala antiga não pode
+    // aceitar novos votos e sobrescrever os jogos inseridos pelo administrador.
+    const manualQuery=REPORTS+'?room_id=eq.'+encodeURIComponent(id)+'&entry_source=eq.admin_manual&select=game&limit=1';
+    const manualResponse=await fetch(manualQuery,{headers:adminHeaders,cache:'no-store'});
+    if(!manualResponse.ok)return fail('Não foi possível verificar os jogos manuais da série.',503);
+    const manualGames=await manualResponse.json();
+    if(manualGames.length)return fail('Esta série foi continuada manualmente pelo ADM. Consulte o painel administrativo para conferir os resultados.',409);
     const body=await req.json();
     if(!Number.isSafeInteger(body?.revision)||body.revision!==Number(row.revision)) return fail('O draft mudou. Atualize e tente novamente.',409);
     let champions:string[]=[];
