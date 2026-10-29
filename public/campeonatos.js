@@ -90,12 +90,19 @@ async function register(compId){
 function standings(compId){
  const games=state.matches.filter(m=>m.competition_id===compId&&m.status==='approved');
  const ids=state.entries.filter(e=>e.competition_id===compId&&e.status==='approved').map(e=>e.team_id);
- const scores=ids.map(id=>({id,team:team(id)?.name||'Time',wins:0,losses:0,mapsWon:0,mapsLost:0,points:0}));
- for(const g of games){const a=scores.find(x=>x.id===g.team_a_id),b=scores.find(x=>x.id===g.team_b_id);
-  if(a){a.mapsWon+=g.score_a;a.mapsLost+=g.score_b;if(g.winner_id===a.id){a.wins++;a.points+=3}else if(g.team_b_id){a.losses++}}
-  if(b){b.mapsWon+=g.score_b;b.mapsLost+=g.score_a;if(g.winner_id===b.id){b.wins++;b.points+=3}else b.losses++}
+ const scores=ids.map(id=>({id,team:team(id)?.name||'Time',wins:0,losses:0,byes:0,played:0,mapsWon:0,mapsLost:0,points:0,buchholz:0}));
+ for(const g of games){
+  const aa=scores.find(x=>x.id===g.team_a_id),bb=scores.find(x=>x.id===g.team_b_id);
+  if(!bb){if(aa&&g.winner_id===aa.id){aa.byes++;aa.points+=3}continue;}
+  if(aa){aa.played++;aa.mapsWon+=g.score_a;aa.mapsLost+=g.score_b;if(g.winner_id===aa.id){aa.wins++;aa.points+=3}else aa.losses++}
+  if(bb){bb.played++;bb.mapsWon+=g.score_b;bb.mapsLost+=g.score_a;if(g.winner_id===bb.id){bb.wins++;bb.points+=3}else bb.losses++}
  }
- return scores.sort((x,y)=>y.points-x.points||(y.mapsWon-y.mapsLost)-(x.mapsWon-x.mapsLost)||y.wins-x.wins||x.team.localeCompare(y.team));
+ for(const g of games.filter(g=>g.team_b_id)){
+  const aa=scores.find(x=>x.id===g.team_a_id),bb=scores.find(x=>x.id===g.team_b_id);
+  if(aa&&bb){aa.buchholz+=bb.points;bb.buchholz+=aa.points}
+ }
+ return scores.sort((x,y)=>y.points-x.points||y.buchholz-x.buchholz||
+  ((y.mapsWon-y.mapsLost)-(x.mapsWon-x.mapsLost))||y.wins-x.wins||x.team.localeCompare(y.team));
 }
 function renderOverview(){
  const target=$('competition-overview'),comp=competition($('selected-competition').value);
@@ -103,12 +110,12 @@ function renderOverview(){
  const list=state.matches.filter(m=>m.competition_id===comp.id),rank=standings(comp.id);
  let html='<p class="cmim-muted">'+esc(comp.description||'')+'</p>'+
   '<div><span class="cmim-badge">'+esc(label(comp.structure))+'</span><span class="cmim-badge">MD'+comp.series_games+'</span><span class="cmim-badge">'+esc(label(comp.status))+'</span></div>';
- if(rank.length)html+='<h3 style="color:#ffe58c">TABELA DE CLASSIFICAÇÃO</h3><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Mapas</th><th>Pontos</th></tr></thead><tbody>'+rank.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+esc(t.team)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.mapsWon+'/'+t.mapsLost+'</td><td>'+t.points+'</td></tr>').join('')+'</tbody></table></div>';
+ if(rank.length)html+='<h3 style="color:#ffe58c">TABELA DE CLASSIFICAÇÃO</h3><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Mapas</th><th>Pontos</th><th>Buchholz</th><th>Folgas</th></tr></thead><tbody>'+rank.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+esc(t.team)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.mapsWon+'/'+t.mapsLost+'</td><td>'+t.points+'</td><td>'+t.buchholz+'</td><td>'+t.byes+'</td></tr>').join('')+'</tbody></table></div>';
  if(list.length)html+='<h3 style="color:#ffe58c">CONFRONTOS E RODADAS</h3>'+
  [...new Set(list.map(m=>m.round_number))].sort((a,b)=>a-b).map(round=>
   '<h4 style="color:#d4e5c8">RODADA '+round+'</h4><div class="cmim-competition-grid">'+list.filter(m=>m.round_number===round).map(m=>
-  '<div class="cmim-match"><span class="cmim-kicker">'+esc(label(m.status))+'</span><div class="cmim-match-score">'+readable(m.team_a_id)+' <strong>'+m.score_a+' × '+m.score_b+'</strong> '+(m.team_b_id?readable(m.team_b_id):'FOLGA')+'</div>'+
-  (m.room_id?'<small>Seleção: '+esc(m.room_id.slice(0,8))+'…</small>':'')+'</div>').join('')+'</div>').join('');
+  '<div class="cmim-match"><span class="cmim-kicker">'+esc(m.team_b_id?label(m.status):'FOLGA · AVANÇA AUTOMATICAMENTE')+'</span><div class="cmim-match-score">'+readable(m.team_a_id)+' <strong>'+(m.team_b_id?m.score_a+' × '+m.score_b:'—')+'</strong> '+(m.team_b_id?readable(m.team_b_id):'FOLGA')+'</div>'+
+  (m.room_id?'<a class="cmim-match-link" href="./selecao.html?room='+encodeURIComponent(m.room_id)+'">▶ Assistir seleção</a>':'')+'</div>').join('')+'</div>').join('');
  else html+='<div class="cmim-empty" style="margin-top:18px">Nenhuma rodada gerada ainda. O ADM pode abrir a competição e criar os confrontos.</div>';
  target.innerHTML=html;
 }
@@ -164,57 +171,15 @@ function renderAdminManage(){
  });
 }
 async function generateRound(comp){
- const entries=state.entries.filter(e=>e.competition_id===comp.id&&e.status==='approved'),
- squads=entries.map(e=>e.team_id),games=state.matches.filter(m=>m.competition_id===comp.id),
- lastRound=Math.max(0,...games.map(g=>g.round_number));
- if(squads.length<2)return status('Aprove pelo menos duas equipes antes de gerar confrontos.',true);
- if(!['live','closed'].includes(comp.status))return status('Feche as inscrições e coloque o campeonato em andamento antes de gerar rodadas.',true);
- if(games.some(g=>g.round_number===lastRound&&g.status!=='approved'))
-  return status('Finalize e aprove todos os resultados da rodada anterior antes de gerar a próxima.',true);
- let round=lastRound+1,pairs=[];
- if(comp.structure==='liga'){
-  if(games.length)return status('A tabela da Liga já foi gerada. Registre os resultados sem duplicar as rodadas.',true);
-  const rotating=[...squads];if(rotating.length%2)rotating.push(null);
-  const length=rotating.length,rounds=length-1;
-  for(let k=0;k<rounds;k++){
-   for(let j=0;j<length/2;j++){
-    const aTeam=rotating[j],bTeam=rotating[length-1-j];
-    if(aTeam&&bTeam)pairs.push({round_number:k+1,team_a_id:aTeam,team_b_id:bTeam});
-   }
-   rotating.splice(1,0,rotating.pop());
-  }
- }else{
-  if(comp.structure==='copa'){
-   if(lastRound===0){
-    const nextPower=2**Math.floor(Math.log2(squads.length));
-    const byeCount=squads.length-nextPower;
-    // Uma copa com número não potência de 2 dá folga explícita aos times excedentes.
-    const all=[...squads];while(all.length>1){const aTeam=all.shift(),bTeam=all.shift()||null;pairs.push({round_number:round,team_a_id:aTeam,team_b_id:bTeam})}
-   }else{
-    const prev=games.filter(g=>g.round_number===lastRound);
-    const winners=prev.map(g=>g.winner_id).filter(Boolean);
-    if(winners.length<2)return status('Não há confrontos restantes para gerar.',true);
-    const all=[...winners];while(all.length){pairs.push({round_number:round,team_a_id:all.shift(),team_b_id:all.shift()||null})}
-   }
-  }else{
-   // Suíço: ordena por vitórias e evita revancha quando há adversários alternativos.
-   const used=new Set(games.filter(g=>g.team_a_id&&g.team_b_id).map(g=>[g.team_a_id,g.team_b_id].sort().join(':')));
-   const scores=standings(comp.id),waiting=scores.map(t=>t.id);
-   while(waiting.length){const ta=waiting.shift();const idx=waiting.findIndex(tb=>!used.has([ta,tb].sort().join(':')));
-    const tb=idx>=0?waiting.splice(idx,1)[0]:waiting.shift()||null;
-    pairs.push({round_number:round,team_a_id:ta,team_b_id:tb});
-   }
-  }
- }
- if(!pairs.length)return status('Nenhum confronto novo disponível.',true);
- if(!confirm('Criar '+pairs.length+' confronto(s) para '+comp.title+'?'))return;
- const byRound=new Map();for(const x of pairs){const n=byRound.get(x.round_number)||0;byRound.set(x.round_number,n+1);x.match_number=n+1;}
- const data=pairs.map(x=>({...x,competition_id:comp.id,status:x.team_b_id?'scheduled':'approved',
- score_a:x.team_b_id?0:1,score_b:0,winner_id:x.team_b_id?null:x.team_a_id}));
+ if(!state.admin)return status('Acesso exclusivo do administrador.',true);
+ if(!confirm('Gerar confrontos de '+comp.title+'? O servidor impedirá rodadas duplicadas, revanche indevida e folgas repetidas.'))return;
+ const button=$('generate-round');if(button)button.disabled=true;
  try{
-  await a.call('/rest/v1/cmim_competition_matches',{method:'POST',secure:true,headers:{Prefer:'return=minimal'},body:data});
-  status('✓ Confrontos gerados e visíveis na tabela.');await read();
- }catch(e){status('Erro ao gerar: '+safeErr(e),true)}
+  const result=await a.call('/rest/v1/rpc/cmim_competition_generate_round',{
+   method:'POST',secure:true,body:{p_competition:comp.id}});
+  await read();status('✓ '+result.matchesCreated+' confronto(s) gerados na rodada '+result.round+'.'+(result.byeTeam?' Uma folga foi atribuída.':''));
+ }catch(error){status('Erro no emparelhamento: '+safeErr(error),true)}
+ finally{if(button)button.disabled=false}
 }
 $('admin-competition-select').onchange=renderAdminManage;
 document.querySelectorAll('[data-admin-screen]').forEach(b=>b.onclick=()=>{
