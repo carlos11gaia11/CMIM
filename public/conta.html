@@ -1,0 +1,49 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Entrar e cadastrar</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script></head><body class="cmim-account-page" data-no-auth-badge="1">
+<header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>CONTAS E COMUNIDADE</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./perfil.html">Meu perfil</a><a href="./campeonatos.html">Campeonatos</a></nav></header>
+<main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">IDENTIDADE CMIM · UMA CONTA PARA TODA A COMUNIDADE</span><h1>FAÇA PARTE <em>DO RIFT.</em></h1><p>Seu perfil acompanha suas participações, picks, vitórias, temporadas e campeonatos. Os dados de sua conta ficam protegidos no Supabase Auth.</p></div>
+<div class="cmim-tabs" role="tablist"><button class="active" data-mode="login" type="button">Já tenho conta</button><button data-mode="signup" type="button">Criar minha conta</button></div>
+<section id="auth-login" class="cmim-card cmim-auth-panel"><h2>ENTRAR NO CMIM</h2><p class="cmim-muted">Use seu e-mail e senha. Contas administrativas existentes também podem entrar aqui.</p>
+<form id="login-form"><div class="cmim-form-row"><label class="cmim-field">E-MAIL<input type="email" name="email" autocomplete="username" placeholder="exemplo@email.com" required></label><label class="cmim-field">SENHA<input type="password" name="password" autocomplete="current-password" minlength="8" required></label></div>
+<div class="cmim-actions"><button class="cmim-button">ENTRAR NO SITE →</button><a href="#" id="reset-password">Esqueci minha senha</a></div></form>
+<p class="cmim-status" id="login-status" role="status"></p></section>
+<section id="auth-signup" class="cmim-card cmim-auth-panel" hidden><h2>CRIAR CONTA DE JOGADOR</h2>
+<p class="cmim-info">O Riot ID é composto de <strong>Nick#TAG</strong> (ex.: Gaia#BR1). Use seu nick correto para que o CMIM consiga relacionar suas partidas e estatísticas. Nome real e e-mail não aparecem publicamente.</p>
+<form id="signup-form"><div class="cmim-form-row">
+<label class="cmim-field">SEU NOME<input name="real_name" maxlength="90" minlength="2" autocomplete="name" placeholder="Nome real" required></label>
+<label class="cmim-field">NICK + #TAG<input name="riot_id" maxlength="39" placeholder="Gaia#BR1" pattern=".{2,32}#[A-Za-z0-9]{3,6}" title="Exemplo Gaia#BR1" required></label>
+<label class="cmim-field">LANE PRIMÁRIA<select name="lane" required><option value="">Selecione a lane</option><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+<label class="cmim-field">LANE SECUNDÁRIA<select name="secondary_lane" required><option value="">Selecione a lane</option><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+<label class="cmim-field">E-MAIL<input type="email" name="email" autocomplete="email" placeholder="exemplo@email.com" required></label>
+<label class="cmim-field">SENHA (8+ CARACTERES)<input type="password" name="password" minlength="8" autocomplete="new-password" required></label>
+<label class="cmim-field">CONFIRMAR SENHA<input type="password" name="confirm" minlength="8" autocomplete="new-password" required></label>
+<label class="cmim-field">FOTO DE PERFIL (OPCIONAL)<input type="file" name="avatar" accept="image/png,image/jpeg,image/webp"><span class="cmim-muted">Até 2 MB. Se for necessário confirmar o e-mail, você poderá enviar a foto após entrar.</span></label>
+</div><div class="cmim-actions"><button class="cmim-button">CRIAR MEU PERFIL →</button></div></form>
+<p class="cmim-status" id="signup-status" role="status"></p></section>
+</main>
+<script>document.addEventListener('DOMContentLoaded',()=>{
+ const a=window.CMIMAuth,$=id=>document.getElementById(id);
+ const buttons=[...document.querySelectorAll('[data-mode]')];
+ function show(which){buttons.forEach(b=>b.classList.toggle('active',b.dataset.mode===which));$('auth-login').hidden=which!=='login';$('auth-signup').hidden=which!=='signup';}
+ buttons.forEach(b=>b.onclick=()=>show(b.dataset.mode));
+ if(new URLSearchParams(location.search).get('register')==='1')show('signup');
+ if(a.session()?.access_token){location.replace('./perfil.html');return;}
+ function status(id,msg,bad=false){$(id).textContent=msg;$(id).classList.toggle('error',bad)}
+ $('login-form').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button');btn.disabled=true;
+  try{const f=new FormData(e.currentTarget);await a.signIn(f.get('email'),f.get('password'));location.assign('./perfil.html')}
+  catch(err){status('login-status',err.message,true)}finally{btn.disabled=false}};
+ $('signup-form').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button'),fd=new FormData(e.currentTarget);
+  if(fd.get('password')!==fd.get('confirm'))return status('signup-status','As senhas não coincidem.',true);
+  btn.disabled=true;
+  try{const data=await a.signUp(Object.fromEntries(fd.entries()));
+   if(data.access_token){
+    const file=fd.get('avatar');if(file?.size){try{await a.uploadAvatar(file)}catch(err){status('signup-status','Conta criada, mas foto não enviada: '+err.message,true)}}
+    location.assign('./perfil.html');
+   }else{
+    status('signup-status','✓ Cadastro recebido! Confira seu e-mail para confirmar a conta. Após a confirmação, volte e faça login. Sua foto poderá ser enviada no perfil.');
+    $('signup-form').reset();
+   }
+  }catch(err){status('signup-status',err.message,true)}finally{btn.disabled=false}};
+ $('reset-password').onclick=async e=>{e.preventDefault();const email=prompt('Qual e-mail você usou para entrar no CMIM?');
+   if(!email)return;try{await a.call('/auth/v1/recover',{method:'POST',body:{email}});status('login-status','Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.')}
+   catch(err){status('login-status',err.message,true)}};
+});</script></body></html>
