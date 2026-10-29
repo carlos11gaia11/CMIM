@@ -316,3 +316,127 @@ body :where(a,button,input,textarea,select):focus-visible{outline:2px solid #ffe
  .hero-art-refined-bottom strong{font-size:19px}
  .site-header .identity small{letter-spacing:.4px}
 }
+
+
+/* --- HOME | Login como CTA principal e ADM discreto no rodapé --- */
+.cmim-homepage .site-header .topbar{column-gap:15px;row-gap:6px}
+.cmim-homepage .site-header .nav{flex:1;min-width:0;gap:clamp(10px,1.1vw,17px)}
+.cmim-homepage .site-header .nav a{white-space:nowrap}
+.cmim-homepage .site-header .nav a[href="#ferramentas"],
+.cmim-homepage .site-header .nav a[href="#jogadores"],
+.cmim-homepage .site-header .nav a[href="#regras"],
+.cmim-homepage .site-header .nav a[href="#historia"],
+.cmim-homepage .site-header .nav a[href="#news"],
+.cmim-homepage .site-header .nav a[href="#redes"]{display:none}
+.cmim-homepage .portal-auth-entry{
+  flex:0 0 auto;min-height:45px;display:inline-flex;gap:12px;align-items:center;
+  justify-content:center;padding:11px 17px;border-radius:8px;border:1px solid #fff09d;
+  background:#ffe16b;color:#161b0c;font:900 12px/1.15 Barlow,Arial,sans-serif;
+  letter-spacing:.3px;text-align:center;box-shadow:0 4px 24px #ffdd4c36;
+  transition:background .2s,transform .2s,box-shadow .2s;overflow-wrap:anywhere;
+}
+.cmim-homepage .portal-auth-entry span{font-size:16px}
+.cmim-homepage .portal-auth-entry:hover{background:#fff3ac;color:#111607;transform:translateY(-2px);box-shadow:0 7px 26px #ffe07a55}
+.cmim-homepage .portal-auth-entry:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.cmim-homepage .portal-admin-quiet{
+  position:fixed;right:14px;bottom:14px;z-index:480;
+  display:inline-flex;align-items:center;justify-content:center;min-height:36px;
+  border:1px solid #4f6252;border-radius:7px;padding:7px 11px;
+  background:#111b15eb;color:#b2c2b0;font:800 10px/1.1 Barlow,Arial,sans-serif;
+  letter-spacing:.45px;text-decoration:none;
+  box-shadow:0 4px 18px #0006;transition:border-color .18s,background .18s,color .18s;
+}
+.cmim-homepage .portal-admin-quiet:hover{border-color:#7e9482;background:#243128;color:#e1ede0}
+.cmim-homepage .portal-admin-quiet:focus-visible{outline:3px solid #ffe07a;outline-offset:3px}
+@media(max-width:1140px) and (min-width:801px){
+ .cmim-homepage .site-header .topbar{flex-wrap:wrap;justify-content:space-between}
+ .cmim-homepage .site-header .nav{order:3;flex:1 0 100%;justify-content:center;padding:6px 0 0}
+ .cmim-homepage .portal-auth-entry{order:2}
+}
+@media(max-width:800px){
+ .cmim-homepage .site-header .topbar{justify-content:space-between;align-items:center}
+ .cmim-homepage .site-header .nav{order:3;flex:1 0 100%;width:100%;overflow-x:auto;flex-wrap:nowrap;justify-content:flex-start}
+ .cmim-homepage .site-header .nav a[href="#ferramentas"],
+ .cmim-homepage .site-header .nav a[href="#jogadores"],
+ .cmim-homepage .site-header .nav a[href="#regras"],
+ .cmim-homepage .site-header .nav a[href="#historia"],
+ .cmim-homepage .site-header .nav a[href="#news"],
+ .cmim-homepage .site-header .nav a[href="#redes"]{display:inline-flex}
+ .cmim-homepage .portal-auth-entry{order:2;min-height:42px;padding:9px 12px;font-size:11px;max-width:55%;margin-left:auto}
+}
+@media(max-width:760px){
+ .cmim-homepage .portal-admin-quiet{bottom:calc(77px + env(safe-area-inset-bottom));right:10px}
+}
+@media(max-width:450px){
+ .cmim-homepage .identity img{width:41px;height:41px}
+ .cmim-homepage .portal-auth-entry{font-size:10px;max-width:53%;padding:9px 10px;gap:7px}
+ .cmim-homepage .portal-auth-entry span{font-size:12px}
+}
+
+/* --- Home / Guia do In-House: informação acessível, sem áreas vazias --- */
+.cmim-homepage .inhouse-how{padding:64px 0 67px}
+.inhouse-how-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px}
+.inhouse-how-heading>div{min-width:0;max-width:730px}
+.inhouse-how-kicker{color:#e5cb64;letter-spacing:1.3px;font-size:10px}
+.inhouse-how-kicker span{margin-right:8px;color:#b7ef9a}
+.inhouse-how-heading h2{font:900 clamp(39px,4.9vw,62px)/.96 "Barlow Condensed",Impact,sans-serif;
+  color:#f6f8ef;letter-spacing:.1px;margin:12px 0 16px;overflow-wrap:anywhere}
+.inhouse-how-heading p{color:#c4d2bf;font-size:14px;line-height:1.75;margin:0}
+.inhouse-how-start{white-space:nowrap;flex-shrink:0}
+.inhouse-how-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.inhouse-how-step{display:flex;flex-direction:column;min-width:0;padding:22px;
+  border:1px solid #4d6250;border-radius:11px;
+  background:linear-gradient(155deg,#212d21 0%,#17221a 95%);
+  box-shadow:inset 0 1px #ffffff0a;position:relative;overflow:hidden}
+.inhouse-how-step:before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:2px;
+  background:linear-gradient(90deg,#dec566,transparent);opacity:.65}
+.inhouse-how-step-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:15px}
+.inhouse-how-number{font:900 37px/1 "Barlow Condensed",Impact,sans-serif;color:#ffdf75}
+.inhouse-how-icon{display:grid;place-items:center;width:38px;height:38px;
+  border:1px solid #6a7354;border-radius:9px;background:#2a3525;color:#f5dd83;font-size:20px}
+.inhouse-how-step h3{font:900 25px/1.05 "Barlow Condensed",Impact,sans-serif;
+  color:#f7f5dc;letter-spacing:.3px;margin:0 0 10px}
+.inhouse-how-step p{color:#c6d5c1;font-size:12px;line-height:1.78;overflow-wrap:anywhere;margin:0 0 22px}
+.inhouse-how-step p strong{color:#fcf1c8}
+.inhouse-blue{color:#9dd7ff}
+.inhouse-red{color:#ffafa5}
+.inhouse-how-chip{align-self:flex-start;margin-top:auto;color:#ebd78f;
+  background:#32351f;border:1px solid #65684a;border-radius:5px;
+  padding:5px 9px;font-size:10px;font-weight:900;letter-spacing:.35px}
+.inhouse-how-note{margin-top:16px;display:flex;align-items:center;gap:17px;
+  background:linear-gradient(105deg,#2e321d,#1d2a1e);border:1px solid #878044;
+  border-radius:10px;padding:17px 20px}
+.inhouse-how-note-icon{flex:0 0 38px;height:38px;display:grid;place-items:center;
+  background:#5a5329;border:1px solid #c2b05b;border-radius:50%;
+  color:#fff0a5;font:900 19px Barlow,sans-serif}
+.inhouse-how-note>div{flex:1;min-width:0}
+.inhouse-how-note strong{color:#ffecad;font-size:12px;font-weight:900}
+.inhouse-how-note p{color:#d5dfcd;font-size:12px;line-height:1.65;margin:4px 0 0}
+.inhouse-how-note-link{flex-shrink:0;color:#fbe599;font-weight:900;font-size:11px;
+  border-bottom:1px solid #998b4d;padding:6px 2px;white-space:nowrap}
+.inhouse-how-note-link:hover{color:#fffbd5}
+.inhouse-how-footer{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:21px}
+.inhouse-how-rules{font-size:11px;letter-spacing:.25px;font-weight:900;
+  color:#e1dcae;margin-left:auto;padding:12px}
+.inhouse-how-rules:hover{color:#ffef98}
+@media(max-width:1000px){
+ .inhouse-how-steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .inhouse-how-heading{align-items:flex-start}
+}
+@media(max-width:710px){
+ .cmim-homepage .inhouse-how{padding:45px 0 50px}
+ .inhouse-how-heading{flex-direction:column;align-items:stretch;gap:15px}
+ .inhouse-how-heading h2{font-size:clamp(39px,9vw,58px)}
+ .inhouse-how-start{align-self:flex-start}
+ .inhouse-how-note{flex-wrap:wrap;gap:12px}
+ .inhouse-how-note-link{margin-left:50px}
+}
+@media(max-width:540px){
+ .inhouse-how-steps{grid-template-columns:1fr;gap:11px}
+ .inhouse-how-step{padding:18px}
+ .inhouse-how-step h3{font-size:25px}
+ .inhouse-how-note{padding:15px}
+ .inhouse-how-note p{font-size:12px}
+ .inhouse-how-footer .button{width:100%;justify-content:center}
+ .inhouse-how-rules{margin-left:0;padding-left:0}
+}
