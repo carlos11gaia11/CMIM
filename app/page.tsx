@@ -112,7 +112,33 @@ export default function Page(){
   if(!s.started||s.paused||!t||clock<s.deadline+5000)return;
   const marker=room+':turn:'+rev;if(timeoutSent.current===marker)return;timeoutSent.current=marker;void action({type:'timeout'});
  },[clock,rev,s?.paused,role,s?.changeRequest?.status,s?.changeRequest?.until]);
- async function create(demo=false,overrides:any=null){if(!demo&&!isConfigured()){notify('Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no GitHub Actions.');return;}setBusy(true);const config=overrides||{teams,mode,games,duration,first,disabled,presentation};try{if(demo){const st=initial(config);setRoom('demo');setRole('B');receive({state:st,revision:0,role:'B'},true);notify('Demonstração local: confirme os dois capitães para começar.')}else{const d:any=await apiRequest('/rooms',{method:'POST',body:config});const links={B:d.B,R:d.R};safeWrite('cmim:'+d.id,d.B);safeWrite('cmim:share:'+d.id,JSON.stringify(links));setKey(d.B);setTokens(links);setRoom(d.id);receive({...d,role:'B'},true);history.replaceState(null,'',location.pathname+'?room='+d.id+'#key='+d.B);setModal('share');notify('Sala criada! Compartilhe os três links. O draft começa quando ambos confirmarem.')}}catch(e){notify((e as Error).message)}finally{setBusy(false)}}
+ async function create(demo=false,overrides:any=null){if(!demo&&!isConfigured()){notify('Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no GitHub Actions.');return;}setBusy(true);const config=overrides||{teams,mode,games,duration,first,disabled,presentation};try{if(demo){const st=initial(config);setRoom('demo');setRole('B');receive({state:st,revision:0,role:'B'},true);notify('Demonstração local: confirme os dois capitães para começar.')}else{const d:any=await apiRequest('/rooms',{method:'POST',body:config});const links={B:d.B,R:d.R};safeWrite('cmim:'+d.id,d.B);safeWrite('cmim:share:'+d.id,JSON.stringify(links));setKey(d.B);setTokens(links);setRoom(d.id);receive({...d,role:'B'},true);history.replaceState(null,'',location.pathname+'?room='+d.id+'#key='+d.B);setModal('share');
+ const pendingMatch=sessionStorage.getItem('cmim:competition-match-pending');
+ if(pendingMatch&&config?.source==='competition'){
+  try{
+   const BASE='https://klpvidxhzofbwstvvxib.supabase.co';
+   const KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn';
+   let session=JSON.parse(sessionStorage.getItem('cmim_session')||localStorage.getItem('cmim_player_session')||'null');
+   if(!session?.access_token)throw Error('Faça login como ADM para vincular a sala.');
+   if((session.expires_at||0)<Date.now()/1000+60){
+     const renewed=await fetch(BASE+'/auth/v1/token?grant_type=refresh_token',{
+       method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
+       body:JSON.stringify({refresh_token:session.refresh_token})});
+     const refresh=await renewed.json();
+     if(!renewed.ok||!refresh.access_token)throw Error('Sessão administrativa expirada.');
+     session=refresh;
+     sessionStorage.setItem('cmim_session',JSON.stringify(session));
+     localStorage.setItem('cmim_player_session',JSON.stringify(session));
+   }
+   const linked=await fetch(BASE+'/rest/v1/rpc/cmim_competition_link_room',{
+     method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
+     body:JSON.stringify({p_match:pendingMatch,p_room:d.id})});
+   const result=await linked.json().catch(()=>({}));
+   if(!linked.ok)throw Error(result.message||'Não foi possível ligar esta sala ao confronto.');
+   sessionStorage.removeItem('cmim:competition-match-pending');
+   notify('✓ Seleção vinculada ao campeonato! Compartilhe os links dos capitães.');
+  }catch(error){notify('A sala foi criada, mas NÃO foi vinculada ao campeonato: '+(error as Error).message+' · Guarde o ID '+d.id+'.');}
+ }else notify('Sala criada! Compartilhe os três links. O draft começa quando ambos confirmarem.')}}catch(e){notify((e as Error).message)}finally{setBusy(false)}}
  // Apos o Snake Draft, a pagina cria automaticamente a sala real e exibe os links.
  useEffect(()=>{
   const params=new URLSearchParams(location.search);
