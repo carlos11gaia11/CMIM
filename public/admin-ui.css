@@ -240,3 +240,26 @@ border:1px solid #a28d4a;border-radius:12px;background:#15211a;color:#f4f8ec;pad
 border:1px solid #8e8350;background:#2d2b1e;color:#ffebae;border-radius:6px;padding:7px 11px;font-weight:900;font-size:11px}
 .review-edit-trigger:hover{background:#484225}
 @media(max-width:700px){.admin-review-dialog{padding:15px}.review-edit-rows{grid-template-columns:1fr}.review-dialog-actions button{flex:1 1 100%}}
+
+
+/* Registro oficial manual de jogos disputados fora da plataforma */
+.review-add-game{background:#203b39!important;border:1px solid #69b3a3!important;color:#c9ffe8!important;font-weight:900}
+.review-add-game:hover{background:#2c5750!important}
+.review-manual-note{margin-top:9px;background:#293c35;border:1px solid #638e7c;
+ border-radius:6px;padding:9px 12px;color:#e4ffeb;font-size:11px;overflow-wrap:anywhere}
+.review-manual-basic{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 16px;margin:15px 0 22px}
+.review-manual-basic>label,.review-manual-pick{display:grid;gap:7px;font-size:11px;
+ font-weight:800;color:#e3edd5;min-width:0}
+.review-manual-basic>label:last-child{grid-column:1/-1}
+.review-manual-basic select,.review-manual-basic input,.review-manual-basic textarea,.review-manual-pick input{
+ width:100%;border:1px solid #72866a;background:#101c14;color:#eff6e6;
+ min-height:42px;border-radius:6px;padding:9px 11px;font:inherit;outline-offset:2px}
+.review-manual-basic select:focus-visible,.review-manual-basic input:focus-visible,.review-manual-pick input:focus-visible{outline:2px solid #ffe478}
+.review-manual-basic textarea{resize:vertical;line-height:1.6}
+.review-manual-subheading{font:900 22px 'Barlow Condensed',Impact,sans-serif;margin:24px 0 5px;color:#ffe699}
+.review-manual-help{color:#cedcc6;font-size:11px;margin:0 0 12px;line-height:1.6}
+.review-manual-pick{background:#1d2d23;border:1px solid #45674a;padding:12px;border-radius:8px}
+.review-manual-pick strong{overflow-wrap:anywhere;color:#fff3bc;font-size:13px}
+.review-manual-pick .manual-lane{color:#bce8cc;font-size:10px;letter-spacing:.5px}
+#review-manual-error{min-height:24px;font-size:12px;color:#ffbdb4}
+@media(max-width:690px){.review-manual-basic{grid-template-columns:1fr}}
