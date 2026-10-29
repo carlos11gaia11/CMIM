@@ -25,6 +25,7 @@
         <button type="button" class="current" data-admin-tab="matches"><span class="nav-icon">✓</span><span>Aprovação de partidas</span><span id="review-nav-badge" class="review-nav-badge" hidden>0</span></button>
         <button type="button" data-admin-tab="players"><span class="nav-icon">♙</span><span>Jogadores e tiers</span></button>
         <button type="button" data-admin-tab="register"><span class="nav-icon">✚</span><span>Cadastro e inscrições</span></button>
+        <button type="button" data-admin-tab="audio"><span class="nav-icon">♫</span><span>Música de fundo</span></button>
         <button type="button" data-admin-tab="news"><span class="nav-icon">▣</span><span>CMIM News</span></button>
       </nav>
       <div class="admin-sidebar-label">ACESSOS RÁPIDOS</div>
@@ -146,6 +147,18 @@
             </div>
             <div class="form-notice"><strong>Resultados e pontuação:</strong> a edição de partidas, pontos e exclusões continua na <a href="./ranking.html">tabela de pontuação ↗</a> para preservar as regras existentes.</div>
           </section>
+          <section id="admin-tab-audio" class="admin-tab-content" hidden aria-label="Música oficial da Seleção de Campeões">
+           <div class="module-heading"><div><span class="admin-eyebrow">MÚSICA DE FUNDO OFICIAL</span><h2>Trilha da Seleção</h2>
+           <p>Publique o MP3 que será reproduzido como <strong>áudio de fundo sem vídeo</strong> nos links Blue, Red e espectador. A publicação fica disponível para todos.</p></div></div>
+           <section class="admin-card"><header class="card-header"><div><span class="card-step">♫</span><div><h3>Worlds 2026 · Orchestral Theme Ft. Pentakill</h3><p>Envie o MP3 uma vez. Apenas o ADM pode substituir a trilha.</p></div></div></header>
+           <form id="admin-soundtrack-form" class="card-body admin-form">
+            <label>ARQUIVO DE ÁUDIO MP3 <input id="admin-soundtrack-file" type="file" accept=".mp3,audio/mpeg" required></label>
+            <p class="field-help">Tamanho máximo de 12 MB. A música será armazenada em um bucket público do Supabase, com envio autorizado somente para o administrador.</p>
+            <button type="submit" class="admin-main-button">♫ PUBLICAR TRILHA PARA TODOS</button>
+            <p id="admin-soundtrack-status" role="status">Nenhum arquivo selecionado.</p>
+            <audio id="admin-soundtrack-preview" controls preload="none" style="display:block;width:100%;max-width:500px"></audio>
+           </form></section>
+          </section>
           <section id="admin-tab-news" class="admin-tab-content" hidden aria-label="Gerenciar CMIM News">
             <div class="module-heading"><div><span class="admin-eyebrow">MÓDULO 03 / REDAÇÃO</span><h2>CMIM News</h2><p>Escreva reportagens, prepare rascunhos e publique as notícias oficiais da comunidade.</p></div><div class="heading-badge">JORNAL OFICIAL</div></div>
             <section class="admin-card">
@@ -176,7 +189,7 @@
   <script>
     (() => {
       const tabs=[...document.querySelectorAll('[data-admin-tab]')];
-      const panels={matches:document.getElementById('admin-tab-matches'),players:document.getElementById('admin-tab-players'),register:document.getElementById('admin-tab-register'),news:document.getElementById('admin-tab-news')};
+      const panels={matches:document.getElementById('admin-tab-matches'),players:document.getElementById('admin-tab-players'),register:document.getElementById('admin-tab-register'),audio:document.getElementById('admin-tab-audio'),news:document.getElementById('admin-tab-news')};
       function activate(name){
         if(!panels[name])name='matches';
         tabs.forEach(b=>{const on=b.dataset.adminTab===name;b.classList.toggle('current',on);b.setAttribute('aria-current',on?'page':'false')});
