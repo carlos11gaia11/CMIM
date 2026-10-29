@@ -106,7 +106,7 @@
     if(!state.admin)return;
     const [rows,metadata,news,reports]=await Promise.all([
       jsonFetch('/rest/v1/cmim_rank?id=eq.1&select=data,version',{secured:true}),
-      jsonFetch('/rest/v1/cmim_player_meta?select=rank_player_id,tier,lane,riot_tag,champion_tags&limit=1000',{secured:true}),
+      jsonFetch('/rest/v1/cmim_player_meta?select=rank_player_id,tier,lane,riot_tag,champion_tags,player_tags&limit=1000',{secured:true}),
       jsonFetch('/rest/v1/cmim_portal_news?select=id,title,category,published,created_at&order=created_at.desc&limit=50',{secured:true}),
       jsonFetch('/rest/v1/cmim_draft_game_reports?select=room_id,game,season_id,season_name,mode,winner_side,winner_team,teams,picks,bans,series_games,confirmed_at,review_status,review_note,reviewed_at&order=confirmed_at.desc&limit=1000',{secured:true})
     ]);
@@ -144,6 +144,7 @@
     $('admin-lane').value=meta?.lane||'';
     $('admin-riot-tag').value=meta?.riot_tag||'';
     $('admin-champions').value=Array.isArray(meta?.champion_tags)?meta.champion_tags.join(', '):'';
+    $('admin-player-tags').value=Array.isArray(meta?.player_tags)?meta.player_tags.join(', '):'';
     $('admin-player-feedback').textContent='';
   }
   async function saveMetadata(event){
@@ -152,11 +153,13 @@
     const form=event.currentTarget,button=form.querySelector('button[type=submit]');
     const id=$('admin-player-select').value,tag=$('admin-riot-tag').value.trim().replace(/^#/,'');
     const champions=$('admin-champions').value.split(/[,;\n]/).map(s=>s.trim()).filter(Boolean);
+    const playerTags=[...new Set($('admin-player-tags').value.split(/[,;\n]/).map(s=>s.trim()).filter(Boolean))];
     const tier=$('admin-tier').value||null,lane=$('admin-lane').value||null;
     if(!state.rank?.players?.some(p=>p.id===id)){flash('Selecione um jogador do ranking.',true);return;}
     if(tag&&!/^[A-Za-z0-9]{3,6}$/.test(tag)){flash('Tag Riot: use de 3 a 6 letras ou números, sem #.',true);return;}
     if(!tierList.includes(tier)&&tier!==null){flash('Tier inválido.',true);return;}
     if(!laneList.includes(lane)&&lane!==null){flash('Lane inválida.',true);return;}
+    if(playerTags.length>12||playerTags.some(x=>x.length>20)){flash('Use até 12 tags, com no máximo 20 caracteres cada.',true);return;}
     if(champions.length>5||champions.some(c=>c.length>24)){flash('Informe até cinco campeões, com no máximo 24 caracteres cada.',true);return;}
     button.disabled=true;
     try{
@@ -165,7 +168,7 @@
         headers:{Prefer:'resolution=merge-duplicates,return=representation'},
         body:JSON.stringify({
           rank_player_id:id,tier,lane,riot_tag:tag||null,
-          champion_tags:[...new Set(champions)],updated_at:new Date().toISOString(),updated_by:state.session.user.id
+          champion_tags:[...new Set(champions)],player_tags:playerTags,updated_at:new Date().toISOString(),updated_by:state.session.user.id
         })
       });
       $('admin-player-feedback').textContent='✓ Dados salvos com sucesso.';
