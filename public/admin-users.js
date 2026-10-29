@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 'use strict';
 const BASE='https://klpvidxhzofbwstvvxib.supabase.co',KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn', $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
-const state={profiles:[],private:[],defs:[],roles:[],ready:false};
+const state={profiles:[],private:[],defs:[],roles:[],rank:[],ready:false};
 const status=(s,bad=false)=>{if(!$('manage-user-status'))return;$('manage-user-status').textContent=s;$('manage-user-status').style.color=bad?'#ffaba6':'#bdebb7'};
 const getSession=()=>{try{return JSON.parse(sessionStorage.getItem('cmim_session')||'null')}catch{return null}};
 async function req(path,options={}){
@@ -19,13 +19,14 @@ async function fetchData(){
  status('Buscando contas e cargos autorizados...');
  try{
   const who=await req('/auth/v1/user');if(who.app_metadata?.cmim_admin!==true)throw Error('Esta conta não tem autorização para gerenciar usuários.');
-  const [profiles,priv,defs,roles]=await Promise.all([
-   req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url&order=nick.asc&limit=1500'),
+  const [profiles,priv,defs,roles,rankRows]=await Promise.all([
+   req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,tier&order=nick.asc&limit=1500'),
    req('/rest/v1/cmim_player_private?select=id,real_name&limit=1500'),
    req('/rest/v1/cmim_role_definitions?select=slug,label,description,permissions&order=label.asc&limit=100'),
-   req('/rest/v1/cmim_user_roles?select=user_id,role_slug,assigned_at&limit=3000')
+   req('/rest/v1/cmim_user_roles?select=user_id,role_slug,assigned_at&limit=3000'),
+   req('/rest/v1/cmim_rank?id=eq.1&select=data')
   ]);
-  Object.assign(state,{profiles,private:priv,defs,roles,ready:true});render();status(profiles.length+' usuários cadastrados, '+defs.length+' cargos.');
+  Object.assign(state,{profiles,private:priv,defs,roles,rank:rankRows?.[0]?.data?.players||[],ready:true});render();status(profiles.length+' usuários cadastrados, '+defs.length+' cargos.');
  }catch(e){status('Erro ao carregar usuários: '+e.message,true)}
 }
 function render(){
@@ -33,6 +34,8 @@ function render(){
  const options='<option value="">Selecione um usuário...</option>'+users.map(p=>'<option value="'+p.id+'">'+esc(p.nick+'#'+p.tag)+'</option>').join('');
  $('manage-user-select').innerHTML=options;$('manage-role-user').innerHTML=options;
  if(users.some(x=>x.id===current))$('manage-user-select').value=current;
+ $('manage-user-rank').innerHTML='<option value="">Sem vínculo ao Ranking</option>'+state.rank
+  .map(p=>'<option value="'+esc(p.id)+'">'+esc(p.nick)+'</option>').join('');
  const currentRole=$('manage-role-select').value;
  $('manage-role-select').innerHTML='<option value="">Selecione o cargo...</option>'+state.defs.map(r=>'<option value="'+esc(r.slug)+'">'+esc(r.label)+'</option>').join('');
  if(state.defs.some(x=>x.slug===currentRole))$('manage-role-select').value=currentRole;
@@ -45,6 +48,7 @@ function showUser(){
  $('manage-user-nick').value=u.nick;$('manage-user-tag').value=u.tag;
  $('manage-user-lane').value=u.lane||'MID';
  $('manage-user-secondary').value=u.secondary_lane||'SUP';
+ $('manage-user-rank').value=u.rank_player_id||'';
 }
 function renderAssigned(){
  const selected=$('manage-role-user').value;
@@ -64,6 +68,12 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
   await req('/rest/v1/cmim_profiles?id=eq.'+id,{method:'PATCH',body:{nick:$('manage-user-nick').value.trim(),tag:$('manage-user-tag').value.trim().toUpperCase(),
    lane,secondary_lane,updated_at:new Date().toISOString()}});
   await req('/rest/v1/cmim_player_private?id=eq.'+id,{method:'PATCH',body:{real_name:$('manage-user-name').value.trim(),updated_at:new Date().toISOString()}});
+  const currentRank=state.profiles.find(p=>p.id===id);
+  if((currentRank?.rank_player_id||'')!==$('manage-user-rank').value){
+   await req('/rest/v1/rpc/cmim_admin_profile_set',{method:'POST',body:{
+     p_user:id,p_rank_player_id:$('manage-user-rank').value||null,p_tier:currentRank?.tier||null
+   }});
+  }
   status('✓ Usuário atualizado com sucesso.');await fetchData();$('manage-user-select').value=id;showUser();
  }catch(err){status('Falha: '+err.message,true)}finally{btn.disabled=false}
 });
