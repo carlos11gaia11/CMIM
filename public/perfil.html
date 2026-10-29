@@ -36,7 +36,7 @@
  try{
   who=await a.user();if(!who){location.replace('./conta.html');return}
   const [publicProfiles,privateData,roles,rankRows,reports]=await Promise.all([
-   a.call('/rest/v1/cmim_profiles?id=eq.'+who.id+'&select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id'),
+   a.call('/rest/v1/cmim_profiles?id=eq.'+who.id+'&select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at'),
    a.call('/rest/v1/cmim_player_private?id=eq.'+who.id+'&select=real_name,phone_e164',{secure:true}),
    a.call('/rest/v1/cmim_user_roles?user_id=eq.'+who.id+'&select=role_slug',{secure:true}),
    a.call('/rest/v1/cmim_rank?id=eq.1&select=data'),
@@ -49,6 +49,9 @@
   $('player-lanes').textContent='LANE PRIMÁRIA: '+(profile.lane||'—')+' · SECUNDÁRIA: '+(profile.secondary_lane||'—');
   if(profile.avatar_url)$('player-avatar').src=profile.avatar_url;
   $('player-badges').innerHTML=(roles||[]).map(r=>'<span class="cmim-badge">'+E(r.role_slug.toUpperCase())+'</span>').join('')||'<span class="cmim-badge">JOGADOR</span>';
+  $('player-badges').insertAdjacentHTML('beforeend',profile.rank_player_id&&profile.rank_verified_at?
+    '<span class="cmim-badge" style="color:#a9ffcf">✓ CONTA VINCULADA AO RANKING</span>':
+    '<span class="cmim-badge">◷ AGUARDANDO VÍNCULO DO ADM</span>');
   $('edit-realname').value=privateInfo?.real_name||'';
   $('edit-phone').value=privateInfo?.phone_e164||'';
   $('edit-nick').value=profile.nick;$('edit-tag').value=profile.tag;
