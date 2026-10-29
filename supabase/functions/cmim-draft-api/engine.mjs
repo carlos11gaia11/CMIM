@@ -9,11 +9,11 @@ export const HIDDEN_GRACE_MS = 5000;
 export const CHANGE_SECONDS = 10;
 export function initial(config={}) {
  const duration = [20,30,45,60,90].includes(Number(config.duration)) ? Number(config.duration) : 30;
- const teams = ['B','R'].map((side,i)=>({name:String(config.teams?.[i]?.name||`Time ${i+1}`).slice(0,40),logo:cleanLogo(config.teams?.[i]?.logo),players:Array.from({length:5},(_,j)=>String(config.teams?.[i]?.players?.[j]||['Top','Jungle','Mid','ADC','Support'][j]).slice(0,24))}));
- return {sideOwners:['B','R'],ready:[false,false],swapDuration:ADJUST_SECONDS,swapDeadline:0,lanes:[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']],presentation:cleanPresentation(config.presentation),teams,mode:['Normal','Fearless','Ironman'].includes(config.mode)?config.mode:'Normal',games:[1,3,5].includes(Number(config.games))?Number(config.games):3,duration,disabled:Array.isArray(config.disabled)?config.disabled.filter(x=>typeof x==='string').slice(0,200):[],first:config.first==='R'?'R':'B',game:1,history:[],actions:[],started:false,paused:false,remaining:duration,deadline:0,score:[0,0],swaps:[[0,1,2,3,4],[0,1,2,3,4]],pendingDecision:null,changeRequest:null,resultVotes:{B:null,R:null},lastConfirmedResult:null,season:config.season||null,pilot:config.pilot===true,lastEvent:null};
+ const teams = ['B','R'].map((side,i)=>({name:String(config.teams?.[i]?.name||`Time ${i+1}`).slice(0,40),logo:cleanLogo(config.teams?.[i]?.logo),captain:String(config.teams?.[i]?.captain||config.teams?.[i]?.players?.[0]||'Capitão').slice(0,24),players:Array.from({length:5},(_,j)=>String(config.teams?.[i]?.players?.[j]||['Top','Jungle','Mid','ADC','Support'][j]).slice(0,24))}));
+ return {sideOwners:['B','R'],ready:[false,false],swapDuration:ADJUST_SECONDS,swapDeadline:0,lanes:[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']],presentation:cleanPresentation(config.presentation),teams,mode:['Normal','Fearless','Ironman'].includes(config.mode)?config.mode:'Normal',games:[1,3,5].includes(Number(config.games))?Number(config.games):3,duration,disabled:Array.isArray(config.disabled)?config.disabled.filter(x=>typeof x==='string').slice(0,200):[],first:'B',game:1,history:[],actions:[],started:false,paused:false,remaining:duration,deadline:0,score:[0,0],swaps:[[0,1,2,3,4],[0,1,2,3,4]],pendingDecision:null,changeRequest:null,resultVotes:{B:null,R:null},lastConfirmedResult:null,season:config.season||null,pilot:config.pilot===true,lastEvent:null};
 }
 export function cleanLogo(value) {return typeof value==='string' && value.length<600000 && /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(value)?value:''}
-export function turn(s) { const t=ORDER[s.actions.length]; return t ? {side:s.first==='R'?(t[0]==='B'?'R':'B'):t[0],type:t[1]} : null; }
+export function turn(s) { const t=ORDER[s.actions.length]; return t ? {side:t[0],type:t[1]} : null; }
 export function roleFor(s,identity){if(!['B','R'].includes(identity))return identity;return (s.sideOwners||['B','R'])[0]===identity?'B':'R';}
 export function locked(s) {return new Set([...s.disabled,...s.actions.filter(a=>a.champion).map(a=>a.champion),...s.history.flatMap(g=>g.actions.filter(a=>s.mode==='Ironman'||(s.mode==='Fearless'&&a.type==='pick')).map(a=>a.champion)).filter(Boolean)]);}
 const decisions=new Set(['undo','reset']);
@@ -102,7 +102,7 @@ export function apply(s,action,role,champions=[],now=Date.now()) {
     next.score=[...next.score].reverse();
     next.sideOwners=[...(next.sideOwners||['B','R'])].reverse();
    }
-   next.game++;next.first=next.first==='B'?'R':'B';
+   next.game++;next.first='B';
    next.ready=[false,false];next.swapDeadline=0;
    next.lanes=[['TOP','JGL','MID','ADC','SUP'],['TOP','JGL','MID','ADC','SUP']];
    next.actions=[];next.started=false;next.paused=false;next.lastEvent=null;
