@@ -4,7 +4,7 @@
 <div class="cmim-tabs" role="tablist"><button class="active" data-mode="login" type="button">Já tenho conta</button><button data-mode="signup" type="button">Criar minha conta</button></div>
 <section id="auth-login" class="cmim-card cmim-auth-panel"><h2>ENTRAR NO CMIM</h2><p class="cmim-muted">Use seu e-mail e senha. Contas administrativas existentes também podem entrar aqui.</p>
 <form id="login-form"><div class="cmim-form-row"><label class="cmim-field">E-MAIL<input type="email" name="email" autocomplete="username" placeholder="exemplo@email.com" required></label><label class="cmim-field">SENHA<input type="password" name="password" autocomplete="current-password" minlength="8" required></label></div>
-<div class="cmim-actions"><button class="cmim-button">ENTRAR NO SITE →</button><a href="#" id="reset-password">Esqueci minha senha</a></div></form>
+<div class="cmim-actions"><button class="cmim-button">ENTRAR NO SITE →</button><a href="#" id="reset-password">Esqueci minha senha</a><a href="#" id="resend-confirmation">Reenviar confirmação de e-mail</a></div></form>
 <p class="cmim-status" id="login-status" role="status"></p></section>
 <section id="auth-signup" class="cmim-card cmim-auth-panel" hidden><h2>CRIAR CONTA DE JOGADOR</h2>
 <p class="cmim-info">O Riot ID é composto de <strong>Nick#TAG</strong> (ex.: Gaia#BR1). Use seu nick correto para que o CMIM consiga relacionar suas partidas e estatísticas. Nome real e e-mail não aparecem publicamente.</p>
@@ -68,6 +68,19 @@
     $('signup-form').reset();
    }
   }catch(err){status('signup-status',err.message,true)}finally{btn.disabled=false}};
+ $('resend-confirmation').onclick=async e=>{
+   e.preventDefault();
+   const email=$('login-form').querySelector('input[name="email"]').value.trim() ||
+    prompt('Qual e-mail você cadastrou no CMIM?');
+   if(!email)return;
+   status('login-status','Solicitando um novo link de confirmação...');
+   try{
+    await a.call('/auth/v1/resend?redirect_to='+encodeURIComponent(a.EMAIL_CONFIRM_REDIRECT),{
+     method:'POST',body:{type:'signup',email}
+    });
+    status('login-status','✓ Se houver um cadastro aguardando confirmação, um novo e-mail será enviado. Verifique a caixa de entrada e o spam. O link deve voltar ao site CMIM.');
+   }catch(error){status('login-status','Não foi possível reenviar: '+error.message,true)}
+ };
  $('reset-password').onclick=async e=>{e.preventDefault();const email=prompt('Qual e-mail você usou para entrar no CMIM?');
    if(!email)return;try{await a.call('/auth/v1/recover',{method:'POST',body:{email}});status('login-status','Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.')}
    catch(err){status('login-status',err.message,true)}};
