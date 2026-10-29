@@ -1,0 +1,26 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Campeonatos e Inscrições</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><script defer src="./campeonatos.js"></script></head><body class="cmim-account-page" data-no-auth-badge="1">
+<header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>COMPETITIVE CIRCUIT</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./draft.html?jogar=1">Jogar</a><a href="./perfil.html">Meu Perfil</a><a href="./conta.html">Login</a></nav></header>
+<main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">TORNEIOS • LIGAS • SISTEMA SUÍÇO</span><h1>CAMPEONATOS <em>CMIM.</em></h1><p>Inscreva seu time, acompanhe inscrições, rodadas, tabelas, confrontos e resultados. Os organizadores administram tudo nesta mesma plataforma.</p></div>
+<p class="cmim-status" role="status" id="champ-status"></p>
+<div class="cmim-grid" style="margin-bottom:20px"><section class="cmim-card"><h2>SEU TIME</h2><p class="cmim-muted">Cadastre um time e convide os cinco jogadores antes de disputar um campeonato.</p>
+<div id="my-teams"></div><form id="create-squad"><div class="cmim-form-row"><label class="cmim-field">NOME DO TIME<input name="name" maxlength="55" minlength="3" placeholder="Ex.: CMIM PHANTOMS" required></label>
+<label class="cmim-field">SIGLA (2–6)<input name="short_name" minlength="2" maxlength="6" placeholder="CMP" required></label>
+<label class="cmim-field">SUA POSIÇÃO NO TIME<select name="captain_lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label></div>
+<button class="cmim-button" type="submit">＋ CRIAR TIME</button></form></section>
+<section class="cmim-card"><h2>CONVITES RECEBIDOS</h2><p class="cmim-muted">Aceite ou recuse convites dos capitães para completar seu elenco.</p><div id="my-invites" class="cmim-empty">Entre na sua conta para ver os convites.</div></section></div>
+<h2 class="cmim-kicker">TEMPORADA COMPETITIVA · EVENTOS</h2><div id="competition-list" class="cmim-competition-grid"><div class="cmim-empty">Carregando campeonatos...</div></div>
+<section class="cmim-card" style="margin-top:20px"><h2>TABELAS, CONFRONTOS E CLASSIFICAÇÃO</h2><p class="cmim-muted">Selecione um campeonato para ver os jogos e o formato da disputa.</p>
+<label class="cmim-field">CAMPEONATO<select id="selected-competition"><option value="">Escolha um campeonato</option></select></label><div id="competition-overview"></div></section>
+<section id="competition-admin" class="cmim-card" hidden style="margin-top:20px;border-color:#b99b56"><span class="cmim-kicker">ÁREA RESTRITA · ORGANIZAÇÃO</span><h2>GESTÃO DE CAMPEONATOS</h2>
+<div class="cmim-tabs"><button class="active" data-admin-screen="create">Criar campeonato</button><button data-admin-screen="manage">Inscrições e rodadas</button></div>
+<form id="admin-comp-create"><div class="cmim-form-row">
+<label class="cmim-field">NOME DO CAMPEONATO<input name="title" minlength="4" maxlength="140" required placeholder="Ex.: Copa Insalubrão"></label>
+<label class="cmim-field">FORMATO DA COMPETIÇÃO<select name="structure"><option value="copa">🏆 Copa / Mata-mata</option><option value="liga">📊 Liga / Pontos corridos</option><option value="suico">⚔ Suíço / Rodadas</option></select></label>
+<label class="cmim-field">SÉRIE DAS PARTIDAS<select name="series_games"><option value="1">MD1</option><option value="3" selected>MD3</option><option value="5">MD5</option></select></label>
+<label class="cmim-field">Nº MÁXIMO DE TIMES<input name="max_teams" type="number" min="2" max="128" value="16" required></label>
+<label class="cmim-field">INÍCIO<input name="starts_at" type="datetime-local" required></label>
+<label class="cmim-field">STATUS INICIAL<select name="status"><option value="draft">Rascunho</option><option value="open" selected>Inscrições abertas</option></select></label>
+</div><label class="cmim-field">DESCRIÇÃO E REGULAMENTO<textarea name="description" rows="4" maxlength="5000"></textarea></label><div class="cmim-actions"><button class="cmim-button">＋ PUBLICAR CAMPEONATO</button></div></form>
+<div id="admin-comp-manage" hidden><label class="cmim-field">SELECIONE O CAMPEONATO<select id="admin-competition-select"></select></label>
+<div id="admin-competition-body" style="margin-top:20px"></div></div></section>
+</main></body></html>
