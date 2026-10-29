@@ -2,6 +2,8 @@
 (()=>{'use strict';
  const BASE='https://klpvidxhzofbwstvvxib.supabase.co',KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn';
  const STORAGE='cmim_player_session',LANES=['TOP','JG','MID','ADC','SUP'];
+ // Confirmations must return to the published CMIM site, never to Supabase's localhost default.
+ const EMAIL_CONFIRM_REDIRECT='https://carlos11gaia11.github.io/CMIM/conta.html?confirmed=1';
  let session=null,loginInFlight=null;try{const adm=JSON.parse(sessionStorage.getItem('cmim_session')||'null'),player=JSON.parse(localStorage.getItem(STORAGE)||'null');session=adm?.user?.app_metadata?.cmim_admin===true?adm:(player||adm)}catch{}
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  function save(data){session=data||null;try{if(data)localStorage.setItem(STORAGE,JSON.stringify(data));else localStorage.removeItem(STORAGE)}catch{}document.dispatchEvent(new CustomEvent('cmim-auth-changed',{detail:{loggedIn:!!session}}));updateBadge()}
@@ -40,7 +42,7 @@ async function signUp(values){
    throw Error('Escolha duas lanes diferentes.');
   if(String(values.password||'').length<8)throw Error('A senha precisa de pelo menos 8 caracteres.');
   if(String(values.real_name||'').trim().length<2)throw Error('Informe seu nome.');
-  const out=await call('/auth/v1/signup',{method:'POST',body:{
+  const out=await call('/auth/v1/signup?redirect_to='+encodeURIComponent(EMAIL_CONFIRM_REDIRECT),{method:'POST',body:{
    email:String(values.email).trim().toLowerCase(),password:values.password,
    data:{nick:nickTag[1].trim(),tag:nickTag[2].toUpperCase(),real_name:String(values.real_name).trim().slice(0,90),
      lane:values.lane,secondary_lane:values.secondary_lane,phone_e164:normalizePhone(values.phone)}
@@ -95,7 +97,7 @@ async function signUp(values){
   }).join('');
   document.body.append(nav);
  }
- window.CMIMAuth={BASE,KEY,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save};
+ window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save};
  function initialize(){mountBadge();mountMobileDock()}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })();
