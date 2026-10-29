@@ -20,7 +20,7 @@ async function fetchData(){
  try{
   const who=await req('/auth/v1/user');if(who.app_metadata?.cmim_admin!==true)throw Error('Esta conta não tem autorização para gerenciar usuários.');
   const [profiles,priv,defs,roles,rankRows]=await Promise.all([
-   req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,tier&order=nick.asc&limit=1500'),
+   req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at,tier&order=nick.asc&limit=1500'),
    req('/rest/v1/cmim_player_private?select=id,real_name,phone_e164&limit=1500'),
    req('/rest/v1/cmim_role_definitions?select=slug,label,description,permissions&order=label.asc&limit=100'),
    req('/rest/v1/cmim_user_roles?select=user_id,role_slug,assigned_at&limit=3000'),
@@ -31,7 +31,7 @@ async function fetchData(){
 }
 function render(){
  const current=$('manage-user-select').value,users=state.profiles;
- const options='<option value="">Selecione um usuário...</option>'+users.map(p=>'<option value="'+p.id+'">'+esc(p.nick+'#'+p.tag)+'</option>').join('');
+ const options='<option value="">Selecione um usuário...</option>'+users.map(p=>'<option value="'+p.id+'">'+(p.rank_verified_at?'✓ ':'◷ ')+esc(p.nick+'#'+p.tag)+'</option>').join('');
  $('manage-user-select').innerHTML=options;$('manage-role-user').innerHTML=options;
  if(users.some(x=>x.id===current))$('manage-user-select').value=current;
  $('manage-user-rank').innerHTML='<option value="">Sem vínculo ao Ranking</option>'+state.rank
@@ -50,6 +50,8 @@ function showUser(){
  $('manage-user-lane').value=u.lane||'MID';
  $('manage-user-secondary').value=u.secondary_lane||'SUP';
  $('manage-user-rank').value=u.rank_player_id||'';
+ const verified=$('manage-rank-verification');
+ if(verified)verified.textContent=u.rank_verified_at?'✓ Vínculo verificado pelo ADM em '+new Date(u.rank_verified_at).toLocaleDateString('pt-BR'):'◷ Sem vínculo verificado ao Ranking.';
 }
 function renderAssigned(){
  const selected=$('manage-role-user').value;
