@@ -1,5 +1,5 @@
 -- CMIM • Snapshot SQL of deployed identity and tournament functions
--- Generated 29 October 2026 from the actual connected Supabase database.
+-- Generated 29 October 2026 from the connected Supabase database; latest functions include auto-sync.
 -- Keep this as schema reference. Do not apply to existing production without reviewing.
 alter table public.cmim_profiles add column if not exists rank_verified_at timestamptz;
 alter table public.cmim_profiles add column if not exists rank_verified_by uuid references auth.users(id);
@@ -96,6 +96,10 @@ begin
  raise exception 'Analise todas as inscrições pendentes primeiro.';end if;
  select count(*) into n from public.cmim_competition_entries where competition_id=c.id and status='approved';
  if n<2 then raise exception 'Aprove ao menos dois times.';end if;
+ if c.structure='suico' and c.swiss_rounds>(case when n%2=0 then n-1 else n end) then
+  raise exception 'Para % equipes o máximo sem revanche é % rodadas. Ajuste o número de rodadas no campeonato.',
+   n,(case when n%2=0 then n-1 else n end);
+ end if;
  select coalesce(max(round_number),0) into last from public.cmim_competition_matches where competition_id=c.id;
  if exists(select 1 from public.cmim_competition_matches where competition_id=c.id and round_number=last and status<>'approved') then
  raise exception 'Finalize e aprove a rodada anterior.';end if;
@@ -302,7 +306,7 @@ declare
  st jsonb;ver bigint;season jsonb; season_id text;
  teams jsonb; mapped jsonb:='[]'::jsonb; group_ids jsonb;
  side_idx integer; slot_idx integer; player_nick text; player_id text; account_id text; all_ids text[]:=array[]::text[];
- team_a text;team_b text;score_a int:=0;score_b int:=0;game_idx int:=0;series_len int;required_wins int;v_event_id text;res jsonb;
+ team_a text;team_b text;score_a int:=0;score_b int:=0;game_idx int:=0;series_len int;required_wins int;v_event_id text;res jsonb; v_match uuid; v_synced jsonb; v_sync_error text;
 begin
  if auth.uid() is null or not public.cmim_is_admin() then raise exception 'Somente o administrador pode aprovar pontos.';end if;
  select data,version into st,ver from public.cmim_rank where id=1;
@@ -330,7 +334,61 @@ begin
      account_id:=r1.teams->side_idx->'profileIds'->>slot_idx;
      player_id:=null;
      -- Prefer a verified account-to-ranking link, never arbitrary nickname claims.
-     if account_id is not null and account_id ~ '^[a-f0-9-]{36}$' then
+     if account_id is not null and account_id ~ '^[a-f0-9-]{36}
+
+CREATE OR REPLACE FUNCTION public.cmim_swiss_pair(p_competition uuid, p_teams uuid[], p_depth integer DEFAULT 0)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE
+ SET search_path TO ''
+AS $function$
+declare a uuid;b uuid;c uuid;rest uuid[];tail jsonb;
+ choices integer;minimum integer:=2147483647;cnt integer;
+begin
+ if coalesce(cardinality(p_teams),0)=0 then return '[]'::jsonb;end if;
+ if cardinality(p_teams)%2<>0 then return null;end if;
+ if p_depth>64 then return null;end if;
+ -- Pick the participant with the fewest legal opponents first (MRV).
+ foreach c in array p_teams loop
+  select count(*) into cnt from unnest(p_teams) t(opponent)
+  where t.opponent<>c and not exists(
+   select 1 from public.cmim_competition_matches m where m.competition_id=p_competition
+    and m.team_b_id is not null and
+    ((m.team_a_id=c and m.team_b_id=t.opponent) or
+     (m.team_b_id=c and m.team_a_id=t.opponent))
+  );
+  if cnt<minimum then a:=c;minimum:=cnt;end if;
+ end loop;
+ if minimum=0 then return null;end if;
+ rest:=array_remove(p_teams,a);
+ -- Try nearest-ranked possible opponents first. Backtrack if a choice dead-ends.
+ foreach b in array rest loop
+  if exists(select 1 from public.cmim_competition_matches m where m.competition_id=p_competition
+   and m.team_b_id is not null and
+   ((m.team_a_id=a and m.team_b_id=b) or (m.team_b_id=a and m.team_a_id=b))) then continue;end if;
+  tail:=public.cmim_swiss_pair(p_competition,array_remove(rest,b),p_depth+1);
+  if tail is not null then
+   return jsonb_build_array(jsonb_build_object('a',a,'b',b))||tail;
+  end if;
+ end loop;
+ return null;
+end $function$;
+
+drop trigger if exists cmim_guard_verified_riot_id on public.cmim_profiles;
+create trigger cmim_guard_verified_riot_id before update on public.cmim_profiles
+ for each row execute function cmim_private.cmim_guard_verified_riot_id();
+drop trigger if exists cmim_guard_competition_match on public.cmim_competition_matches;
+create trigger cmim_guard_competition_match before update on public.cmim_competition_matches
+ for each row execute function cmim_private.cmim_guard_competition_match();
+revoke all on function public.cmim_competition_generate_round(uuid) from public,anon;
+revoke all on function public.cmim_competition_link_room(uuid,uuid) from public,anon;
+revoke all on function public.cmim_competition_sync_match(uuid) from public,anon;
+revoke all on function public.cmim_swiss_pair(uuid,uuid[],integer) from public,anon;
+grant execute on function public.cmim_competition_generate_round(uuid) to authenticated;
+grant execute on function public.cmim_competition_link_room(uuid,uuid) to authenticated;
+grant execute on function public.cmim_competition_sync_match(uuid) to authenticated;
+grant execute on function public.cmim_swiss_pair(uuid,uuid[],integer) to authenticated;
+ then
        select prof.rank_player_id into player_id from public.cmim_profiles prof
        where prof.id=account_id::uuid and prof.rank_verified_at is not null;
        if player_id is null then
@@ -388,7 +446,17 @@ begin
    set review_status='approved',reviewed_by=auth.uid(),reviewed_at=now(),review_note=null
    where room_id=p_room and review_status='pending';
  if not found then raise exception 'Nao ha partidas pendentes para aprovar.'; end if;
- return jsonb_build_object('ok',true,'eventId',v_event_id,'score',score_a::text||'x'||score_b::text,'seasonId',season_id,'format','MD'||series_len);
+ -- If linked to a tournament, try to update its bracket after the official ranking
+ -- approval. A tournament roster mismatch must not erase the approved In-House result.
+ for v_match in select id from public.cmim_competition_matches
+  where room_id=p_room and status<>'approved' loop
+  begin
+   v_synced:=public.cmim_competition_sync_match(v_match);
+  exception when others then
+   v_sync_error:=sqlerrm;
+  end;
+ end loop;
+ return jsonb_build_object('ok',true,'eventId',v_event_id,'score',score_a::text||'x'||score_b::text,'seasonId',season_id,'format','MD'||series_len,'competitionSynced',coalesce(v_synced->>'ok','false')::boolean,'competitionSyncError',v_sync_error);
 end $function$;
 
 CREATE OR REPLACE FUNCTION public.cmim_swiss_pair(p_competition uuid, p_teams uuid[], p_depth integer DEFAULT 0)
