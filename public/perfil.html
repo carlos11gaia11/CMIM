@@ -11,6 +11,7 @@
 <form id="profile-edit" class="cmim-card" hidden style="margin-top:17px"><h2>ATUALIZAR MEU PERFIL</h2>
 <div class="cmim-form-row">
 <label class="cmim-field">NOME (PRIVADO)<input id="edit-realname" minlength="2" maxlength="90" required></label>
+<label class="cmim-field">TELEFONE COM DDD (PRIVADO)<input id="edit-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="(11) 99999-9999"></label>
 <label class="cmim-field">NICK NO RIOT ID<input id="edit-nick" minlength="2" maxlength="32" required></label>
 <label class="cmim-field">TAG RIOT (SEM #)<input id="edit-tag" minlength="3" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
 <label class="cmim-field">LANE PRINCIPAL<select id="edit-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
@@ -36,7 +37,7 @@
   who=await a.user();if(!who){location.replace('./conta.html');return}
   const [publicProfiles,privateData,roles,rankRows,reports]=await Promise.all([
    a.call('/rest/v1/cmim_profiles?id=eq.'+who.id+'&select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id'),
-   a.call('/rest/v1/cmim_player_private?id=eq.'+who.id+'&select=real_name',{secure:true}),
+   a.call('/rest/v1/cmim_player_private?id=eq.'+who.id+'&select=real_name,phone_e164',{secure:true}),
    a.call('/rest/v1/cmim_user_roles?user_id=eq.'+who.id+'&select=role_slug',{secure:true}),
    a.call('/rest/v1/cmim_rank?id=eq.1&select=data'),
    a.call('/rest/v1/cmim_draft_game_reports?review_status=eq.approved&select=room_id,game,season_id,season_name,confirmed_at,winner_side,winner_team,teams,picks&order=confirmed_at.desc&limit=1500')
@@ -49,6 +50,7 @@
   if(profile.avatar_url)$('player-avatar').src=profile.avatar_url;
   $('player-badges').innerHTML=(roles||[]).map(r=>'<span class="cmim-badge">'+E(r.role_slug.toUpperCase())+'</span>').join('')||'<span class="cmim-badge">JOGADOR</span>';
   $('edit-realname').value=privateInfo?.real_name||'';
+  $('edit-phone').value=privateInfo?.phone_e164||'';
   $('edit-nick').value=profile.nick;$('edit-tag').value=profile.tag;
   $('edit-lane').value=profile.lane||'MID';$('edit-secondary-lane').value=profile.secondary_lane||'SUP';
   $('profile-edit').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type=submit]');btn.disabled=true;
@@ -56,7 +58,7 @@
     const nick=$('edit-nick').value.trim(),tag=$('edit-tag').value.trim().toUpperCase(),lane=$('edit-lane').value,secondary_lane=$('edit-secondary-lane').value;
     if(lane===secondary_lane)throw Error('Escolha duas lanes diferentes.');
     await a.call('/rest/v1/cmim_profiles?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{nick,tag,lane,secondary_lane,updated_at:new Date().toISOString()}});
-    await a.call('/rest/v1/cmim_player_private?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{real_name:$('edit-realname').value.trim(),updated_at:new Date().toISOString()}});
+    await a.call('/rest/v1/cmim_player_private?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{real_name:$('edit-realname').value.trim(),phone_e164:$('edit-phone').value.trim()?a.normalizePhone($('edit-phone').value):null,updated_at:new Date().toISOString()}});
     if($('edit-avatar').files[0])await a.uploadAvatar($('edit-avatar').files[0]);
     $('edit-status').textContent='✓ Perfil salvo.';setTimeout(()=>location.reload(),800);
    }catch(err){$('edit-status').textContent=err.message;$('edit-status').classList.add('error')}finally{btn.disabled=false}
