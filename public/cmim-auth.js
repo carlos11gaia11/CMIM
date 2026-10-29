@@ -45,7 +45,7 @@ async function signUp(values){
   const out=await call('/auth/v1/signup?redirect_to='+encodeURIComponent(EMAIL_CONFIRM_REDIRECT),{method:'POST',body:{
    email:String(values.email).trim().toLowerCase(),password:values.password,
    data:{nick:nickTag[1].trim(),tag:nickTag[2].toUpperCase(),real_name:String(values.real_name).trim().slice(0,90),
-     lane:values.lane,secondary_lane:values.secondary_lane,phone_e164:normalizePhone(values.phone)}
+     lane:values.lane,secondary_lane:values.secondary_lane,current_elo:values.current_elo,phone_e164:normalizePhone(values.phone)}
   }});
   if(out.access_token)save(out);
   return out;
