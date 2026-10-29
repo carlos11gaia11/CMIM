@@ -1,0 +1,84 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Meu perfil e estatísticas</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script></head><body class="cmim-account-page" data-no-auth-badge="1">
+<header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>PLAYER PROFILE</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./draft.html?jogar=1">Jogar</a><a href="./campeonatos.html">Campeonatos</a><button id="account-signout" class="cmim-button ghost">Sair</button></nav></header>
+<main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">ESTATÍSTICAS INDIVIDUAIS · HISTÓRICO REAL</span><h1>MINHA <em>JORNADA.</em></h1><p>Veja sua ficha, seus campeões, o desempenho em partidas aprovadas, a evolução e as temporadas em que participa.</p></div>
+<div id="profile-loading" class="cmim-empty">Conectando à sua conta...</div>
+<div id="profile-content" hidden>
+<section class="cmim-card"><div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+<img id="player-avatar" class="cmim-portrait" src="./cmim.jpeg" alt="Avatar do jogador">
+<div style="flex:1;min-width:185px"><span class="cmim-kicker" id="player-realname">JOGADOR CMIM</span><h2 id="player-handle" style="font-size:38px;overflow-wrap:anywhere">Nick#TAG</h2><p id="player-lanes" class="cmim-muted">—</p><div id="player-badges"></div></div>
+<button id="toggle-edit" class="cmim-button ghost">✎ Editar minha ficha</button>
+</div></section>
+<form id="profile-edit" class="cmim-card" hidden style="margin-top:17px"><h2>ATUALIZAR MEU PERFIL</h2>
+<div class="cmim-form-row">
+<label class="cmim-field">NOME (PRIVADO)<input id="edit-realname" minlength="2" maxlength="90" required></label>
+<label class="cmim-field">NICK NO RIOT ID<input id="edit-nick" minlength="2" maxlength="32" required></label>
+<label class="cmim-field">TAG RIOT (SEM #)<input id="edit-tag" minlength="3" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
+<label class="cmim-field">LANE PRINCIPAL<select id="edit-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+<label class="cmim-field">LANE SECUNDÁRIA<select id="edit-secondary-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+<label class="cmim-field">FOTO (PNG/JPG/WEBP ATÉ 2 MB)<input id="edit-avatar" type="file" accept="image/png,image/jpeg,image/webp"></label>
+</div><div class="cmim-actions"><button class="cmim-button">SALVAR ALTERAÇÕES</button><button id="cancel-edit" type="button" class="cmim-button ghost">Cancelar</button></div>
+<p id="edit-status" class="cmim-status" role="status"></p></form>
+<div class="cmim-stats"><div class="cmim-stat"><strong id="stat-games">—</strong><span>JOGOS APROVADOS</span></div><div class="cmim-stat"><strong id="stat-wins">—</strong><span>VITÓRIAS</span></div><div class="cmim-stat"><strong id="stat-wr">—</strong><span>WIN RATE</span></div><div class="cmim-stat"><strong id="stat-champs">—</strong><span>CAMPEÕES DIFERENTES</span></div></div>
+<div class="cmim-grid"><section class="cmim-card"><h2>MINHA EVOLUÇÃO</h2><p class="cmim-muted">Vitórias e derrotas nos últimos jogos homologados.</p><div id="profile-chart" class="cmim-progress" aria-label="Gráfico do histórico de resultados"></div></section>
+<section class="cmim-card"><h2>CAMPEÕES MAIS JOGADOS</h2><div id="profile-champions" class="cmim-empty">Sem picks homologados ainda.</div></section></div>
+<section class="cmim-card" style="margin-top:18px"><h2>HISTÓRICO DE PARTIDAS</h2><div id="profile-game-history" class="cmim-table-wrap"></div><p class="cmim-muted">As estatísticas são baseadas em nicks registrados nos relatórios aprovados. O ADM pode vincular seu perfil ao ranking para assegurar sua classificação oficial. Uma coincidência de nick sem vínculo não comprova a identidade de quem jogou.</p></section>
+<section class="cmim-card" style="margin-top:18px"><h2>MINHAS TEMPORADAS</h2><div id="profile-seasons" class="cmim-empty">Buscando temporadas...</div></section>
+</div></main>
+<script>document.addEventListener('DOMContentLoaded',async()=>{
+ const a=CMIMAuth,$=id=>document.getElementById(id),E=a.esc;
+ const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+ const empty=label=>'<div class="cmim-empty">'+E(label)+'</div>';
+ let who=null,profile=null,privateInfo=null;
+ $('account-signout').onclick=async()=>{await a.logout();location.href='./conta.html'};
+ $('toggle-edit').onclick=()=>{$('profile-edit').hidden=!$('profile-edit').hidden};
+ $('cancel-edit').onclick=()=>{$('profile-edit').hidden=true};
+ try{
+  who=await a.user();if(!who){location.replace('./conta.html');return}
+  const [publicProfiles,privateData,roles,rankRows,reports]=await Promise.all([
+   a.call('/rest/v1/cmim_profiles?id=eq.'+who.id+'&select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id'),
+   a.call('/rest/v1/cmim_player_private?id=eq.'+who.id+'&select=real_name',{secure:true}),
+   a.call('/rest/v1/cmim_user_roles?user_id=eq.'+who.id+'&select=role_slug',{secure:true}),
+   a.call('/rest/v1/cmim_rank?id=eq.1&select=data'),
+   a.call('/rest/v1/cmim_draft_game_reports?review_status=eq.approved&select=room_id,game,season_id,season_name,confirmed_at,winner_side,winner_team,teams,picks&order=confirmed_at.desc&limit=1500')
+  ]);
+  profile=publicProfiles?.[0];privateInfo=privateData?.[0];
+  if(!profile)throw Error('Perfil não encontrado. Entre em contato com o administrador.');
+  $('player-realname').textContent=privateInfo?.real_name||'JOGADOR CMIM';
+  $('player-handle').textContent=profile.nick+'#'+profile.tag;
+  $('player-lanes').textContent='LANE PRIMÁRIA: '+(profile.lane||'—')+' · SECUNDÁRIA: '+(profile.secondary_lane||'—');
+  if(profile.avatar_url)$('player-avatar').src=profile.avatar_url;
+  $('player-badges').innerHTML=(roles||[]).map(r=>'<span class="cmim-badge">'+E(r.role_slug.toUpperCase())+'</span>').join('')||'<span class="cmim-badge">JOGADOR</span>';
+  $('edit-realname').value=privateInfo?.real_name||'';
+  $('edit-nick').value=profile.nick;$('edit-tag').value=profile.tag;
+  $('edit-lane').value=profile.lane||'MID';$('edit-secondary-lane').value=profile.secondary_lane||'SUP';
+  $('profile-edit').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type=submit]');btn.disabled=true;
+   try{
+    const nick=$('edit-nick').value.trim(),tag=$('edit-tag').value.trim().toUpperCase(),lane=$('edit-lane').value,secondary_lane=$('edit-secondary-lane').value;
+    if(lane===secondary_lane)throw Error('Escolha duas lanes diferentes.');
+    await a.call('/rest/v1/cmim_profiles?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{nick,tag,lane,secondary_lane,updated_at:new Date().toISOString()}});
+    await a.call('/rest/v1/cmim_player_private?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{real_name:$('edit-realname').value.trim(),updated_at:new Date().toISOString()}});
+    if($('edit-avatar').files[0])await a.uploadAvatar($('edit-avatar').files[0]);
+    $('edit-status').textContent='✓ Perfil salvo.';setTimeout(()=>location.reload(),800);
+   }catch(err){$('edit-status').textContent=err.message;$('edit-status').classList.add('error')}finally{btn.disabled=false}
+  };
+  const games=(reports||[]).filter(r=>Array.isArray(r.picks)&&r.picks.some(p=>norm(p.nick)===norm(profile.nick)));
+  const enriched=games.map(g=>{
+   const picks=g.picks.filter(p=>norm(p.nick)===norm(profile.nick));
+   const pick=picks[0],won=pick?.side===g.winner_side;
+   return {...g,pick,won}
+  });
+  const wins=enriched.filter(g=>g.won).length,played=enriched.length;
+  $('stat-games').textContent=played;$('stat-wins').textContent=wins;
+  $('stat-wr').textContent=played?Math.round(wins/played*100)+'%':'—';
+  $('stat-champs').textContent=new Set(enriched.map(g=>g.pick?.champion).filter(Boolean)).size;
+  const champ=new Map();enriched.forEach(g=>{const k=g.pick?.champion||'Desconhecido';const o=champ.get(k)||{played:0,wins:0};o.played++;if(g.won)o.wins++;champ.set(k,o)});
+  $('profile-champions').className='';
+  $('profile-champions').innerHTML=champ.size?[...champ.entries()].sort((a,b)=>b[1].played-a[1].played).slice(0,8).map(([name,n])=>'<div style="display:flex;gap:9px;align-items:center;border-bottom:1px solid #51654e;padding:9px"><img width="45" height="45" style="border-radius:7px" alt="" loading="lazy" src="https://ddragon.leagueoflegends.com/cdn/img/champion/tiles/'+encodeURIComponent(name)+'_0.jpg"><b style="flex:1;color:#ffe49b">'+E(name)+'</b><span>'+n.played+' pick(s) · '+Math.round(n.wins/n.played*100)+'% WR</span></div>').join(''):empty('Ainda não há campeões homologados com seu nick.');
+  const chart=enriched.slice(0,15).reverse();
+  $('profile-chart').innerHTML=chart.length?chart.map((g,i)=>'<div style="height:'+(g.won?100:45)+'%;background:'+(g.won?'#dbbf58':'#a05c52')+'"><b>'+ (g.won?'V':'D')+'</b><span>'+String(i+1)+'</span></div>').join(''):empty('Sem jogos homologados para gerar o gráfico.');
+  $('profile-game-history').innerHTML=enriched.length?'<table class="cmim-table"><thead><tr><th>Data</th><th>Temporada</th><th>Campeão</th><th>Resultado</th><th>Partida</th></tr></thead><tbody>'+enriched.slice(0,50).map(g=>'<tr><td>'+new Date(g.confirmed_at).toLocaleDateString('pt-BR')+'</td><td>'+E(g.season_name||'—')+'</td><td>'+E(g.pick?.champion||'—')+'</td><td style="color:'+(g.won?'#a4edae':'#ffac9c')+'">'+(g.won?'VITÓRIA':'DERROTA')+'</td><td>Jogo '+g.game+'</td></tr>').join('')+'</tbody></table>':empty('Nenhuma partida aprovada foi associada ao seu nick.');
+  const rank=rankRows?.[0]?.data||{},seasons=(rank.seasons||[]).filter(x=>(x.roster||[]).includes(profile.rank_player_id));
+  $('profile-seasons').innerHTML=seasons.length?seasons.map(x=>'<div class="cmim-badge">'+E(x.name)+' · '+E(x.division||'Misto')+' · '+E(x.status||'')+'</div>').join(''):empty('Nenhuma temporada do Ranking foi vinculada ao seu usuário ainda.');
+  $('profile-loading').hidden=true;$('profile-content').hidden=false;
+ }catch(err){$('profile-loading').textContent='Não foi possível carregar seu perfil: '+err.message;}
+});</script></body></html>
