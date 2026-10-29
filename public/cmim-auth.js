@@ -69,8 +69,19 @@ async function signUp(values){
   return url;
  }
  function badgeMarkup(){return '<div class="cmim-auth-bar" id="cmim-auth-badge"><a href="./conta.html" title="Conta CMIM">◌ Entrar / Cadastrar</a></div>'}
- function updateBadge(){const el=document.getElementById('cmim-auth-badge');if(!el)return;
-  if(session?.access_token){const name=session.user?.user_metadata?.nick||'Meu perfil';el.innerHTML='<a href="./perfil.html">◉ '+esc(name)+' · Perfil</a>';}
+ function updateBadge(){
+  const authenticated=!!session?.access_token;
+  const name=session?.user?.user_metadata?.nick||'Meu perfil';
+  // On the homepage login belongs in the prominent header CTA, not in the bottom corner.
+  const header=document.getElementById('portal-auth-button');
+  if(header){
+   header.href=authenticated?'./perfil.html':'./conta.html';
+   header.textContent=authenticated?'◉ '+name+' · MEU PERFIL ↗':'◉ ENTRAR / CRIAR CONTA ↗';
+   header.setAttribute('aria-label',authenticated?'Abrir meu perfil CMIM':'Entrar no CMIM ou criar conta');
+  }
+  const el=document.getElementById('cmim-auth-badge');
+  if(!el)return;
+  if(authenticated)el.innerHTML='<a href="./perfil.html">◉ '+esc(name)+' · Perfil</a>';
   else el.innerHTML='<a href="./conta.html">◌ Entrar / Cadastrar</a>';
  }
  function mountBadge(){if(document.getElementById('cmim-auth-badge')||document.body?.dataset?.noAuthBadge==='1')return;
@@ -98,6 +109,11 @@ async function signUp(values){
   document.body.append(nav);
  }
  window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save};
- function initialize(){mountBadge();mountMobileDock()}
+ function initialize(){
+  mountBadge();mountMobileDock();updateBadge();
+  // When the default auth badge is suppressed, still refresh the header login state.
+  if(document.getElementById('portal-auth-button')&&session?.access_token)
+    current().then(updateBadge).catch(()=>updateBadge());
+ }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })();
