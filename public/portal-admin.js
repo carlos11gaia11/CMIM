@@ -269,11 +269,19 @@
         g.complete?'● AGUARDANDO ADM':'◷ SÉRIE EM ANDAMENTO';
       const teamA=esc(g.teamA),teamB=esc(g.teamB);
       const games=g.games.map(game=>{
-        const banNames=(game.bans||[]).map(b=>b.champion).filter(Boolean);const manual=game.entry_source==='admin_manual';
-        const picks=(game.picks||[]).map(p=>[p.nick,p.champion].filter(Boolean).join(' · '));
-        return '<div class="review-game"><div class="review-game-heading"><b>Jogo '+Number(game.game)+(manual?' · ✎ MANUAL':' · ✓ SITE')+'</b><span>Vencedor: '+esc(game.winner_team)+'</span></div>'+ (manual?'<div class="review-manual-note">📋 Fonte: '+esc(game.manual_reason||'Sem observação')+'</div>':'')+
-          '<details><summary>Conferir picks, bans e jogadores</summary><div class="review-game-details"><div><b>PICKS / NICKS</b><p>'+esc(picks.join(' | '))+'</p></div>'+
-          '<div><b>BANS</b><p>'+esc(banNames.join(', '))+'</p></div></div></details>'+(g.status==='pending'?'<button class="review-edit-trigger" data-edit-room="'+esc(g.id)+'" data-edit-game="'+Number(game.game)+'">✎ Corrigir vencedor, jogador ou campeão</button>':'')+'</div>';
+        const manual=game.entry_source==='admin_manual';
+        const columns=['B','R'].map(side=>{
+          const rows=(game.picks||[]).filter(p=>p.side===side);
+          const content=rows.map(p=>'<li><span>'+esc(p.lane||'—')+' · '+esc(p.nick||'—')+'</span><strong class="'+(p.champion?'':'unknown')+'">'+esc(p.champion||'Não informado')+'</strong></li>').join('');
+          return '<div class="review-game-side '+(side==='B'?'blue':'red')+'"><b>'+(side==='B'?'🔵 BLUE SIDE':'🔴 RED SIDE')+'</b><ul>'+content+'</ul></div>';
+        }).join('');
+        const banList=(game.bans||[]).filter(b=>b.champion)
+          .map(b=>'<span class="review-ban-chip">'+esc(b.champion)+'</span>').join('');
+        return '<div class="review-game"><div class="review-game-heading"><b>Jogo '+Number(game.game)+(manual?' · ✎ MANUAL':' · ✓ SITE')+'</b><span>Vencedor: '+esc(game.winner_team)+'</span></div>'+
+          (manual?'<div class="review-manual-note">📋 Fonte: '+esc(game.manual_reason||'Sem observação')+'</div>':'')+
+          '<details><summary>Conferir picks, bans e jogadores</summary><div class="review-game-details review-picks-grid">'+columns+
+          '<div class="review-game-bans"><b>BANS</b><div>'+(banList||'<span class="unknown">Não registrados</span>')+'</div></div></div></details>'+
+          (g.status==='pending'?'<button class="review-edit-trigger" data-edit-room="'+esc(g.id)+'" data-edit-game="'+Number(game.game)+'">✎ Corrigir vencedor, jogador ou campeão</button>':'')+'</div>';
       }).join('');
       const players=(g.games[0]?.teams||[]).map(team=>'<div><b>'+esc(team.name)+'</b><p>'+esc((team.players||[]).join(' · '))+'</p></div>').join('');
       let actions='';
