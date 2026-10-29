@@ -159,18 +159,20 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
  if(lane===secondary_lane)return status('As duas lanes precisam ser diferentes.',true);
  btn.disabled=true;
  try{
-  await req('/rest/v1/cmim_profiles?id=eq.'+id,{method:'PATCH',body:{nick:$('manage-user-nick').value.trim(),tag:$('manage-user-tag').value.trim().toUpperCase(),
-   lane,secondary_lane,updated_at:new Date().toISOString()}});
-  await req('/rest/v1/cmim_player_private?id=eq.'+id,{method:'PATCH',body:{real_name:$('manage-user-name').value.trim(),
-   phone_e164:(()=>{
-     let digits=$('manage-user-phone').value.replace(/[^0-9]/g,'');
-     if(!digits)return null;
-     if(digits.startsWith('55')&&(digits.length===12||digits.length===13))digits=digits.slice(2);
-     if(!/^[1-9][0-9][0-9]{8,9}$/.test(digits))throw Error('Telefone: informe DDD e 10 ou 11 dígitos.');
-     return '+55'+digits;
-   })(),
-   updated_at:new Date().toISOString()}});
   const currentRank=state.profiles.find(p=>p.id===id);
+  const phoneE164=(()=>{
+    let digits=$('manage-user-phone').value.replace(/[^0-9]/g,'');
+    if(!digits)return null;
+    if(digits.startsWith('55')&&(digits.length===12||digits.length===13))digits=digits.slice(2);
+    if(!/^[1-9][0-9][0-9]{8,9}$/.test(digits))throw Error('Telefone: informe DDD e 10 ou 11 dígitos.');
+    return '+55'+digits;
+  })();
+  await req('/rest/v1/rpc/cmim_admin_update_player',{method:'POST',body:{
+   p_user:id,p_nick:$('manage-user-nick').value.trim(),p_tag:$('manage-user-tag').value.trim().toUpperCase(),
+   p_lane:lane,p_secondary_lane:secondary_lane,p_current_elo:currentRank?.current_elo||null,p_tier:currentRank?.tier||null,
+   p_bio:currentRank?.bio||'',p_avatar_url:currentRank?.avatar_url||null,
+   p_real_name:$('manage-user-name').value.trim(),p_phone_e164:phoneE164
+  }});
   if((currentRank?.rank_player_id||'')!==$('manage-user-rank').value){
    await req('/rest/v1/rpc/cmim_admin_profile_set',{method:'POST',body:{
      p_user:id,p_rank_player_id:$('manage-user-rank').value||null,p_tier:currentRank?.tier||null
