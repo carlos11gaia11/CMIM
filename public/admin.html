@@ -78,15 +78,15 @@
           <section id="admin-tab-matches" class="admin-tab-content" aria-label="Aprovação das partidas">
             <div class="module-heading"><div><span class="admin-eyebrow">MÓDULO 01 / HOMOLOGAÇÃO OFICIAL</span>
               <h2>Aprovação de partidas</h2>
-              <p>Confira os jogos, os vencedores validados pelos dois capitães e os jogadores. Uma MD3 só entra no ranking e nas estatísticas <strong>depois da sua aprovação</strong>.</p>
+              <p>Confira os resultados confirmados pelos capitães ou <strong>registre manualmente jogos disputados fora do site</strong>. MD1, MD3 e MD5 só geram pontos e estatísticas após sua aprovação.</p>
               </div><button id="review-refresh" class="admin-main-button" type="button">↻ ATUALIZAR LISTA</button>
             </div>
             <div class="review-summary" aria-label="Resumo das revisões">
               <div class="review-summary-card"><strong id="review-pending-count">—</strong><span>Aguardando aprovação</span></div>
-              <div class="review-summary-card"><strong id="review-approved-count">—</strong><span>MD3 aprovadas</span></div>
-              <div class="review-summary-card"><strong id="review-rejected-count">—</strong><span>MD3 rejeitadas</span></div>
+              <div class="review-summary-card"><strong id="review-approved-count">—</strong><span>Séries aprovadas</span></div>
+              <div class="review-summary-card"><strong id="review-rejected-count">—</strong><span>Séries rejeitadas</span></div>
             </div>
-            <div class="review-guidance"><b>Como funciona:</b> os dois capitães concordam com cada resultado → a MD3 entra nesta fila → o ADM confere e aprova → o CMIM lança os pontos e libera as estatísticas. Se houver alguma irregularidade, rejeite informando o motivo. Uma MD3 já aprovada não pode ser contabilizada novamente.</div>
+            <div class="review-guidance"><b>Como funciona:</b> os capitães confirmam pelo site ou o ADM registra manualmente jogos disputados fora dele → a série fica pendente → o ADM confere e aprova → só então os pontos e as estatísticas são publicados. Jogos manuais ficam identificados no histórico, com justificativa e identificação de quem registrou.</div>
             <div class="review-toolbar">
               <label for="review-filter">EXIBIR<select id="review-filter">
                 <option value="pending">Pendentes</option>
@@ -97,7 +97,7 @@
               <span id="review-status" role="status">Carregando partidas do Supabase...</span>
             </div>
             <div id="review-list" class="review-list"><div class="review-empty">Conferindo a fila de partidas...</div></div>
-            <div class="form-notice"><strong>Segurança:</strong> só a conta ADM do Ranking CMIM pode aprovar ou rejeitar. A aprovação da MD3 e a atualização da tabela são feitas juntas no Supabase; se houver algum erro, nenhuma das duas é aplicada.</div>
+            <div class="form-notice"><strong>Segurança:</strong> só a conta ADM do Ranking CMIM pode aprovar ou rejeitar. A aprovação da série e a atualização da tabela são feitas juntas no Supabase; se houver algum erro, nenhuma das duas é aplicada.</div>
           </section>
           <section id="admin-tab-players" class="admin-tab-content" aria-label="Gerenciar jogadores e tiers">
             <div class="module-heading">
@@ -222,6 +222,32 @@
       <footer class="admin-footer"><span>CMIM © 2026 — ADMINISTRAÇÃO DA COMUNIDADE</span><a href="./">RETORNAR AO PORTAL ↗</a></footer>
     </div>
   </div>
+  <dialog id="review-manual-dialog" class="admin-review-dialog" aria-label="Registrar jogo manual de uma série">
+    <form id="review-manual-form">
+      <div class="review-dialog-head"><div><span class="admin-eyebrow">HOMOLOGAÇÃO · PARTIDA DISPUTADA FORA DO SITE</span>
+        <h2 id="review-manual-title">Registrar jogo</h2>
+        <p>Use esta função somente se o jogo realmente aconteceu. O próximo número da série será atribuído automaticamente e ficará <b>pendente</b> até aprovação.</p>
+      </div><button id="review-manual-close" type="button" aria-label="Fechar">✕</button></div>
+      <div class="review-guidance">
+        <b>Conferência obrigatória:</b> escolha o time que jogou no <b>Blue Side</b> e o vencedor real. Se os campeões ou bans não foram registrados, deixe os campos vazios: o resultado contará no ranking após aprovação, mas <b>não inventaremos estatísticas dos campeões desconhecidos</b>.
+      </div>
+      <div class="review-manual-basic">
+        <label>🔵 EQUIPE QUE JOGOU NO BLUE SIDE<select id="review-manual-blue" required></select></label>
+        <label>🏆 EQUIPE VENCEDORA<select id="review-manual-winner" required></select></label>
+        <label>📅 DATA / HORA DO JOGO (OPCIONAL)<input id="review-manual-date" type="datetime-local"></label>
+        <label>📝 FONTE E JUSTIFICATIVA<textarea id="review-manual-reason" required minlength="8" maxlength="500" rows="2" placeholder="Ex.: MD3 continuou pelo Discord, resultado confirmado com os dois capitães."></textarea></label>
+      </div>
+      <h3 class="review-manual-subheading">Campeões por jogador (opcional)</h3>
+      <p class="review-manual-help">Use o ID oficial do campeão, por exemplo: Ahri, Jinx, LeeSin. Se não souber, deixe em branco.</p>
+      <div id="review-manual-picks" class="review-edit-rows"></div>
+      <h3 class="review-manual-subheading">Bans da partida (opcional)</h3>
+      <p class="review-manual-help">Cinco bans do Blue Side e cinco do Red Side. Não insira picks ou bans fictícios.</p>
+      <div id="review-manual-bans" class="review-edit-rows"></div>
+      <p id="review-manual-error" class="admin-error" role="alert"></p>
+      <footer class="review-dialog-actions"><button id="review-manual-cancel" type="button">Cancelar</button>
+        <button id="review-manual-save" type="submit" class="admin-main-button">＋ SALVAR JOGO MANUAL PENDENTE</button></footer>
+    </form>
+  </dialog>
   <dialog id="review-edit-dialog" class="admin-review-dialog" aria-label="Corrigir partida pendente">
    <form id="review-edit-form">
     <div class="review-dialog-head"><div><span class="admin-eyebrow">REVISÃO ADM · ANTES DA APROVAÇÃO</span><h2>Corrigir resultado e picks</h2>
