@@ -17,7 +17,7 @@
 <label class="cmim-field">NOME DO CAMPEONATO<input name="title" minlength="4" maxlength="140" required placeholder="Ex.: Copa Insalubrão"></label>
 <label class="cmim-field">FORMATO DA COMPETIÇÃO<select name="structure"><option value="copa">🏆 Copa / Mata-mata</option><option value="liga">📊 Liga / Pontos corridos</option><option value="suico">⚔ Suíço / Rodadas</option></select></label>
 <label class="cmim-field">SÉRIE DAS PARTIDAS<select name="series_games"><option value="1">MD1</option><option value="3" selected>MD3</option><option value="5">MD5</option></select></label>
-<label class="cmim-field">Nº MÁXIMO DE TIMES<input name="max_teams" type="number" min="2" max="128" value="16" required></label>
+<label class="cmim-field">RODADAS DO SUÍÇO<select name="swiss_rounds"><option value="3">3 rodadas</option><option value="4">4 rodadas</option><option value="5" selected>5 rodadas</option><option value="6">6 rodadas</option><option value="7">7 rodadas</option></select></label><label class="cmim-field">Nº MÁXIMO DE TIMES<input name="max_teams" type="number" min="2" max="128" value="16" required></label>
 <label class="cmim-field">INÍCIO<input name="starts_at" type="datetime-local" required></label>
 <label class="cmim-field">STATUS INICIAL<select name="status"><option value="draft">Rascunho</option><option value="open" selected>Inscrições abertas</option></select></label>
 </div><label class="cmim-field">DESCRIÇÃO E REGULAMENTO<textarea name="description" rows="4" maxlength="5000"></textarea></label><div class="cmim-actions"><button class="cmim-button">＋ PUBLICAR CAMPEONATO</button></div></form>
