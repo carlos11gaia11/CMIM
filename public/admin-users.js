@@ -21,7 +21,7 @@ async function fetchData(){
   const who=await req('/auth/v1/user');if(who.app_metadata?.cmim_admin!==true)throw Error('Esta conta não tem autorização para gerenciar usuários.');
   const [profiles,priv,defs,roles,rankRows]=await Promise.all([
    req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,tier&order=nick.asc&limit=1500'),
-   req('/rest/v1/cmim_player_private?select=id,real_name&limit=1500'),
+   req('/rest/v1/cmim_player_private?select=id,real_name,phone_e164&limit=1500'),
    req('/rest/v1/cmim_role_definitions?select=slug,label,description,permissions&order=label.asc&limit=100'),
    req('/rest/v1/cmim_user_roles?select=user_id,role_slug,assigned_at&limit=3000'),
    req('/rest/v1/cmim_rank?id=eq.1&select=data')
@@ -45,6 +45,7 @@ function showUser(){
  const u=state.profiles.find(p=>p.id===$('manage-user-select').value);
  if(!u)return;
  $('manage-user-name').value=state.private.find(p=>p.id===u.id)?.real_name||'';
+ $('manage-user-phone').value=state.private.find(p=>p.id===u.id)?.phone_e164||'';
  $('manage-user-nick').value=u.nick;$('manage-user-tag').value=u.tag;
  $('manage-user-lane').value=u.lane||'MID';
  $('manage-user-secondary').value=u.secondary_lane||'SUP';
@@ -67,7 +68,15 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
  try{
   await req('/rest/v1/cmim_profiles?id=eq.'+id,{method:'PATCH',body:{nick:$('manage-user-nick').value.trim(),tag:$('manage-user-tag').value.trim().toUpperCase(),
    lane,secondary_lane,updated_at:new Date().toISOString()}});
-  await req('/rest/v1/cmim_player_private?id=eq.'+id,{method:'PATCH',body:{real_name:$('manage-user-name').value.trim(),updated_at:new Date().toISOString()}});
+  await req('/rest/v1/cmim_player_private?id=eq.'+id,{method:'PATCH',body:{real_name:$('manage-user-name').value.trim(),
+   phone_e164:(()=>{
+     let digits=$('manage-user-phone').value.replace(/[^0-9]/g,'');
+     if(!digits)return null;
+     if(digits.startsWith('55')&&(digits.length===12||digits.length===13))digits=digits.slice(2);
+     if(!/^[1-9][0-9][0-9]{8,9}$/.test(digits))throw Error('Telefone: informe DDD e 10 ou 11 dígitos.');
+     return '+55'+digits;
+   })(),
+   updated_at:new Date().toISOString()}});
   const currentRank=state.profiles.find(p=>p.id===id);
   if((currentRank?.rank_player_id||'')!==$('manage-user-rank').value){
    await req('/rest/v1/rpc/cmim_admin_profile_set',{method:'POST',body:{
