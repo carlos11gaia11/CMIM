@@ -209,6 +209,14 @@ async function launchTournamentMatch(matchId,comp){
  }
  try{
   const teams=[lineup(match.team_a_id),lineup(match.team_b_id)];
+  const rankRows=await a.call('/rest/v1/cmim_rank?id=eq.1&select=data');
+  const season=rankRows?.[0]?.data?.seasons?.find(x=>x.status==='active');
+  if(!season)throw Error('O Ranking não possui uma temporada ativa. Abra uma temporada antes da seleção oficial.');
+  const allowed=new Set(season.roster||[]);
+  const linked=state.profiles.filter(p=>teams.some(t=>t.profileIds.includes(p.id)));
+  const outside=linked.filter(p=>!allowed.has(p.rank_player_id));
+  if(outside.length)throw Error('Estes jogadores não estão inscritos na temporada ativa: '+
+   outside.map(p=>p.nick+'#'+p.tag).join(', ')+'. Inclua-os pelo ADM antes de jogar.');
   const payload={teams,games:Number(comp.series_games),mode:'Normal',duration:30,first:'B',pilot:true,
    source:'competition',createdAt:Date.now()};
   sessionStorage.setItem('cmim:play-handoff',JSON.stringify(payload));
