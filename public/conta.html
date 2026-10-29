@@ -30,6 +30,7 @@
  const params=new URLSearchParams(location.search);
  const callback=new URLSearchParams(location.hash.slice(1));
  if(params.get('register')==='1')show('signup');
+ if(params.get('required')==='1')status('login-status','🔒 Para utilizar as ferramentas do CMIM, faça login ou crie sua conta. Depois você voltará à ferramenta escolhida.');
  // Supabase redirects to this page with an implicit-flow session in the URL fragment.
  // Remove the sensitive fragment from browser history immediately after reading it.
  const callbackError=callback.get('error_description')||callback.get('error');
@@ -46,14 +47,14 @@
      expires_at:Math.floor(Date.now()/1000)+expiresIn
    });
    history.replaceState({},document.title,location.pathname+'?confirmed=1');
-   location.replace('./perfil.html');
+   location.replace(a.requestedDestination());
    return;
  }else if(params.get('confirmed')==='1'){
    status('login-status','✓ Você voltou ao CMIM! Se confirmou o e-mail, entre para acessar seu perfil.');
  }
- if(a.session()?.access_token){location.replace('./perfil.html');return;}
+ if(a.session()?.access_token){void a.user().then(who=>{if(who)location.replace(a.requestedDestination())});}
  $('login-form').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button');btn.disabled=true;
-  try{const f=new FormData(e.currentTarget);await a.signIn(f.get('email'),f.get('password'));location.assign('./perfil.html')}
+  try{const f=new FormData(e.currentTarget);await a.signIn(f.get('email'),f.get('password'));location.assign(a.requestedDestination())}
   catch(err){status('login-status',err.message,true)}finally{btn.disabled=false}};
  $('signup-form').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button'),fd=new FormData(e.currentTarget);
   if(fd.get('password')!==fd.get('confirm'))return status('signup-status','As senhas não coincidem.',true);
@@ -61,7 +62,7 @@
   try{const data=await a.signUp(Object.fromEntries(fd.entries()));
    if(data.access_token){
     const file=fd.get('avatar');if(file?.size){try{await a.uploadAvatar(file)}catch(err){status('signup-status','Conta criada, mas foto não enviada: '+err.message,true)}}
-    location.assign('./perfil.html');
+    location.assign(a.requestedDestination());
    }else{
     status('signup-status','✓ Cadastro recebido! Confira seu e-mail para confirmar a conta. Ao clicar no link de confirmação, você será levado automaticamente de volta ao site do CMIM. Sua foto poderá ser enviada no perfil.');
     $('signup-form').reset();
