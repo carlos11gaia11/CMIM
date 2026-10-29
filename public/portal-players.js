@@ -56,7 +56,7 @@
         profiles=Array.isArray(response)?response:[];
       }catch{ /* A classificação pública continua disponível mesmo sem perfis. */ }
       try{
-        const response=await get('/rest/v1/cmim_player_meta?select=rank_player_id,tier,lane,riot_tag,champion_tags&limit=1000');
+        const response=await get('/rest/v1/cmim_player_meta?select=rank_player_id,tier,lane,riot_tag,champion_tags,player_tags&limit=1000');
         playerMeta=Array.isArray(response)?response:[];
       }catch{ /* Legacy rankings remain visible if metadata is unavailable. */ }
       const seasons=[...(data.seasons||[])].sort((a,b)=>Date.parse(b.createdAt||0)-Date.parse(a.createdAt||0));
@@ -77,7 +77,7 @@
         const laneCandidate=meta?.lane||profile?.lane;
         const lane=['TOP','JG','MID','ADC','SUP'].includes(laneCandidate)?laneCandidate:null;
         const champions=Array.isArray(meta?.champion_tags)?meta.champion_tags.filter(x=>typeof x==='string'&&x.length<=24).slice(0,5):[];
-        return {id:p.id,nick:p.nick,tier,tag,lane,champions,avatar:sanitizeAvatar(profile?.avatar_url),position:placement?.position||null,points:placement?.points??null};
+        return {id:p.id,nick:p.nick,tier,tag,lane,champions,playerTags:Array.isArray(meta?.player_tags)?meta.player_tags.slice(0,12):[],avatar:sanitizeAvatar(profile?.avatar_url),position:placement?.position||null,points:placement?.points??null};
       });
       state.loaded=true;state.error=false;state.season=season;state.status=complete?'closed':'active';
       if(counter)counter.textContent=state.players.length;
@@ -105,7 +105,7 @@
     const scope=$('players-scope')?.value||'all';
     const sort=$('players-sort')?.value||'rank';
     let list=state.players.filter(p=>
-      (!query||slug(p.nick+' '+(p.tag||'')+' '+(p.lane||'')).includes(query))&&
+      (!query||slug(p.nick+' '+(p.tag||'')+' '+(p.lane||'')+' '+(p.playerTags||[]).join(' ')).includes(query))&&
       (tierFilter==='all'||p.tier===tierFilter)&&
       (scope==='all'||scope==='ranked'&&!!p.position||scope==='unranked'&&!p.position||scope==='tagged'&&!!p.tag)
     );
@@ -123,9 +123,10 @@
       const badge=p.tier?'<span class="tier-pill" style="--tier-color:'+colors[p.tier]+'">'+esc(p.tier)+'</span>':'<span class="tier-pill unknown">A definir</span>';
       const champHtml=p.champions?.length?'<span class="champion-list">'+p.champions.map(c=>'<span class="champion-chip">'+esc(c)+'</span>').join('')+'</span>':'';
       const tag=p.tag?'<span class="riot-tag">#'+esc(p.tag)+'</span>':'<span class="riot-tag subtle">Sem tag vinculada</span>';
+      const personalTags=(p.playerTags||[]).map(x=>'<span class="champion-chip" style="border-color:#9d8344;color:#ffefa4">'+esc(x)+'</span>').join('');
       const lane=p.lane?'<span class="lane-pill">'+esc(p.lane)+'</span>':'<span class="unspecified">Não informada</span>';
       const position=p.position?'<strong class="ranking-place '+(p.position<=3?'place-top':'')+'">'+p.position+'º</strong><small>'+(isFinal?'Posição final':'Posição parcial')+' · '+number(p.points)+' pts</small>':'<strong class="ranking-place none">—</strong><small>Sem posição nesta temporada</small>';
-      return '<tr><td class="roster-index">'+String(i+1).padStart(2,'0')+'</td><td><div class="player-cell"><div class="player-avatar">'+avatar+'</div><div><b>'+esc(p.nick)+'</b>'+tag+champHtml+'</div></div></td><td>'+badge+'</td><td>'+lane+'</td><td class="position-cell">'+position+'</td></tr>';
+      return '<tr><td class="roster-index">'+String(i+1).padStart(2,'0')+'</td><td><div class="player-cell"><div class="player-avatar">'+avatar+'</div><div><b>'+esc(p.nick)+'</b>'+tag+champHtml+personalTags+'</div></div></td><td>'+badge+'</td><td>'+lane+'</td><td class="position-cell">'+position+'</td></tr>';
     }).join('');
   }
   for(const key of ['players-search','players-tier','players-scope','players-sort'])$(key)?.addEventListener(key==='players-search'?'input':'change',renderPlayers);
