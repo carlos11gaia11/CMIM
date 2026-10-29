@@ -337,6 +337,31 @@
     finally{state.reviewBusy=false;renderReviewQueue();}
   }
 
+  const soundtrackURL=API+'/storage/v1/object/public/cmim-soundtrack/worlds-2026.mp3';
+  async function uploadSoundtrack(e){
+    e.preventDefault();
+    if(!state.admin)return flash('Entre como ADM para publicar a trilha.',true);
+    const input=$('admin-soundtrack-file'),file=input?.files?.[0],status=$('admin-soundtrack-status');
+    if(!file||!file.name.toLowerCase().endsWith('.mp3')||file.size>12*1024*1024)
+      return flash('Escolha um MP3 de até 12 MB.',true);
+    const button=e.currentTarget.querySelector('button[type=submit]');button.disabled=true;
+    status.textContent='Enviando música para o Supabase...';
+    try{
+      await ensureSession();
+      const response=await fetch(API+'/storage/v1/object/cmim-soundtrack/worlds-2026.mp3',{
+        method:'POST',
+        headers:{apikey:KEY,Authorization:'Bearer '+state.session.access_token,
+         'Content-Type':'audio/mpeg','x-upsert':'true','Cache-Control':'3600'},
+        body:file
+      });
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok)throw Error(result.message||result.error||'Falha ao enviar MP3');
+      status.textContent='✓ Música oficial publicada! Agora será reproduzida nos links da Seleção quando alguém clicar em Tocar trilha.';
+      $('admin-soundtrack-preview').src=soundtrackURL+'?v='+Date.now();
+      flash('Trilha MP3 publicada para todos os jogadores.');
+    }catch(error){status.textContent='Erro: '+error.message;flash(status.textContent,true)}
+    finally{button.disabled=false}
+  }
   function renderNewsManager(){
     const target=$('admin-news-list');if(!target)return;
     target.innerHTML=state.news.length?state.news.map(n=>
@@ -408,6 +433,7 @@
     }
   }
   // No portal o link leva a uma pagina completa; o antigo modal nao e usado.
+  $('admin-soundtrack-form')?.addEventListener('submit',uploadSoundtrack);
   $('review-filter')?.addEventListener('change',renderReviewQueue);
   $('review-refresh')?.addEventListener('click',()=>{
     loadAdminData().then(()=>flash('Fila de partidas atualizada.')).catch(e=>flash('Erro ao atualizar: '+e.message,true));
