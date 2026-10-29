@@ -75,6 +75,27 @@ async function signUp(values){
   document.body.insertAdjacentHTML('beforeend',badgeMarkup());updateBadge();
   if(session?.access_token)current().then(updateBadge);
  }
+ function mountMobileDock(){
+  if(!document.body||document.getElementById('cmim-mobile-dock'))return;
+  const links=[
+   ['⌂','Portal','./'],
+   ['▶','Jogar','./draft.html?jogar=1'],
+   ['♛','Torneios','./campeonatos.html'],
+   ['◉','Perfil','./perfil.html'],
+   ['▥','Ranking','./ranking.html']
+  ];
+  const here=location.pathname.split('/').pop()||'index.html';
+  const nav=document.createElement('nav');nav.id='cmim-mobile-dock';nav.className='cmim-mobile-dock';
+  nav.setAttribute('aria-label','Acesso rápido às seções CMIM');
+  nav.innerHTML=links.map(([icon,label,href])=>{
+    const path=href.replace('./','').split('?')[0]||'index.html';
+    const active=here===path;
+    return '<a href="'+href+'"'+(active?' aria-current="page"':'')+'>'+
+      '<span aria-hidden="true">'+icon+'</span><small>'+label+'</small></a>';
+  }).join('');
+  document.body.append(nav);
+ }
  window.CMIMAuth={BASE,KEY,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save};
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountBadge);else mountBadge();
+ function initialize(){mountBadge();mountMobileDock()}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })();
