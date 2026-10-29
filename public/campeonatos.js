@@ -242,7 +242,7 @@ $('admin-comp-create').onsubmit=async e=>{
   await a.call('/rest/v1/cmim_competitions',{method:'POST',secure:true,body:{
    title:txt(f.get('title')).trim(),description:txt(f.get('description')).trim(),structure:f.get('structure'),
    series_games:Number(f.get('series_games')),format:'MD'+f.get('series_games'),starts_at:new Date(f.get('starts_at')).toISOString(),
-   max_teams:Number(f.get('max_teams')),status:f.get('status')
+   max_teams:Number(f.get('max_teams')),swiss_rounds:Number(f.get('swiss_rounds')||5),status:f.get('status')
   }});
   e.currentTarget.reset();status('✓ Campeonato criado.');await read();
  }catch(err){status('Erro ao cadastrar: '+safeErr(err),true)}finally{btn.disabled=false}
