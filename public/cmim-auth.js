@@ -68,6 +68,47 @@ async function signUp(values){
   await call('/rest/v1/cmim_profiles?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{avatar_url:url,updated_at:new Date().toISOString()}});
   return url;
  }
+ 
+ // Page access is enforced using Supabase Auth, not merely the presence of a stored token.
+ // Pages intentionally marked data-cmim-protected=1 are gated even when opened by direct URL.
+ const PROTECTED_PAGES=new Set(['draft.html','ranking.html','selecao.html','inhouse.html','relatorios.html','campeonatos.html','perfil.html']);
+ function safeReturn(raw){
+  if(!raw||typeof raw!=='string'||raw.length>1500)return null;
+  try{
+   const target=new URL(raw,location.href);
+   const root=location.pathname.replace(/[^/]*$/,'');
+   const page=target.pathname.split('/').pop();
+   if(target.origin!==location.origin||!target.pathname.startsWith(root)||!PROTECTED_PAGES.has(page))return null;
+   return target.href;
+  }catch{return null}
+ }
+ function requestedDestination(){
+  try{
+   const saved=sessionStorage.getItem('cmim:login-return');
+   const valid=safeReturn(saved);
+   sessionStorage.removeItem('cmim:login-return');
+   return valid||new URL('./perfil.html',location.href).href;
+  }catch{return new URL('./perfil.html',location.href).href}
+ }
+ function gotoLogin(){
+  const currentPage=location.pathname.split('/').pop();
+  if(currentPage==='conta.html')return;
+  const requested=location.pathname+location.search+location.hash;
+  try{sessionStorage.setItem('cmim:login-return',requested)}catch{}
+  location.replace(new URL('./conta.html?required=1',location.href).href);
+ }
+ async function requireLogin(){
+  // Only a valid Supabase Auth user unlocks the page. Expired and forged sessions fail.
+  if(document.body?.dataset?.cmimProtected!=='1')return true;
+  try{
+   const verified=await user();
+   if(!verified?.id){gotoLogin();return false}
+   document.documentElement.classList.remove('cmim-auth-pending');
+   document.dispatchEvent(new Event('cmim-auth-ready'));
+   return true;
+  }catch{gotoLogin();return false}
+ }
+
  function badgeMarkup(){return '<div class="cmim-auth-bar" id="cmim-auth-badge"><a href="./conta.html" title="Conta CMIM">◌ Entrar / Cadastrar</a></div>'}
  function updateBadge(){
   const authenticated=!!session?.access_token;
@@ -108,12 +149,24 @@ async function signUp(values){
   }).join('');
   document.body.append(nav);
  }
- window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save};
+ window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save,requireLogin,gotoLogin,requestedDestination};
  function initialize(){
-  mountBadge();mountMobileDock();updateBadge();
-  // When the default auth badge is suppressed, still refresh the header login state.
+  if(document.body?.dataset?.cmimProtected==='1'){
+   void requireLogin().then(ok=>{if(ok){mountBadge();mountMobileDock();updateBadge()}});
+  }else{mountBadge();mountMobileDock();updateBadge()}
   if(document.getElementById('portal-auth-button')&&session?.access_token)
-    current().then(updateBadge).catch(()=>updateBadge());
+   current().then(updateBadge).catch(()=>updateBadge());
+  // Public portal: clicking a protected tool while logged out takes the visitor to login.
+  if(document.body?.dataset?.cmimProtected!=='1'){
+   document.addEventListener('click',event=>{
+    const link=event.target.closest?.('a[href]');
+    if(!link||event.defaultPrevented||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    if(link.target&&link.target!=='_self')return;
+    const url=new URL(link.href,location.href);
+    if(url.origin!==location.origin||!PROTECTED_PAGES.has(url.pathname.split('/').pop()))return;
+    if(!session?.access_token){event.preventDefault();location.assign(url.href);}
+   });
+  }
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })();
