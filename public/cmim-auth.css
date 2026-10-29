@@ -106,3 +106,10 @@ body.cmim-account-page{background:radial-gradient(circle at 85% -10%,#3b361a 0,t
  .cmim-account-page .cmim-match-score{font-size:20px}
  .cmim-account-page .cmim-actions>*{max-width:100%;overflow-wrap:anywhere}
 }
+
+/* A Seleção possui seus próprios controles em tela cheia: não sobrepor o draft. */
+@media(max-width:760px){
+ body:has(#root) .cmim-mobile-dock{display:none}
+ body:has(#root){padding-bottom:0!important}
+ body:has(#root) .cmim-auth-bar{bottom:12px!important;left:auto!important;right:12px!important;max-width:180px}
+}
