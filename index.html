@@ -110,11 +110,11 @@
   </style>
   <link rel="stylesheet" href="./portal-extra.css">
 <link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script></head>
-<body>
+<body data-no-auth-badge="1" class="cmim-homepage">
   <header class="site-header">
     <div class="wrap topbar">
       <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./cmim.jpeg" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
-      <nav class="nav" aria-label="Menu principal"><a href="./draft.html?jogar=1" class="play-nav-link">▶ JOGAR</a><a href="./inhouse.html">IN-HOUSE</a><a href="./campeonatos.html">CAMPEONATOS</a><a href="./perfil.html">MEU PERFIL</a><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="#regras">REGRAS</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><a id="portal-admin-button" class="portal-admin-entry" href="./admin.html">⚙ ADMINISTRAR</a>
+      <nav class="nav" aria-label="Menu principal"><a href="./draft.html?jogar=1" class="play-nav-link">▶ JOGAR</a><a href="#como-funciona">COMO FUNCIONA</a><a href="./inhouse.html">IN-HOUSE</a><a href="./campeonatos.html">CAMPEONATOS</a><a href="./perfil.html">MEU PERFIL</a><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="#regras">REGRAS</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><a id="portal-auth-button" class="portal-auth-entry" href="./conta.html" aria-label="Entrar ou criar conta no CMIM">◉ ENTRAR / CRIAR CONTA <span aria-hidden="true">↗</span></a>
     </div>
   </header>
   <main>
@@ -136,6 +136,69 @@
           <div class="hero-art-refined-copy"><span>UM TIME.</span><span>UMA HISTÓRIA.</span><strong>UM CMIM.</strong></div>
         </div>
         <div class="hero-art-refined-bottom"><div><small>NASCEU DO ZERO. VOLTOU MAIS FORTE.</small><strong>PLAY <span>·</span> COMPETE <span>·</span> REPEAT</strong></div></div>
+      </div>
+    </section>
+    <div class="wrap divider"></div>
+
+    <section class="wrap inhouse-how section" id="como-funciona" aria-labelledby="inhouse-how-title">
+      <div class="inhouse-how-heading">
+        <div>
+          <div class="mini inhouse-how-kicker"><span aria-hidden="true">●</span> PRIMEIRA VEZ NO CMIM? · GUIA DO IN-HOUSE</div>
+          <h2 id="inhouse-how-title">COMO FUNCIONA <span class="yellow">O IN-HOUSE?</span></h2>
+          <p>Da lista de jogadores à classificação oficial: todo mundo participa do draft, joga a série e constrói a história da temporada. Veja o caminho de uma partida dentro do CMIM.</p>
+        </div>
+        <a href="./draft.html?jogar=1" class="button primary inhouse-how-start">▶ COMEÇAR A JOGAR <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="inhouse-how-steps" aria-label="Seis etapas para participar do In-House">
+        <article class="inhouse-how-step">
+          <div class="inhouse-how-step-top"><span class="inhouse-how-number">01</span><span class="inhouse-how-icon" aria-hidden="true">◈</span></div>
+          <h3>REÚNA A LISTA</h3>
+          <p>Com os <strong>10 jogadores</strong> definidos, uma pessoa da lista compartilha a tela e clica em <strong>Jogar</strong>. Ela pode ser um capitão ou alguém ajudando os dois capitães a formar as equipes.</p>
+          <span class="inhouse-how-chip">10 JOGADORES · 5 POR TIME</span>
+        </article>
+        <article class="inhouse-how-step">
+          <div class="inhouse-how-step-top"><span class="inhouse-how-number">02</span><span class="inhouse-how-icon" aria-hidden="true">⇄</span></div>
+          <h3>FAÇA O DRAFT DOS TIMES</h3>
+          <p>Preencha os nicks por lane, escolha o formato de montagem dos times (como <strong>Snake, Alternado ou Aleatório</strong>) e selecione os jogadores até completar os dois elencos.</p>
+          <span class="inhouse-how-chip">CAPITÃES · DRAFT DE JOGADORES</span>
+        </article>
+        <article class="inhouse-how-step">
+          <div class="inhouse-how-step-top"><span class="inhouse-how-number">03</span><span class="inhouse-how-icon" aria-hidden="true">◷</span></div>
+          <h3>DEFINA A SÉRIE</h3>
+          <p>Escolha <strong>MD1, MD3 ou MD5</strong> e as regras de campeões: <strong>Normal, Fearless ou Ironman</strong>. Antes de avançar, decidam os lados: <b class="inhouse-blue">Time A = Blue Side</b> e <b class="inhouse-red">Time B = Red Side</b>.</p>
+          <span class="inhouse-how-chip">FORMATO · LADOS CONFIRMADOS</span>
+        </article>
+        <article class="inhouse-how-step">
+          <div class="inhouse-how-step-top"><span class="inhouse-how-number">04</span><span class="inhouse-how-icon" aria-hidden="true">♜</span></div>
+          <h3>ESCOLHA OS CAMPEÕES</h3>
+          <p>O site abre a Seleção de Campeões e disponibiliza os <strong>links de Blue Side, Red Side e espectador</strong>. Cada capitão controla os picks e bans do seu lado.</p>
+          <span class="inhouse-how-chip">PICKS · BANS · CAPITÃES</span>
+        </article>
+        <article class="inhouse-how-step">
+          <div class="inhouse-how-step-top"><span class="inhouse-how-number">05</span><span class="inhouse-how-icon" aria-hidden="true">✓</span></div>
+          <h3>CONFIRME O RESULTADO</h3>
+          <p>Após cada jogo, <strong>os dois capitães informam o vencedor</strong>. O sistema só avança quando ambos registram o mesmo resultado. Se houver divergência, a próxima partida não é liberada automaticamente.</p>
+          <span class="inhouse-how-chip">DUPLA CONFIRMAÇÃO</span>
+        </article>
+        <article class="inhouse-how-step">
+          <div class="inhouse-how-step-top"><span class="inhouse-how-number">06</span><span class="inhouse-how-icon" aria-hidden="true">★</span></div>
+          <h3>APROVAÇÃO E PONTUAÇÃO</h3>
+          <p>Ao terminar a série, o <strong>ADM confere e aprova as partidas</strong>. Só depois disso os resultados entram no <strong>Ranking CMIM</strong> e nas estatísticas de campeões da temporada.</p>
+          <span class="inhouse-how-chip">ADM · RANKING · ESTATÍSTICAS</span>
+        </article>
+      </div>
+      <div class="inhouse-how-note">
+        <span class="inhouse-how-note-icon" aria-hidden="true">!</span>
+        <div>
+          <strong>IMPORTANTE ANTES DE COMEÇAR</strong>
+          <p>Para receber pontos oficiais, os jogadores precisam estar corretamente identificados no Ranking da temporada. Se a partida terminar fora do site, o ADM pode registrar os jogos restantes com justificativa e submetê-los à aprovação.</p>
+        </div>
+        <a href="./ranking.html" class="inhouse-how-note-link">VER RANKING <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="inhouse-how-footer">
+        <a class="button primary" href="./draft.html?jogar=1">▶ JOGAR IN-HOUSE</a>
+        <a class="button" href="./inhouse.html">▥ VER ESTATÍSTICAS</a>
+        <a class="inhouse-how-rules" href="#regras">LER OS 10 MANDAMENTOS <span aria-hidden="true">→</span></a>
       </div>
     </section>
     <div class="wrap divider"></div>
@@ -285,6 +348,7 @@
     </section>
     <section class="closing"><div class="wrap closing-inner"><div><div class="mini yellow">DE VOLTA ÀS RAÍZES</div><h2>O CMIM É FEITO POR QUEM JOGA.</h2><p>Sem milhões de jogadores. Só a nossa comunidade e muitas histórias para contar.</p></div><a class="button primary" href="./draft.html">COMEÇAR UM DRAFT <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></a></div></section>
   </main>
+  <a id="portal-admin-button" class="portal-admin-quiet" href="./admin.html" aria-label="Área administrativa do CMIM">⚙ ADM</a>
   <footer class="wrap footer"><span>CMIM © 2026 · COMUNIDADE MAIS INSALUBRE DO MUNDO · FEITO PARA A COMUNIDADE.</span><span>GG WP · <a href="https://www.twitch.tv/11gaia11br" target="_blank" rel="noopener noreferrer">ACOMPANHE AS LIVES ↗</a></span></footer>
 
 
