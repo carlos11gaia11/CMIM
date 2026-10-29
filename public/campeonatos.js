@@ -5,7 +5,15 @@ const a=window.CMIMAuth,$=id=>document.getElementById(id),esc=a.esc;
 const txt=x=>String(x??'');
 const state={me:null,admin:false,comps:[],entries:[],squads:[],members:[],profiles:[],matches:[],invites:[],selected:null};
 const safeErr=e=>txt(e?.message||e);
-const status=(message,bad=false)=>{const node=$('champ-status');node.textContent=message;node.className='cmim-status'+(bad?' error':'');};
+const status=(message,bad=false)=>{
+ const node=$('champ-status');node.textContent=message;node.className='cmim-status'+(bad?' error':'');
+ let toast=$('cmim-competition-toast');
+ if(!toast){toast=document.createElement('div');toast.id='cmim-competition-toast';
+  toast.className='cmim-toast';toast.setAttribute('role','status');
+  toast.setAttribute('aria-live','polite');document.body.append(toast);}
+ toast.textContent=message;toast.className='cmim-toast'+(bad?' error':'');toast.hidden=false;
+ clearTimeout(status.timer);status.timer=setTimeout(()=>toast.hidden=true,bad?9000:4500);
+};
 const label=s=>({copa:'Copa / Mata-mata',liga:'Liga / Pontos corridos',suico:'Suíço',draft:'Rascunho',open:'Inscrições abertas',closed:'Inscrições encerradas',live:'Em andamento',finished:'Finalizado',pending:'Pendente',approved:'Aprovado',rejected:'Rejeitado',scheduled:'Agendado'}[s]||s);
 const team=id=>state.squads.find(x=>x.id===id);
 const competition=id=>state.comps.find(x=>x.id===id);
