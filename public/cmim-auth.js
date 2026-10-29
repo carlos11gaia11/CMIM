@@ -27,7 +27,13 @@
   const data=await call('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});
   save(data);return data;
  }
- async function signUp(values){
+ function normalizePhone(value){
+ let digits=String(value||'').replace(/[^0-9]/g,'');
+ if(digits.startsWith('55')&&(digits.length===12||digits.length===13))digits=digits.slice(2);
+ if(!/^[1-9][0-9][0-9]{8,9}$/.test(digits))throw Error('Informe telefone com DDD e 10 ou 11 dígitos.');
+ return '+55'+digits;
+}
+async function signUp(values){
   const nickTag=String(values.riot_id||'').trim().match(/^(.{2,32})#([A-Za-z0-9]{3,6})$/);
   if(!nickTag)throw Error('Use um nick com # e tag de 3 a 6 caracteres. Ex.: Gaia#BR1.');
   if(!LANES.includes(values.lane)||!LANES.includes(values.secondary_lane)||values.lane===values.secondary_lane)
@@ -37,7 +43,7 @@
   const out=await call('/auth/v1/signup',{method:'POST',body:{
    email:String(values.email).trim().toLowerCase(),password:values.password,
    data:{nick:nickTag[1].trim(),tag:nickTag[2].toUpperCase(),real_name:String(values.real_name).trim().slice(0,90),
-     lane:values.lane,secondary_lane:values.secondary_lane}
+     lane:values.lane,secondary_lane:values.secondary_lane,phone_e164:normalizePhone(values.phone)}
   }});
   if(out.access_token)save(out);
   return out;
@@ -69,6 +75,6 @@
   document.body.insertAdjacentHTML('beforeend',badgeMarkup());updateBadge();
   if(session?.access_token)current().then(updateBadge);
  }
- window.CMIMAuth={BASE,KEY,LANES,call,current,user,signIn,signUp,logout,uploadAvatar,esc,session:()=>session,save};
+ window.CMIMAuth={BASE,KEY,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountBadge);else mountBadge();
 })();
