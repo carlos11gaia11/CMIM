@@ -360,7 +360,11 @@
         secured:true,method:'POST',body:JSON.stringify({p_room:room,p_expected_version:state.version})
       });
       await loadAdminData();
-      flash('✓ '+result.format+' ('+result.score+') aprovada! Ranking e estatísticas atualizados.');
+      if(result.competitionSyncError)
+        flash('✓ '+result.format+' aprovada no Ranking, mas o campeonato precisa de revisão: '+result.competitionSyncError,true);
+      else flash('✓ '+result.format+' ('+result.score+') aprovada! Ranking e estatísticas atualizados.'+
+        (result.competitionSynced?' Confronto do campeonato sincronizado automaticamente.':''));
+
     }catch(error){
       flash('Não foi possível aprovar: '+error.message+'. Confira se os dez nicks estão inscritos na temporada.',true);
     }finally{state.reviewBusy=false;renderReviewQueue();}
