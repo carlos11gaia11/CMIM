@@ -9,9 +9,14 @@ export const asset = (path: string) => `${import.meta.env.BASE_URL}${path.replac
 
 export async function apiRequest(path:string, options:{method?:string;token?:string;body?:unknown} = {}) {
  if(!isConfigured()) throw Error('Supabase não configurado. Consulte o LEIA-ME.');
+ // Never call draft room endpoints anonymously: bearer token comes from the
+ // verified CMIMAuth session and is checked again by the Edge Function.
+ const auth = typeof window!=='undefined' ? (window as any).CMIMAuth : null;
+ const session = auth ? await auth.current() : null;
+ if(!session?.access_token)throw Error('Faça login no CMIM para usar o draft e a seleção de campeões.');
  const response = await fetch(`${url}/functions/v1/cmim-draft-api${path}`, {
   method:options.method||'GET',
-  headers:{'Content-Type':'application/json','apikey':publicKey,...(options.token?{'X-CMIM-Captain':options.token}:{})},
+  headers:{'Content-Type':'application/json','apikey':publicKey,'Authorization':'Bearer '+session.access_token,...(options.token?{'X-CMIM-Captain':options.token}:{})},
   ...(options.body!==undefined?{body:JSON.stringify(options.body)}:{}),
   cache:'no-store'
  });
