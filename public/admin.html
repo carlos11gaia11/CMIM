@@ -185,6 +185,18 @@
       <footer class="admin-footer"><span>CMIM © 2026 — ADMINISTRAÇÃO DA COMUNIDADE</span><a href="./">RETORNAR AO PORTAL ↗</a></footer>
     </div>
   </div>
+  <dialog id="review-edit-dialog" class="admin-review-dialog" aria-label="Corrigir partida pendente">
+   <form id="review-edit-form">
+    <div class="review-dialog-head"><div><span class="admin-eyebrow">REVISÃO ADM · ANTES DA APROVAÇÃO</span><h2>Corrigir resultado e picks</h2>
+    <p>As alterações ficam registradas no histórico de auditoria. Partidas aprovadas não podem ser editadas.</p></div>
+    <button id="review-edit-close" type="button" aria-label="Fechar">✕</button></div>
+    <label class="review-edit-win">VENCEDOR CORRETO <select id="review-edit-winner" required></select></label>
+    <div id="review-edit-rows" class="review-edit-rows"></div>
+    <p id="review-edit-error" role="alert" class="admin-error"></p>
+    <footer class="review-dialog-actions"><button type="button" id="review-edit-cancel">Cancelar</button>
+    <button type="submit" class="admin-main-button">✓ SALVAR CORREÇÕES</button></footer>
+   </form>
+  </dialog>
   <div id="portal-flash" class="portal-flash" hidden role="status"></div>
   <script>
     (() => {
