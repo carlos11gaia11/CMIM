@@ -111,19 +111,34 @@
               </header>
               <div class="card-body">
                 <label for="registered-players-search">BUSCAR NICK OU RIOT ID<input id="registered-players-search" type="search" placeholder="Ex.: Gaia#BR1"></label>
+                <div class="registered-player-filters">
+                  <label>FILTRAR POR TIER<select id="registered-filter-tier"><option value="">Todos os tiers</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option value="NONE">Sem tier</option></select></label>
+                  <label>FILTRAR POR LANE<select id="registered-filter-lane"><option value="">Todas as lanes</option><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option><option value="NONE">Sem lane</option></select></label>
+                  <label>FILTRAR POR ELO<select id="registered-filter-elo"><option value="">Todos os elos</option><option>DESAFIANTE</option><option>GRAO_MESTRE</option><option>MESTRE</option><option>DIAMANTE</option><option>ESMERALDA</option><option>PLATINA</option><option>OURO</option><option>PRATA</option><option>BRONZE</option><option>FERRO</option><option value="NONE">Não informado</option></select></label>
+                  <label>VÍNCULO AO RANKING<select id="registered-filter-rank"><option value="">Todos</option><option value="linked">Vinculados</option><option value="unlinked">Sem vínculo</option></select></label>
+                </div>
                 <p id="registered-players-count" class="field-help" role="status">Carregando perfis cadastrados...</p>
                 <div id="registered-players-list" class="registered-players-list"></div>
                 <form id="registered-tier-form" class="registered-tier-form" hidden>
-                  <h3 id="registered-tier-name">Editar tier do jogador</h3>
+                  <h3 id="registered-tier-name">Editar cadastro do jogador</h3>
                   <div class="admin-fields">
-                    <label>ELO INFORMADO<input id="registered-tier-elo" readonly></label>
-                    <label>PRÉ-TIER INICIAL<input id="registered-tier-initial" readonly></label>
-                    <label>TIER CMIM ATUAL<select id="registered-tier-current" required>
-                      <option value="S">S</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option>
+                    <label>NOME REAL (PRIVADO)<input id="registered-edit-name" maxlength="90" required></label>
+                    <label>TELEFONE (PRIVADO)<input id="registered-edit-phone" type="tel" maxlength="20" placeholder="(11) 99999-9999"></label>
+                    <label>NICK<input id="registered-edit-nick" maxlength="32" required></label>
+                    <label>TAG RIOT<input id="registered-edit-tag" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
+                    <label>LANE PRIMÁRIA<select id="registered-edit-lane" required><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+                    <label>LANE SECUNDÁRIA<select id="registered-edit-secondary" required><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+                    <label>ELO ATUAL<select id="registered-edit-elo" required>
+                      <option value="FERRO">Ferro</option><option value="BRONZE">Bronze</option><option value="PRATA">Prata</option><option value="OURO">Ouro</option><option value="PLATINA">Platina</option><option value="ESMERALDA">Esmeralda</option><option value="DIAMANTE">Diamante</option><option value="MESTRE">Mestre</option><option value="GRAO_MESTRE">Grão-Mestre</option><option value="DESAFIANTE">Desafiante</option>
                     </select></label>
+                    <label>PRÉ-TIER ORIGINAL<input id="registered-tier-initial" readonly></label>
+                    <label>TIER CMIM ATUAL<select id="registered-tier-current" required><option value="S">S</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select></label>
+                    <label>VINCULAR AO RANKING<select id="registered-edit-rank"><option value="">Sem vínculo ao Ranking</option></select></label>
+                    <label class="registered-wide-field">URL DA FOTO DE PERFIL (HTTPS)<input id="registered-edit-avatar" type="url" placeholder="https://..."></label>
+                    <label class="registered-wide-field">BIOGRAFIA<textarea id="registered-edit-bio" rows="3" maxlength="500" placeholder="Informações públicas do perfil"></textarea></label>
                   </div>
-                  <p class="field-help">O pré-tier original permanece salvo. Somente o tier atual será atualizado.</p>
-                  <button class="admin-main-button" type="submit">✓ SALVAR TIER DO JOGADOR</button>
+                  <p class="field-help">O pré-tier original é preservado. Alterar o tier atual não muda a classificação inicial. E-mail e senha são gerenciados pelo sistema de autenticação, não por esta ficha.</p>
+                  <button class="admin-main-button" type="submit">✓ SALVAR ALTERAÇÕES DO JOGADOR</button>
                   <p id="registered-tier-feedback" role="status"></p>
                 </form>
               </div>
