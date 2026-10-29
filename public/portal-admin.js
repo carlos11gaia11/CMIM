@@ -108,7 +108,7 @@
       jsonFetch('/rest/v1/cmim_rank?id=eq.1&select=data,version',{secured:true}),
       jsonFetch('/rest/v1/cmim_player_meta?select=rank_player_id,tier,lane,riot_tag,champion_tags,player_tags&limit=1000',{secured:true}),
       jsonFetch('/rest/v1/cmim_portal_news?select=id,title,category,published,created_at&order=created_at.desc&limit=50',{secured:true}),
-      jsonFetch('/rest/v1/cmim_draft_game_reports?select=room_id,game,season_id,season_name,mode,winner_side,winner_team,teams,picks,bans,series_games,confirmed_at,review_status,review_note,reviewed_at&order=confirmed_at.desc&limit=1000',{secured:true})
+      jsonFetch('/rest/v1/cmim_draft_game_reports?select=room_id,game,season_id,season_name,mode,winner_side,winner_team,teams,picks,bans,series_games,confirmed_at,review_status,review_note,reviewed_at,entry_source,manual_reason&order=confirmed_at.desc&limit=1000',{secured:true})
     ]);
     state.rank=rows?.[0]?.data||{players:[],seasons:[]};state.version=rows?.[0]?.version??0;
     state.metadata=Array.isArray(metadata)?metadata:[];
@@ -260,7 +260,7 @@
     $('review-status').textContent=list.length+' série(s) exibida(s) · '+counts.pending+' aguardando decisão.';
     if(!list.length){
       box.innerHTML='<div class="review-empty">'+(filter==='pending'?
-        'Tudo em dia! Nenhuma série aguardando aprovação. As próximas MD3 aparecerão aqui quando os capitães registrarem os resultados.':
+        'Tudo em dia! Nenhuma série aguardando aprovação. As próximas séries aparecerão quando os capitães ou o ADM registrarem os resultados.':
         'Não há partidas nessa categoria.')+'</div>';
       return;
     }
@@ -269,9 +269,9 @@
         g.complete?'● AGUARDANDO ADM':'◷ SÉRIE EM ANDAMENTO';
       const teamA=esc(g.teamA),teamB=esc(g.teamB);
       const games=g.games.map(game=>{
-        const banNames=(game.bans||[]).map(b=>b.champion).filter(Boolean);
+        const banNames=(game.bans||[]).map(b=>b.champion).filter(Boolean);const manual=game.entry_source==='admin_manual';
         const picks=(game.picks||[]).map(p=>[p.nick,p.champion].filter(Boolean).join(' · '));
-        return '<div class="review-game"><div class="review-game-heading"><b>Jogo '+Number(game.game)+'</b><span>Vencedor: '+esc(game.winner_team)+'</span></div>'+
+        return '<div class="review-game"><div class="review-game-heading"><b>Jogo '+Number(game.game)+(manual?' · ✎ MANUAL':' · ✓ SITE')+'</b><span>Vencedor: '+esc(game.winner_team)+'</span></div>'+ (manual?'<div class="review-manual-note">📋 Fonte: '+esc(game.manual_reason||'Sem observação')+'</div>':'')+
           '<details><summary>Conferir picks, bans e jogadores</summary><div class="review-game-details"><div><b>PICKS / NICKS</b><p>'+esc(picks.join(' | '))+'</p></div>'+
           '<div><b>BANS</b><p>'+esc(banNames.join(', '))+'</p></div></div></details>'+(g.status==='pending'?'<button class="review-edit-trigger" data-edit-room="'+esc(g.id)+'" data-edit-game="'+Number(game.game)+'">✎ Corrigir vencedor, jogador ou campeão</button>':'')+'</div>';
       }).join('');
@@ -279,15 +279,15 @@
       let actions='';
       if(g.status==='pending')actions='<button class="review-approve admin-main-button" type="button" data-review-room="'+esc(g.id)+'" '+
         (!g.complete||state.reviewBusy?'disabled':'')+'>✓ APROVAR MD'+g.seriesGames+' E LANÇAR PONTOS</button>'+
-        '<button class="review-reject" type="button" data-reject-room="'+esc(g.id)+'">Rejeitar partidas</button>';
+        '<button class="review-reject" type="button" data-reject-room="'+esc(g.id)+'">Rejeitar partidas</button>'+(!g.complete?'<button class="review-add-game" type="button" data-manual-room="'+esc(g.id)+'">＋ REGISTRAR JOGO '+(g.games.length+1)+' MANUALMENTE</button>':'');
       if(g.status==='rejected')actions='<button class="review-reopen" type="button" data-reopen-room="'+esc(g.id)+'">Reabrir análise</button>';
       if(g.status==='approved')actions='<span class="review-approved-note">✓ Contabilizada no ranking e nas estatísticas.</span>';
       const note=g.status==='rejected'?'Motivo da rejeição: '+esc(g.reason):
         !g.complete?'A aprovação será liberada quando a MD'+g.seriesGames+' terminar com '+g.requiredWins+' vitória(s).':
-        'MD3 concluída e pronta para a conferência do administrador.';
+        'Série concluída e pronta para a conferência do administrador.';
       return '<article class="review-series '+g.status+'"><div class="review-series-top">'+
         '<div><span class="admin-eyebrow">MD'+g.seriesGames+' · '+esc(g.season)+'</span><h3>'+teamA+' <span>×</span> '+teamB+'</h3>'+
-        '<p>Confirmados: '+g.games.length+' jogo(s) · Sala: '+esc(g.id.slice(0,8))+'…</p></div>'+
+        '<p>Registrados: '+g.games.length+' jogo(s) · Sala: '+esc(g.id.slice(0,8))+'…</p></div>'+
         '<span class="review-badge '+g.status+'">'+label+'</span></div>'+
         '<div class="review-score"><span>'+teamA+'</span><strong>'+g.aw+' × '+g.bw+'</strong><span>'+teamB+'</span></div>'+
         '<div class="review-roster">'+players+'</div>'+
@@ -480,6 +480,7 @@
   $('review-edit-form')?.addEventListener('submit',submitReviewEdit);
   $('review-edit-close')?.addEventListener('click',()=>$('review-edit-dialog').close());
   $('review-edit-cancel')?.addEventListener('click',()=>$('review-edit-dialog').close());
+  window.CMIMReviewBridge={getGroups:reviewGroups,isAdmin:()=>state.admin,isBusy:()=>state.reviewBusy,fetch:(path,opts)=>jsonFetch(path,{secured:true,...opts}),refresh:loadAdminData};
   $('review-filter')?.addEventListener('change',renderReviewQueue);
   $('review-refresh')?.addEventListener('click',()=>{
     loadAdminData().then(()=>flash('Fila de partidas atualizada.')).catch(e=>flash('Erro ao atualizar: '+e.message,true));
