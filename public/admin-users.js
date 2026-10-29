@@ -20,7 +20,7 @@ async function fetchData(){
  try{
   const who=await req('/auth/v1/user');if(who.app_metadata?.cmim_admin!==true)throw Error('Esta conta não tem autorização para gerenciar usuários.');
   const [profiles,priv,defs,roles,rankRows]=await Promise.all([
-   req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at,current_elo,initial_tier,tier&order=nick.asc&limit=1500'),
+   req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,bio,rank_player_id,rank_verified_at,current_elo,initial_tier,tier&order=nick.asc&limit=1500'),
    req('/rest/v1/cmim_player_private?select=id,real_name,phone_e164&limit=1500'),
    req('/rest/v1/cmim_role_definitions?select=slug,label,description,permissions&order=label.asc&limit=100'),
    req('/rest/v1/cmim_user_roles?select=user_id,role_slug,assigned_at&limit=3000'),
@@ -68,9 +68,9 @@ function openRegistered(id){
  $('registered-edit-lane').value=p.lane||'MID';
  $('registered-edit-secondary').value=p.secondary_lane||((p.lane==='SUP')?'MID':'SUP');
  if($('registered-edit-secondary').value===$('registered-edit-lane').value)$('registered-edit-secondary').value=$('registered-edit-lane').value==='TOP'?'JG':'TOP';
- $('registered-edit-elo').value=p.current_elo||'OURO';
+ $('registered-edit-elo').value=p.current_elo||'';
  $('registered-tier-initial').value=p.initial_tier||'Não definido';
- $('registered-tier-current').value=p.tier||p.initial_tier||'D';
+ $('registered-tier-current').value=p.tier||'';
  $('registered-edit-avatar').value=p.avatar_url||'';
  $('registered-edit-bio').value=p.bio||'';
  $('registered-edit-rank').innerHTML='<option value="">Sem vínculo ao Ranking</option>'+state.rank.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.nick||r.name||r.id)+'</option>').join('');
@@ -130,13 +130,13 @@ $('registered-tier-form')?.addEventListener('submit',async event=>{
  try{
   await req('/rest/v1/rpc/cmim_admin_update_player',{method:'POST',body:{
    p_user:current.id,p_nick:$('registered-edit-nick').value.trim(),p_tag:$('registered-edit-tag').value.trim().toUpperCase(),
-   p_lane:lane,p_secondary_lane:secondary,p_current_elo:$('registered-edit-elo').value,p_tier:tier,
+   p_lane:lane,p_secondary_lane:secondary,p_current_elo:$('registered-edit-elo').value,p_tier:tier||null,
    p_bio:$('registered-edit-bio').value.trim(),p_avatar_url:$('registered-edit-avatar').value.trim()||null,
    p_real_name:$('registered-edit-name').value.trim(),p_phone_e164:phone
   }});
   const newRank=$('registered-edit-rank').value||null;
   if((current.rank_player_id||null)!==newRank){
-   await req('/rest/v1/rpc/cmim_admin_profile_set',{method:'POST',body:{p_user:current.id,p_rank_player_id:newRank,p_tier:tier}});
+   await req('/rest/v1/rpc/cmim_admin_profile_set',{method:'POST',body:{p_user:current.id,p_rank_player_id:newRank,p_tier:tier||null}});
   }
   await fetchData();
   $('registered-tier-form').hidden=false;
