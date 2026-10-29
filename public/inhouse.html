@@ -4,7 +4,7 @@
 @media(max-width:840px){.stats{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.filters button{grid-column:1/-1}}@media(max-width:510px){main{padding:35px 0}.stats{gap:8px}.stat,.panel{padding:15px}.stat strong{font-size:37px}.filters{grid-template-columns:1fr}.filters button{grid-column:auto}}
 .champion-cell{display:flex;align-items:center;gap:11px;min-width:165px}.champion-cell img{width:46px;height:46px;object-fit:cover;border:1px solid #738054;border-radius:8px;background:#263322;flex-shrink:0}.champion-cell strong{font-size:13px;color:#fff2b1;overflow-wrap:anywhere}</style><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script></head><body>
 <header><div class="wrap"><a class="brand" href="./"><img src="./cmim.jpeg" alt="CMIM"> CMIM <span style="color:var(--yellow)">IN-HOUSE</span></a><nav><a href="./">PORTAL</a><a href="./ranking.html">RANKING</a><a href="./relatorios.html">RELATÓRIOS</a><a href="./draft.html?jogar=1" class="play">▶ JOGAR</a></nav></div></header>
-<main class="wrap"><div class="eyebrow">ESTATÍSTICAS REAIS · PARTIDAS APROVADAS PELO ADM</div><h1>O RIFT TEM <span>MEMÓRIA.</span></h1><p class="lead">Campeões mais jogados e banidos, win rate, pick rate, ban rate e os jogadores que mais utilizaram cada campeão. Todos os números vêm exclusivamente das partidas confirmadas pelos dois capitães <strong>e aprovadas pelo administrador</strong>.</p>
+<main class="wrap"><div class="eyebrow">ESTATÍSTICAS REAIS · PARTIDAS APROVADAS PELO ADM</div><h1>O RIFT TEM <span>MEMÓRIA.</span></h1><p class="lead">Campeões mais jogados e banidos, win rate, pick rate, ban rate e os jogadores que mais utilizaram cada campeão. Os dados vêm exclusivamente dos jogos <strong>aprovados pelo ADM</strong>. Resultados registrados manualmente também podem contar, mas campeões e bans desconhecidos não são inventados.</p>
 <div class="stats"><div class="stat"><strong id="games">—</strong><small>JOGOS SALVOS</small></div><div class="stat"><strong id="picks">—</strong><small>PICKS</small></div><div class="stat"><strong id="bans">—</strong><small>BANS</small></div><div class="stat"><strong id="champions">—</strong><small>CAMPEÕES JOGADOS</small></div></div>
 <section class="panel"><div class="eyebrow">DADOS DA COMUNIDADE</div><h2>ESTATÍSTICAS POR <span>TEMPORADA.</span></h2><p>Escolha uma temporada e filtre pelo nome do campeão ou do jogador.</p><div class="filters"><label>TEMPORADA<select id="season"><option value="all">Todas as temporadas</option></select></label><label>PESQUISAR<input id="search" placeholder="Campeão ou nick..." type="search" autocomplete="off"></label><button type="button" id="refresh" class="primary">ATUALIZAR ↻</button></div>
 <div id="status" class="notice" role="status" aria-live="polite">Carregando dados do Supabase...</div>
@@ -36,7 +36,7 @@ function render(){
  }
  const entries=[...stats.values()].sort((a,b)=>b.picks-a.picks||b.bans-a.bans||a.id.localeCompare(b.id,'pt-BR'));
  $('games').textContent=games.length;
- $('picks').textContent=games.reduce((s,g)=>s+(g.picks?.length||0),0);
+ $('picks').textContent=games.reduce((s,g)=>s+(g.picks?.filter(p=>p.champion)?.length||0),0);
  $('bans').textContent=games.reduce((s,g)=>s+(g.bans?.filter(b=>b.champion)?.length||0),0);
  $('champions').textContent=entries.filter(c=>c.picks).length;
  $('status').textContent=games.length?games.length+' partida(s) aprovadas pelo administrador nesta seleção.':'Ainda não há partidas aprovadas para este filtro. As estatísticas aparecem após o ADM homologar uma MD3.';
