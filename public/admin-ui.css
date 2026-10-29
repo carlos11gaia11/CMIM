@@ -263,3 +263,21 @@ border:1px solid #8e8350;background:#2d2b1e;color:#ffebae;border-radius:6px;padd
 .review-manual-pick .manual-lane{color:#bce8cc;font-size:10px;letter-spacing:.5px}
 #review-manual-error{min-height:24px;font-size:12px;color:#ffbdb4}
 @media(max-width:690px){.review-manual-basic{grid-template-columns:1fr}}
+
+
+/* Leitura confortável dos picks e bans no painel de homologação */
+.review-picks-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:11px 0}
+.review-game-side{padding:13px;border-radius:8px;border:1px solid #4b7464;background:#162e27;min-width:0}
+.review-game-side.red{background:#302020;border-color:#8d5450}
+.review-game-side>b{display:block;margin-bottom:10px;font-size:11px;color:#a4daff}
+.review-game-side.red>b{color:#ffb8aa}
+.review-game-side ul{list-style:none;padding:0;margin:0;display:grid;gap:5px}
+.review-game-side li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-top:1px solid #4a6750;padding:7px 0;overflow-wrap:anywhere}
+.review-game-side li span{font-size:11px;color:#e4f1df;flex:1}
+.review-game-side li strong{font-size:12px;color:#ffdf73;text-align:right}
+.review-game-side li strong.unknown,.review-game-bans .unknown{color:#acbdac;font-style:italic;font-weight:600}
+.review-game-bans{grid-column:1/-1;border:1px solid #53674d;padding:13px;border-radius:8px;background:#212b22}
+.review-game-bans>b{display:block;margin-bottom:7px;color:#ffe599;font-size:11px}
+.review-game-bans>div{display:flex;gap:7px;flex-wrap:wrap}
+.review-ban-chip{border:1px solid #8b7757;color:#ffdfb6;background:#373025;font-size:11px;font-weight:700;padding:5px 9px;border-radius:5px}
+@media(max-width:620px){.review-picks-grid{grid-template-columns:1fr}}
