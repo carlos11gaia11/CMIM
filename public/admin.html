@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./admin-ui.css">
   <title>CMIM | Administração</title>
-  <script defer src="./portal-admin.js"></script>
+  <script defer src="./portal-admin.js"></script><script defer src="./admin-users.js"></script>
 </head>
 <body class="admin-page">
   <div class="admin-layout">
@@ -24,6 +24,7 @@
       <nav class="admin-side-nav" aria-label="Módulos de administração">
         <button type="button" class="current" data-admin-tab="matches"><span class="nav-icon">✓</span><span>Aprovação de partidas</span><span id="review-nav-badge" class="review-nav-badge" hidden>0</span></button>
         <button type="button" data-admin-tab="players"><span class="nav-icon">♙</span><span>Jogadores e tiers</span></button>
+        <button type="button" data-admin-tab="users"><span class="nav-icon">◎</span><span>Usuários e cargos</span></button>
         <button type="button" data-admin-tab="register"><span class="nav-icon">✚</span><span>Cadastro e inscrições</span></button>
         <button type="button" data-admin-tab="audio"><span class="nav-icon">♫</span><span>Música de fundo</span></button>
         <button type="button" data-admin-tab="news"><span class="nav-icon">▣</span><span>CMIM News</span></button>
@@ -32,6 +33,7 @@
       <nav class="admin-side-nav sub-nav">
         <a href="./"><span class="nav-icon">⌂</span><span>Voltar ao portal</span></a>
         <a href="./ranking.html"><span class="nav-icon">▥</span><span>Tabela de pontuação</span></a>
+        <a href="./campeonatos.html"><span class="nav-icon">♛</span><span>Gerenciar campeonatos</span></a>
         <a href="./selecao.html"><span class="nav-icon">⚔</span><span>Seleção de campeões</span></a>
       </nav>
       <div class="admin-side-bottom"><span class="status-indicator"></span><span>ACESSO RESTRITO<br><small>Protegido pelo Supabase</small></span></div>
@@ -126,6 +128,41 @@
               <footer class="form-footer"><small id="admin-player-feedback" role="status"></small><button type="submit" class="admin-main-button">SALVAR ALTERAÇÕES →</button></footer>
             </form>
           </section>
+          <section id="admin-tab-users" class="admin-tab-content" hidden aria-label="Gerenciar contas e cargos">
+           <div class="module-heading"><div><span class="admin-eyebrow">MÓDULO · IDENTIDADE E PERMISSÕES</span><h2>Usuários e cargos</h2>
+           <p>Gerencie nicks, lanes, nomes privados e cargos da comunidade. As credenciais e senhas permanecem no Supabase Auth e não podem ser visualizadas.</p></div>
+           <button type="button" id="users-refresh" class="admin-main-button">↻ ATUALIZAR</button></div>
+           <div class="review-guidance"><b>Segurança:</b> cargos da comunidade são rótulos e permissões de organização. Eles não concedem automaticamente acesso irrestrito ao ADM. O acesso de administrador continua protegido pelo Supabase.</div>
+           <div class="admin-card"><header class="card-header"><div><span class="card-step">01</span><div><h3>Editar usuário cadastrado</h3><p>Selecione o Riot ID para alterar nick, tag, lanes e nome real privado.</p></div></div></header>
+            <form id="manage-user-form" class="card-body admin-form">
+             <label>JOGADOR CADASTRADO<select id="manage-user-select" required><option value="">Carregando contas...</option></select></label>
+             <div class="admin-fields">
+              <label>NOME REAL (PRIVADO)<input id="manage-user-name" maxlength="90" required></label>
+              <label>NICK<input id="manage-user-nick" maxlength="32" required></label>
+              <label>TAG RIOT<input id="manage-user-tag" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
+              <label>LANE PRIMÁRIA<select id="manage-user-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+              <label>LANE SECUNDÁRIA<select id="manage-user-secondary"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
+             </div>
+             <button class="admin-main-button">✓ SALVAR DADOS DO USUÁRIO</button>
+            </form></div>
+           <div class="admin-register-grid" style="margin-top:18px">
+            <section class="admin-card"><header class="card-header"><div><span class="card-step">02</span><div><h3>Criar cargo</h3></div></div></header>
+             <form id="manage-role-create" class="card-body admin-form">
+              <label>IDENTIFICADOR DO CARGO<input name="slug" pattern="[a-z0-9_-]{2,28}" placeholder="organizador" required></label>
+              <label>NOME VISÍVEL<input name="label" maxlength="45" placeholder="Organizador" required></label>
+              <label>DESCRIÇÃO<input name="description" maxlength="240" placeholder="Responsável por organizar eventos"></label>
+              <label>PERMISSÕES DECLARADAS<input name="permissions" placeholder="play, staff, events"><span class="field-help">Separadas por vírgula. Cargos não substituem autorização no banco.</span></label>
+              <button class="admin-main-button">＋ CRIAR CARGO</button>
+             </form></section>
+            <section class="admin-card"><header class="card-header"><div><span class="card-step">03</span><div><h3>Atribuir e remover cargos</h3></div></div></header>
+             <form id="manage-user-role" class="card-body admin-form">
+              <label>USUÁRIO<select id="manage-role-user" required></select></label>
+              <label>CARGO<select id="manage-role-select" required></select></label>
+              <div class="admin-fields"><button class="admin-main-button" type="submit" data-role-action="add">＋ ATRIBUIR CARGO</button>
+              <button class="admin-main-button" type="button" id="manage-role-remove">REMOVER CARGO</button></div>
+             </form><div id="manage-role-list" class="card-body"></div></section>
+           </div><p id="manage-user-status" class="cmim-status" role="status"></p>
+          </section>
           <section id="admin-tab-register" class="admin-tab-content" hidden aria-label="Cadastro de participantes">
             <div class="module-heading"><div><span class="admin-eyebrow">MÓDULO 02 / GESTÃO DE PARTICIPANTES</span><h2>Cadastro &amp; Inscrições</h2><p>Adicione novos nomes ao ranking ou inscreva jogadores já cadastrados na temporada ativa.</p></div></div>
             <div class="admin-season-card"><div><span>TERMINAL DA TEMPORADA</span><strong id="admin-season-name">Carregando temporada...</strong></div><a href="./ranking.html">Gerenciar temporadas ↗</a></div>
@@ -201,7 +238,7 @@
   <script>
     (() => {
       const tabs=[...document.querySelectorAll('[data-admin-tab]')];
-      const panels={matches:document.getElementById('admin-tab-matches'),players:document.getElementById('admin-tab-players'),register:document.getElementById('admin-tab-register'),audio:document.getElementById('admin-tab-audio'),news:document.getElementById('admin-tab-news')};
+      const panels={matches:document.getElementById('admin-tab-matches'),players:document.getElementById('admin-tab-players'),users:document.getElementById('admin-tab-users'),register:document.getElementById('admin-tab-register'),audio:document.getElementById('admin-tab-audio'),news:document.getElementById('admin-tab-news')};
       function activate(name){
         if(!panels[name])name='matches';
         tabs.forEach(b=>{const on=b.dataset.adminTab===name;b.classList.toggle('current',on);b.setAttribute('aria-current',on?'page':'false')});
