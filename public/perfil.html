@@ -21,7 +21,7 @@
 <div class="cmim-stats"><div class="cmim-stat"><strong id="stat-games">—</strong><span>JOGOS APROVADOS</span></div><div class="cmim-stat"><strong id="stat-wins">—</strong><span>VITÓRIAS</span></div><div class="cmim-stat"><strong id="stat-wr">—</strong><span>WIN RATE</span></div><div class="cmim-stat"><strong id="stat-champs">—</strong><span>CAMPEÕES DIFERENTES</span></div></div>
 <div class="cmim-grid"><section class="cmim-card"><h2>MINHA EVOLUÇÃO</h2><p class="cmim-muted">Vitórias e derrotas nos últimos jogos homologados.</p><div id="profile-chart" class="cmim-progress" aria-label="Gráfico do histórico de resultados"></div></section>
 <section class="cmim-card"><h2>CAMPEÕES MAIS JOGADOS</h2><div id="profile-champions" class="cmim-empty">Sem picks homologados ainda.</div></section></div>
-<section class="cmim-card" style="margin-top:18px"><h2>HISTÓRICO DE PARTIDAS</h2><div id="profile-game-history" class="cmim-table-wrap"></div><p class="cmim-muted">As estatísticas são baseadas em nicks registrados nos relatórios aprovados. O ADM pode vincular seu perfil ao ranking para assegurar sua classificação oficial. Uma coincidência de nick sem vínculo não comprova a identidade de quem jogou.</p></section>
+<section class="cmim-card" style="margin-top:18px"><h2>HISTÓRICO DE PARTIDAS</h2><div id="profile-game-history" class="cmim-table-wrap"></div><p class="cmim-muted">Partidas novas registradas com uma conta CMIM usam seu identificador de perfil. Dados antigos, ainda sem vínculo, são aproximados pelo nick. O ADM pode vincular sua conta ao jogador do ranking para confirmar sua classificação.</p></section>
 <section class="cmim-card" style="margin-top:18px"><h2>MINHAS TEMPORADAS</h2><div id="profile-seasons" class="cmim-empty">Buscando temporadas...</div></section>
 </div></main>
 <script>document.addEventListener('DOMContentLoaded',async()=>{
@@ -61,9 +61,10 @@
     $('edit-status').textContent='✓ Perfil salvo.';setTimeout(()=>location.reload(),800);
    }catch(err){$('edit-status').textContent=err.message;$('edit-status').classList.add('error')}finally{btn.disabled=false}
   };
-  const games=(reports||[]).filter(r=>Array.isArray(r.picks)&&r.picks.some(p=>norm(p.nick)===norm(profile.nick)));
+  const belongs=p=>p.profile_id?p.profile_id===who.id:norm(p.nick)===norm(profile.nick);
+  const games=(reports||[]).filter(r=>Array.isArray(r.picks)&&r.picks.some(belongs));
   const enriched=games.map(g=>{
-   const picks=g.picks.filter(p=>norm(p.nick)===norm(profile.nick));
+   const picks=g.picks.filter(belongs);
    const pick=picks[0],won=pick?.side===g.winner_side;
    return {...g,pick,won}
   });
