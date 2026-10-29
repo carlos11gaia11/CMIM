@@ -20,7 +20,7 @@ async function fetchData(){
  try{
   const who=await req('/auth/v1/user');if(who.app_metadata?.cmim_admin!==true)throw Error('Esta conta não tem autorização para gerenciar usuários.');
   const [profiles,priv,defs,roles,rankRows]=await Promise.all([
-   req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at,tier&order=nick.asc&limit=1500'),
+   req('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at,current_elo,initial_tier,tier&order=nick.asc&limit=1500'),
    req('/rest/v1/cmim_player_private?select=id,real_name,phone_e164&limit=1500'),
    req('/rest/v1/cmim_role_definitions?select=slug,label,description,permissions&order=label.asc&limit=100'),
    req('/rest/v1/cmim_user_roles?select=user_id,role_slug,assigned_at&limit=3000'),
@@ -29,8 +29,36 @@ async function fetchData(){
   Object.assign(state,{profiles,private:priv,defs,roles,rank:rankRows?.[0]?.data?.players||[],ready:true});render();status(profiles.length+' usuários cadastrados, '+defs.length+' cargos.');
  }catch(e){status('Erro ao carregar usuários: '+e.message,true)}
 }
+let selectedRegisteredId=null;
+function displayRegistered(){
+ const box=$('registered-players-list');if(!box)return;
+ const search=String($('registered-players-search')?.value||'').toLocaleLowerCase('pt-BR');
+ const records=state.profiles.filter(p=>(p.nick+'#'+p.tag).toLocaleLowerCase('pt-BR').includes(search));
+ $('registered-players-count').textContent=state.profiles.length+' contas cadastradas · '+records.length+' exibidas';
+ box.innerHTML=records.length?records.map(p=>
+  '<button type="button" class="registered-player-row" data-registered-id="'+esc(p.id)+'">'+
+  '<span class="registered-player-name">'+esc(p.nick+'#'+p.tag)+'</span>'+
+  '<span class="registered-player-detail">'+esc(p.lane||'Sem lane')+'</span>'+
+  '<span class="registered-player-detail">Elo: '+esc(p.current_elo||'Não informado')+'</span>'+
+  '<span class="registered-player-tier">Pré: '+esc(p.initial_tier||'—')+' · Atual: '+esc(p.tier||'—')+'</span>'+
+  '<span class="registered-player-detail">'+(p.rank_verified_at?'✓ Ranking vinculado':'◷ Sem vínculo')+'</span></button>'
+ ).join(''):'<p class="cmim-muted">Nenhum usuário corresponde à pesquisa.</p>';
+ box.querySelectorAll('[data-registered-id]').forEach(b=>b.addEventListener('click',()=>openRegistered(b.dataset.registeredId)));
+}
+function openRegistered(id){
+ const p=state.profiles.find(x=>x.id===id);if(!p)return;
+ selectedRegisteredId=id;
+ $('registered-tier-form').hidden=false;
+ $('registered-tier-name').textContent='Editar tier · '+p.nick+'#'+p.tag;
+ $('registered-tier-elo').value=p.current_elo||'Não informado';
+ $('registered-tier-initial').value=p.initial_tier||'Não definido';
+ $('registered-tier-current').value=p.tier||p.initial_tier||'D';
+ $('registered-tier-feedback').textContent='';
+ $('registered-tier-form').scrollIntoView({block:'nearest',behavior:'smooth'});
+}
 function render(){
  const current=$('manage-user-select').value,users=state.profiles;
+ displayRegistered();
  const options='<option value="">Selecione um usuário...</option>'+users.map(p=>'<option value="'+p.id+'">'+(p.rank_verified_at?'✓ ':'◷ ')+esc(p.nick+'#'+p.tag)+'</option>').join('');
  $('manage-user-select').innerHTML=options;$('manage-role-user').innerHTML=options;
  if(users.some(x=>x.id===current))$('manage-user-select').value=current;
@@ -58,6 +86,24 @@ function renderAssigned(){
  const list=state.roles.filter(r=>r.user_id===selected);
  $('manage-role-list').innerHTML=list.length?list.map(r=>'<span class="cmim-badge" style="display:inline-block;margin:4px">'+esc(state.defs.find(d=>d.slug===r.role_slug)?.label||r.role_slug)+'</span>').join(''):'<span style="color:#b7cdb5">Nenhum cargo extra atribuído.</span>';
 }
+$('registered-players-search')?.addEventListener('input',displayRegistered);
+$('registered-players-refresh')?.addEventListener('click',fetchData);
+$('registered-tier-form')?.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const current=state.profiles.find(p=>p.id===selectedRegisteredId);
+ if(!current)return status('Escolha um usuário cadastrado.',true);
+ const tier=$('registered-tier-current').value;
+ if(!['S','A','B','C','D','E','F'].includes(tier))return status('Tier inválido.',true);
+ const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+ try{
+  await req('/rest/v1/cmim_profiles?id=eq.'+encodeURIComponent(current.id),{
+   method:'PATCH',body:{tier,updated_at:new Date().toISOString()}});
+  await fetchData();openRegistered(current.id);
+  $('registered-tier-feedback').textContent='✓ Tier atual salvo. Pré-tier inicial preservado.';
+ }catch(error){$('registered-tier-feedback').textContent='Erro: '+error.message;status(error.message,true)}
+ finally{button.disabled=false}
+});
+document.querySelector('[data-admin-tab="players"]')?.addEventListener('click',fetchData);
 $('manage-user-select')?.addEventListener('change',showUser);
 $('manage-role-user')?.addEventListener('change',renderAssigned);
 $('users-refresh')?.addEventListener('click',fetchData);
