@@ -2,7 +2,7 @@
 (()=>{'use strict';
  const BASE='https://klpvidxhzofbwstvvxib.supabase.co',KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn';
  const STORAGE='cmim_player_session',LANES=['TOP','JG','MID','ADC','SUP'];
- let session=null,loginInFlight=null;try{session=JSON.parse(localStorage.getItem(STORAGE)||sessionStorage.getItem('cmim_session')||'null')}catch{}
+ let session=null,loginInFlight=null;try{const adm=JSON.parse(sessionStorage.getItem('cmim_session')||'null'),player=JSON.parse(localStorage.getItem(STORAGE)||'null');session=adm?.user?.app_metadata?.cmim_admin===true?adm:(player||adm)}catch{}
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  function save(data){session=data||null;try{if(data)localStorage.setItem(STORAGE,JSON.stringify(data));else localStorage.removeItem(STORAGE)}catch{}document.dispatchEvent(new CustomEvent('cmim-auth-changed',{detail:{loggedIn:!!session}}));updateBadge()}
  async function call(path,{method='GET',body,secure=false,headers={}}={}){
