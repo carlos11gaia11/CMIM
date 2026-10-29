@@ -281,3 +281,20 @@ border:1px solid #8e8350;background:#2d2b1e;color:#ffebae;border-radius:6px;padd
 .review-game-bans>div{display:flex;gap:7px;flex-wrap:wrap}
 .review-ban-chip{border:1px solid #8b7757;color:#ffdfb6;background:#373025;font-size:11px;font-weight:700;padding:5px 9px;border-radius:5px}
 @media(max-width:620px){.review-picks-grid{grid-template-columns:1fr}}
+
+
+/* Registered accounts: separate from historic rank entries */
+.registered-players-list{display:grid;gap:8px;margin:14px 0}
+.registered-player-row{display:grid;grid-template-columns:minmax(140px,1.6fr) minmax(60px,.6fr) minmax(120px,1fr) minmax(125px,1fr) minmax(135px,1fr);align-items:center;gap:12px;
+ width:100%;text-align:left;background:#1a2b20;border:1px solid #51664d;color:#eaf3e5;padding:13px 15px;border-radius:8px;cursor:pointer}
+.registered-player-row:hover,.registered-player-row:focus-visible{border-color:#e9cb6e;background:#293829;outline-offset:2px}
+.registered-player-name{font-weight:900;color:#ffe69a;overflow-wrap:anywhere}
+.registered-player-detail{font-size:12px;color:#d2e0ce}
+.registered-player-tier{font-weight:850;color:#e3f7c4;font-size:12px}
+.registered-tier-form{margin-top:18px;padding:20px;border:1px solid #ab914a;background:#263225;border-radius:10px}
+.registered-tier-form[hidden]{display:none!important}
+.registered-tier-form h3{font-size:22px;color:#ffdf86;margin:0 0 13px}
+.registered-tier-form input[readonly]{background:#152017;color:#e0ead7;opacity:1}
+#registered-tier-feedback{color:#c5f5c4;min-height:16px}
+@media(max-width:950px){.registered-player-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
+@media(max-width:550px){.registered-player-row{grid-template-columns:1fr;gap:5px;padding:12px}.registered-tier-form{padding:12px}}
