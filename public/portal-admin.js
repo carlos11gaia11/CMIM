@@ -273,7 +273,7 @@
         const picks=(game.picks||[]).map(p=>[p.nick,p.champion].filter(Boolean).join(' · '));
         return '<div class="review-game"><div class="review-game-heading"><b>Jogo '+Number(game.game)+'</b><span>Vencedor: '+esc(game.winner_team)+'</span></div>'+
           '<details><summary>Conferir picks, bans e jogadores</summary><div class="review-game-details"><div><b>PICKS / NICKS</b><p>'+esc(picks.join(' | '))+'</p></div>'+
-          '<div><b>BANS</b><p>'+esc(banNames.join(', '))+'</p></div></div></details></div>';
+          '<div><b>BANS</b><p>'+esc(banNames.join(', '))+'</p></div></div></details>'+(g.status==='pending'?'<button class="review-edit-trigger" data-edit-room="'+esc(g.id)+'" data-edit-game="'+Number(game.game)+'">✎ Corrigir vencedor, jogador ou campeão</button>':'')+'</div>';
       }).join('');
       const players=(g.games[0]?.teams||[]).map(team=>'<div><b>'+esc(team.name)+'</b><p>'+esc((team.players||[]).join(' · '))+'</p></div>').join('');
       let actions='';
@@ -295,10 +295,50 @@
         '<div class="review-note">'+note+'</div>'+
         '<div class="review-actions">'+actions+'<a href="./relatorios.html?room='+encodeURIComponent(g.id)+'" target="_blank" rel="noopener noreferrer">↗ Abrir relatórios TXT</a></div></article>';
     }).join('');
+    box.querySelectorAll('[data-edit-room]').forEach(button=>button.addEventListener('click',()=>openReviewEdit(button.dataset.editRoom,Number(button.dataset.editGame))));
     box.querySelectorAll('[data-review-room]').forEach(button=>button.addEventListener('click',()=>approveRoom(button.dataset.reviewRoom)));
     box.querySelectorAll('[data-reject-room]').forEach(button=>button.addEventListener('click',()=>reviewRoom(button.dataset.rejectRoom,'reject')));
     box.querySelectorAll('[data-reopen-room]').forEach(button=>button.addEventListener('click',()=>reviewRoom(button.dataset.reopenRoom,'reopen')));
   }
+
+  let activeReviewEdit=null;
+  function openReviewEdit(room,game){
+    const data=state.reports.find(r=>r.room_id===room&&Number(r.game)===Number(game));
+    if(!data||data.review_status!=='pending')return flash('Somente partidas pendentes podem ser editadas.',true);
+    const dialog=$('review-edit-dialog');if(!dialog)return;
+    activeReviewEdit={room,game,picks:structuredClone(data.picks),teams:data.teams};
+    $('review-edit-winner').innerHTML=(data.teams||[]).map((t,i)=>'<option value="'+(i?'R':'B')+'">'+esc(t.name)+' ('+(i?'Red':'Blue')+' Side)</option>').join('');
+    $('review-edit-winner').value=data.winner_side;
+    $('review-edit-rows').innerHTML=activeReviewEdit.picks.map((pick,index)=>{
+      const team=data.teams[pick.side==='B'?0:1];
+      return '<div class="review-edit-pick"><b>'+(pick.side==='B'?'🔵 Blue':'🔴 Red')+' Side</b>'+
+       '<label>Jogador<select data-pick-nick="'+index+'">'+(team.players||[]).map(n=>'<option value="'+esc(n)+'" '+(n===pick.nick?'selected':'')+'>'+esc(n)+'</option>').join('')+'</select></label>'+
+       '<label>Campeão (ID)<input data-pick-champion="'+index+'" value="'+esc(pick.champion||'')+'" required maxlength="45" pattern="[A-Za-z0-9]{2,45}" placeholder="Ex.: Ahri, LeeSin"></label></div>';
+    }).join('');
+    $('review-edit-error').textContent='';dialog.showModal();
+  }
+  async function submitReviewEdit(event){
+    event.preventDefault();if(!activeReviewEdit||state.reviewBusy)return;
+    const dialog=$('review-edit-dialog'),{room,game,teams,picks}=activeReviewEdit;
+    const corrected=picks.map((pick,index)=>{
+      const nick=dialog.querySelector('[data-pick-nick="'+index+'"]').value;
+      const champion=dialog.querySelector('[data-pick-champion="'+index+'"]').value.trim();
+      const idx=teams[pick.side==='B'?0:1].players.indexOf(nick);
+      return {...pick,nick,champion,slot:idx+1,lane:['TOP','JGL','MID','ADC','SUP'][idx]};
+    });
+    const winner=$('review-edit-winner').value,submit=dialog.querySelector('[type=submit]');
+    submit.disabled=true;$('review-edit-error').textContent='';
+    try{
+      await jsonFetch('/rest/v1/rpc/cmim_admin_edit_draft_game',{
+        secured:true,method:'POST',
+        body:JSON.stringify({p_room:room,p_game:game,p_winner_side:winner,p_picks:corrected})
+      });
+      dialog.close();activeReviewEdit=null;
+      await loadAdminData();flash('✓ Jogo '+game+' corrigido com histórico de auditoria. Revise antes de aprovar.');
+    }catch(error){$('review-edit-error').textContent=error.message;}
+    finally{submit.disabled=false;}
+  }
+
   async function approveRoom(room){
     if(!state.admin||state.reviewBusy)return;
     const group=reviewGroups().find(g=>g.id===room);
@@ -437,6 +477,9 @@
   }
   // No portal o link leva a uma pagina completa; o antigo modal nao e usado.
   $('admin-soundtrack-form')?.addEventListener('submit',uploadSoundtrack);
+  $('review-edit-form')?.addEventListener('submit',submitReviewEdit);
+  $('review-edit-close')?.addEventListener('click',()=>$('review-edit-dialog').close());
+  $('review-edit-cancel')?.addEventListener('click',()=>$('review-edit-dialog').close());
   $('review-filter')?.addEventListener('change',renderReviewQueue);
   $('review-refresh')?.addEventListener('click',()=>{
     loadAdminData().then(()=>flash('Fila de partidas atualizada.')).catch(e=>flash('Erro ao atualizar: '+e.message,true));
