@@ -62,6 +62,31 @@ async function catalog() {
  cachedChampions = {version, champions:Object.values(data).map((x:any)=>({id:x.id,name:x.name,tags:x.tags})).sort((a:any,b:any)=>a.name.localeCompare(b.name,'pt-BR'))}; championsCachedAt=Date.now(); return cachedChampions;
 }
 
+
+// Short-lived verification cache reduces the load of live 1.1s room polling.
+// The token is never sent to clients or written to logs.
+const verifiedSessions=new Map<string,number>();
+async function loggedIn(req:Request):Promise<boolean>{
+ const auth=req.headers.get('authorization')||'';
+ const found=/^Bearer\s+(\S+)$/i.exec(auth);
+ if(!found)return false;
+ const token=found[1],now=Date.now();
+ if((verifiedSessions.get(token)||0)>now)return true;
+ const result=await fetch(BASE+'/auth/v1/user',{
+  headers:{apikey:SERVER_KEY,Authorization:'Bearer '+token},
+  cache:'no-store'
+ });
+ if(!result.ok)return false;
+ const user=await result.json().catch(()=>null);
+ if(!user?.id)return false;
+ if(verifiedSessions.size>400){
+  for(const [stored,until] of verifiedSessions){if(until<=now)verifiedSessions.delete(stored);}
+  if(verifiedSessions.size>400)verifiedSessions.clear();
+ }
+ verifiedSessions.set(token,now+20_000);
+ return true;
+}
+
 Deno.serve(async req=>{
  if(req.method==='OPTIONS') return new Response('ok',{headers:CORS});
  if(!BASE||!SERVER_KEY) return fail('Banco da arena não configurado.',503);
@@ -71,6 +96,9 @@ Deno.serve(async req=>{
  if(req.headers.get('content-length') && Number(req.headers.get('content-length'))>2_100_000) return fail('Arquivo muito grande.',413);
  try {
   if(req.method==='GET' && route[0]==='health') return response({ok:true,app:'CMIM Draft Arena',backend:'Supabase'});
+  // Every functional endpoint requires a real Supabase Auth user, including
+  // captain links, spectators, reports, champion catalog and new rooms.
+  if(!await loggedIn(req))return fail('Faça login no CMIM para acessar as ferramentas.',401);
   if(req.method==='GET' && route[0]==='champions') return response(await catalog());
   // Relatorios sobrevivem a limpeza das salas apos 24h. ID da sala e um UUID nao sequencial.
   if(req.method==='GET' && route.length===2 && route[0]==='reports' && UUID.test(route[1])){
