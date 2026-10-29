@@ -18,7 +18,7 @@ async function read(){
  a.call('/rest/v1/cmim_competitions?select=*&order=created_at.desc&limit=100'),
  a.call('/rest/v1/cmim_squads?select=id,name,short_name,owner_id,captain_lane&limit=500'),
  a.call('/rest/v1/cmim_squad_members?select=team_id,user_id,lane&limit=2000'),
- a.call('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url&limit=2500'),
+ a.call('/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at&limit=2500'),
  a.call('/rest/v1/cmim_competition_matches?select=*&order=round_number.asc,match_number.asc&limit=3000'),
  a.call('/rest/v1/cmim_competition_entries?select=id,competition_id,team_id,status,created_at&limit=2000')
  ]);
@@ -145,8 +145,13 @@ function renderAdminManage(){
  '<p>'+readable(g.team_a_id)+' × '+(g.team_b_id?readable(g.team_b_id):'FOLGA')+'</p>'+
  '<div class="cmim-form-row"><label class="cmim-field">PLACAR A<input name="score_a" type="number" min="0" max="5" value="'+g.score_a+'"></label><label class="cmim-field">PLACAR B<input name="score_b" type="number" min="0" max="5" value="'+g.score_b+'"></label>'+
  '<label class="cmim-field">STATUS<select name="status">'+['scheduled','live','pending','approved'].map(x=>'<option value="'+x+'" '+(g.status===x?'selected':'')+'>'+esc(label(x))+'</option>').join('')+'</select></label>'+
- '<label class="cmim-field">ID DA SALA (OPCIONAL)<input name="room_id" value="'+esc(g.room_id||'')+'" placeholder="UUID da seleção de campeões"></label></div>'+
- '<div class="cmim-actions"><button class="cmim-button ghost">SALVAR CONFRONTO</button></div></form>').join(''):'<p class="cmim-muted">Confrontos ainda não criados.</p>');
+ '</div>'+
+ '<div class="cmim-actions"><button class="cmim-button ghost">SALVAR RESULTADO</button>'+
+ (g.team_b_id&&g.status!=='approved'?(!g.room_id?
+  '<button type="button" class="cmim-button" data-launch-match="'+g.id+'">🎮 CRIAR SELEÇÃO MD'+comp.series_games+'</button>':
+  '<button type="button" class="cmim-button" data-sync-match="'+g.id+'">✓ SINCRONIZAR JOGO HOMOLOGADO</button><a class="cmim-button ghost" href="./admin.html?tab=matches">APROVAR NO ADM ↗</a>'):
+  (g.team_b_id?'':'<span class="cmim-badge">FOLGA AUTOMÁTICA</span>'))+
+ '</div></form>').join(''):'<p class="cmim-muted">Confrontos ainda não criados.</p>');
  box.querySelectorAll('[data-comp-status]').forEach(b=>b.onclick=async()=>{
   if(!confirm('Alterar situação de '+comp.title+' para '+label(b.dataset.compStatus)+'?'))return;
   try{await a.call('/rest/v1/cmim_competitions?id=eq.'+comp.id,{method:'PATCH',secure:true,body:{status:b.dataset.compStatus}});await read()}catch(e){status(safeErr(e),true)}
@@ -155,20 +160,62 @@ function renderAdminManage(){
   try{await a.call('/rest/v1/cmim_competition_entries?id=eq.'+b.dataset.entry,{method:'PATCH',secure:true,body:{status:b.dataset.entryStatus}});await read()}catch(e){status(safeErr(e),true)}
  });
  $('generate-round').onclick=()=>generateRound(comp);
+ box.querySelectorAll('[data-launch-match]').forEach(b=>b.onclick=()=>launchTournamentMatch(b.dataset.launchMatch,comp));
+ box.querySelectorAll('[data-sync-match]').forEach(b=>b.onclick=()=>syncTournamentMatch(b.dataset.syncMatch));
  box.querySelectorAll('[data-match-edit]').forEach(form=>form.onsubmit=async e=>{
   e.preventDefault();const match=games.find(m=>m.id===form.dataset.matchEdit);
   const f=new FormData(form),score_a=Number(f.get('score_a')),score_b=Number(f.get('score_b')),statusValue=f.get('status');
   const needed=(Number(comp.series_games)+1)/2;
+  if(statusValue==='approved'&&match.room_id)return status('Esta sala vinculada só pode ser homologada pelo botão SINCRONIZAR.',true);
   if(statusValue==='approved'&&!(Math.max(score_a,score_b)===needed&&Math.min(score_a,score_b)<needed))
    return status('Para aprovar MD'+comp.series_games+', um time precisa de '+needed+' vitória(s).',true);
-  const room_id=String(f.get('room_id')||'').trim()||null;
-  if(room_id&&!/^[a-f0-9-]{36}$/i.test(room_id))return status('ID da sala precisa ser um UUID válido.',true);
+  const room_id=match.room_id||null;
   const winner_id=statusValue==='approved'?(score_a>score_b?match.team_a_id:match.team_b_id):null;
+  const reason=statusValue==='approved'?prompt('Resultado manual: informe como foi confirmado (mínimo 8 caracteres):'):'';
+  if(statusValue==='approved'&&(reason===null||reason.trim().length<8))
+   return status('Registre a justificativa para homologar o confronto sem sala.',true);
   try{await a.call('/rest/v1/cmim_competition_matches?id=eq.'+match.id,{
-   method:'PATCH',secure:true,body:{score_a,score_b,status:statusValue,winner_id,room_id,updated_at:new Date().toISOString()}});
+   method:'PATCH',secure:true,body:{score_a,score_b,status:statusValue,winner_id,room_id,manual_result_reason:reason||null,approved_by:statusValue==='approved'?state.me.id:null,approved_at:statusValue==='approved'?new Date().toISOString():null,updated_at:new Date().toISOString()}});
    status('✓ Resultado registrado pelo organizador.');await read()}
   catch(err){status('Não foi possível salvar o confronto: '+safeErr(err),true)}
  });
+}
+async function launchTournamentMatch(matchId,comp){
+ if(!state.admin)return status('Esta função é exclusiva do ADM.',true);
+ const match=state.matches.find(x=>x.id===matchId);
+ if(!match||match.status==='approved'||match.room_id||!match.team_b_id)return status('Confronto indisponível.',true);
+ const lanes=['TOP','JG','MID','ADC','SUP'];
+ function lineup(teamId){
+  const squad=team(teamId),members=membersFor(teamId);
+  if(!squad||members.length!==5)throw Error('A equipe '+(squad?.name||'?')+' precisa de cinco membros.');
+  const lineup=lanes.map(l=>members.find(m=>m.lane===l));
+  if(lineup.some(x=>!x)||new Set(lineup.map(x=>x.user_id)).size!==5)
+   throw Error('A equipe '+squad.name+' precisa de um jogador diferente em cada lane.');
+  const profiles=lineup.map(x=>state.profiles.find(p=>p.id===x.user_id));
+  if(profiles.some(x=>!x))throw Error('Uma conta não foi encontrada no elenco.');
+  const pending=profiles.filter(p=>!p.rank_player_id||!p.rank_verified_at);
+  if(pending.length)throw Error('Vincule ao Ranking as contas: '+pending.map(p=>p.nick+'#'+p.tag).join(', ')+'.');
+  const captain=state.profiles.find(p=>p.id===squad.owner_id)?.nick||profiles[0].nick;
+  return {name:squad.name,logo:'',captain,
+   players:profiles.map(p=>p.nick),profileIds:profiles.map(p=>p.id)};
+ }
+ try{
+  const teams=[lineup(match.team_a_id),lineup(match.team_b_id)];
+  const payload={teams,games:Number(comp.series_games),mode:'Normal',duration:30,first:'B',pilot:true,
+   source:'competition',createdAt:Date.now()};
+  sessionStorage.setItem('cmim:play-handoff',JSON.stringify(payload));
+  sessionStorage.setItem('cmim:competition-match-pending',match.id);
+  status('Abrindo seleção oficial do campeonato…');
+  location.href='./selecao.html?play=1';
+ }catch(error){status('Não foi possível criar a seleção: '+safeErr(error),true)}
+}
+async function syncTournamentMatch(matchId){
+ if(!state.admin)return;
+ try{
+  const result=await a.call('/rest/v1/rpc/cmim_competition_sync_match',{
+   secure:true,method:'POST',body:{p_match:matchId}});
+  await read();status('✓ Confronto homologado e classificação atualizada: '+result.score);
+ }catch(error){status('O jogo deve estar aprovado no ADM: '+safeErr(error),true)}
 }
 async function generateRound(comp){
  if(!state.admin)return status('Acesso exclusivo do administrador.',true);
