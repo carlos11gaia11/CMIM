@@ -98,7 +98,7 @@ function renderArena(){autoAssign();let state=nextTurn(),order=state.order,done=
   const byNick=registeredPlayers.filter(p=>nickKey(p.nick)===nickKey(player.nick));
   player.profileId=byNick.length===1?byNick[0].id:null;
  }
- all=lanes.flatMap(l=>players[l].map(p=>p.nick.trim()));if(all.some(x=>!x))return $('error').textContent=`Preencha os ${mode*5} jogadores.`;if(new Set(all.map(x=>x.toLocaleLowerCase())).size!==all.length)return $('error').textContent='Os nicks precisam ser diferentes.';
+ all=lanes.flatMap(l=>players[l].map(p=>p.nick.trim()));if(all.some(x=>!x))return $('error').textContent=`Preencha os ${mode*5} jogadores.`;/* Nicks repetidos são permitidos: cada vaga é identificada por lane e índice. */
  if(registeredPlayers.length){
   const notRegistered=all.filter(x=>!registeredPlayers.some(p=>nickKey(p.nick)===nickKey(x)));
   if(notRegistered.length){
