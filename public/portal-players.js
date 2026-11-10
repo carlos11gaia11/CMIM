@@ -5,7 +5,8 @@
   const PUBLISHABLE = 'sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn';
   const scoring = {games:.5,wins:2,losses:-3,md3:3,mvp:2,bagre:-2,first:10,second:7,third:4,fourth:-4,penalties:-1,adjustment:1};
   const colors = {S:'#f6d462',A:'#c58ce9',B:'#83c6ff',C:'#7ce1ab',D:'#f4b27b',E:'#adb5bf',F:'#ef9195'};
-  const state = {players:[],loaded:false,error:false,season:null,status:'active'};
+  const PAGE_SIZE = 10;
+  const state = {players:[],loaded:false,error:false,season:null,status:'active',page:1};
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const slug = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toLowerCase();
@@ -79,7 +80,7 @@
         const champions=Array.isArray(meta?.champion_tags)?meta.champion_tags.filter(x=>typeof x==='string'&&x.length<=24).slice(0,5):[];
         return {id:p.id,nick:p.nick,tier,tag,lane,champions,playerTags:Array.isArray(meta?.player_tags)?meta.player_tags.slice(0,12):[],avatar:sanitizeAvatar(profile?.avatar_url),position:placement?.position||null,points:placement?.points??null};
       });
-      state.loaded=true;state.error=false;state.season=season;state.status=complete?'closed':'active';
+      state.loaded=true;state.error=false;state.season=season;state.status=complete?'closed':'active';state.page=1;
       if(counter)counter.textContent=state.players.length;
       const count=$('playersTotal');if(count)count.textContent=state.players.length;
       const participants=$('playersRanked');if(participants)participants.textContent=state.players.filter(p=>p.position).length;
@@ -112,13 +113,24 @@
     if(sort==='nick')list.sort((a,b)=>a.nick.localeCompare(b.nick,'pt-BR'));
     else if(sort==='tier')list.sort((a,b)=>(a.tier||'Z').localeCompare(b.tier||'Z')||a.nick.localeCompare(b.nick,'pt-BR'));
     else list.sort((a,b)=>(a.position||9999)-(b.position||9999)||a.nick.localeCompare(b.nick,'pt-BR'));
-    $('players-count').textContent=list.length+' de '+state.players.length+' jogadores';
+    const totalPages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));
+    state.page=Math.max(1,Math.min(state.page,totalPages));
+    const start=(state.page-1)*PAGE_SIZE;
+    const pagePlayers=list.slice(start,start+PAGE_SIZE);
+    $('players-count').textContent=list.length+' de '+state.players.length+' jogadores · exibindo '+(list.length?start+1:0)+'–'+Math.min(start+PAGE_SIZE,list.length);
+    const pages=$('players-pagination');
+    if(pages){
+      pages.hidden=list.length<=PAGE_SIZE;
+      pages.querySelector('[data-players-page="prev"]').disabled=state.page<=1;
+      pages.querySelector('[data-players-page="next"]').disabled=state.page>=totalPages;
+      pages.querySelector('[data-players-page-label]').textContent='Página '+state.page+' de '+totalPages;
+    }
     const isFinal=state.status==='closed';
     if(!list.length){
       target.innerHTML='<tr><td colspan="5" class="roster-empty">Nenhum jogador encontrado com esses filtros.</td></tr>';
       return;
     }
-    target.innerHTML=list.map((p,i)=>{
+    target.innerHTML=pagePlayers.map((p,i)=>{
       const avatar=p.avatar?'<img src="'+esc(p.avatar)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span>'+esc(p.nick.slice(0,2).toUpperCase())+'</span>';
       const badge=p.tier?'<span class="tier-pill" style="--tier-color:'+colors[p.tier]+'">'+esc(p.tier)+'</span>':'<span class="tier-pill unknown">A definir</span>';
       const champHtml=p.champions?.length?'<span class="champion-list">'+p.champions.map(c=>'<span class="champion-chip">'+esc(c)+'</span>').join('')+'</span>':'';
@@ -126,10 +138,19 @@
       const personalTags=(p.playerTags||[]).map(x=>'<span class="champion-chip" style="border-color:#9d8344;color:#ffefa4">'+esc(x)+'</span>').join('');
       const lane=p.lane?'<span class="lane-pill">'+esc(p.lane)+'</span>':'<span class="unspecified">Não informada</span>';
       const position=p.position?'<strong class="ranking-place '+(p.position<=3?'place-top':'')+'">'+p.position+'º</strong><small>'+(isFinal?'Posição final':'Posição parcial')+' · '+number(p.points)+' pts</small>':'<strong class="ranking-place none">—</strong><small>Sem posição nesta temporada</small>';
-      return '<tr><td class="roster-index">'+String(i+1).padStart(2,'0')+'</td><td><div class="player-cell"><div class="player-avatar">'+avatar+'</div><div><b>'+esc(p.nick)+'</b>'+tag+champHtml+personalTags+'</div></div></td><td>'+badge+'</td><td>'+lane+'</td><td class="position-cell">'+position+'</td></tr>';
+      return '<tr><td class="roster-index">'+String(start+i+1).padStart(2,'0')+'</td><td><div class="player-cell"><div class="player-avatar">'+avatar+'</div><div><b>'+esc(p.nick)+'</b>'+tag+champHtml+personalTags+'</div></div></td><td>'+badge+'</td><td>'+lane+'</td><td class="position-cell">'+position+'</td></tr>';
     }).join('');
   }
-  for(const key of ['players-search','players-tier','players-scope','players-sort'])$(key)?.addEventListener(key==='players-search'?'input':'change',renderPlayers);
+  for(const key of ['players-search','players-tier','players-scope','players-sort']){
+    $(key)?.addEventListener(key==='players-search'?'input':'change',()=>{state.page=1;renderPlayers()});
+  }
+  $('players-pagination')?.addEventListener('click',event=>{
+    const button=event.target.closest('button[data-players-page]');
+    if(!button||button.disabled)return;
+    state.page+=button.dataset.playersPage==='next'?1:-1;
+    renderPlayers();
+    $('players-status')?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
+  });
   $('players-retry')?.addEventListener('click',loadPlayers);
   window.CMIMPortalPlayers={reload:loadPlayers,getPlayers:()=>state.players.map(p=>({...p})),getSeason:()=>state.season};
   document.addEventListener('DOMContentLoaded',loadPlayers,{once:true});
