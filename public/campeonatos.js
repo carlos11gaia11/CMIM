@@ -21,6 +21,9 @@ const team=id=>state.squads.find(x=>x.id===id);
 const competition=id=>state.comps.find(x=>x.id===id);
 const formatDate=x=>x?new Date(x).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
 const readable=id=>esc(team(id)?.name||'A definir');
+const safeTeamId=id=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||''));
+const teamLink=id=>safeTeamId(id)&&team(id)?'<a href="./equipe.html?id='+encodeURIComponent(id)+'">'+readable(id)+'</a>':readable(id);
+const dateTime=x=>{if(!x)return 'Horário a definir';const d=new Date(x);return Number.isNaN(+d)?'Horário a definir':d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
 const own=()=>state.squads.filter(t=>t.owner_id===state.me?.id);
 const membersFor=id=>state.members.filter(x=>x.team_id===id);
 async function read(){
@@ -62,7 +65,7 @@ function renderPublicDashboard(){
     teamsEl.innerHTML=visibleTeams.length?visibleTeams.map(t=>{
       const compsFor=approved.filter(e=>e.team_id===t.id).map(e=>competition(e.competition_id)).filter(Boolean);
       const leagues=[...new Set(compsFor.map(c=>leagueLabel(c.league_tier)))];
-      return '<article class="cmim-official-team-card"><span class="cmim-team-monogram">'+esc((t.short_name||t.name||'CM').slice(0,4))+'</span><div><small>TIME HOMOLOGADO</small><h3>'+esc(t.name)+'</h3><p>'+leagues.map(x=>esc(x)).join(' · ')+'</p></div></article>';
+      return '<article class="cmim-official-team-card"><span class="cmim-team-monogram">'+esc((t.short_name||t.name||'CM').slice(0,4))+'</span><div><small>TIME HOMOLOGADO</small><h3><a href="./equipe.html?id='+encodeURIComponent(t.id)+'">'+esc(t.name)+'</a></h3><p>'+leagues.map(x=>esc(x)).join(' · ')+'</p><a class="cmim-team-view" href="./equipe.html?id='+encodeURIComponent(t.id)+'">ELENCO, RESULTADOS E ESTATÍSTICAS →</a></div></article>';
     }).join(''):'<div class="cmim-empty">Ainda não há equipes homologadas nas competições cadastradas.</div>';
   }
  }
@@ -76,8 +79,8 @@ function renderPublicDashboard(){
     schedule.innerHTML=games.length?games.map(m=>{
       const comp=competition(m.competition_id);
       return '<article class="cmim-official-match-card"><span>'+esc(leagueLabel(comp?.league_tier))+' · RODADA '+Number(m.round_number)+'</span>'+
-      '<h3>'+readable(m.team_a_id)+' <b>×</b> '+readable(m.team_b_id)+'</h3>'+
-      '<p>'+esc(comp?.title||'Competição CMIM')+' · '+esc(label(m.status))+'</p>'+
+      '<h3>'+teamLink(m.team_a_id)+' <b>×</b> '+teamLink(m.team_b_id)+'</h3>'+
+      '<p>'+esc(comp?.title||'Competição CMIM')+' · '+esc(label(m.status))+' · '+esc(dateTime(m.scheduled_at))+'</p>'+
       '<button class="cmim-button ghost" data-goto-event="'+esc(m.competition_id)+'" type="button">VER CHAVEAMENTO →</button></article>';
     }).join(''):'<div class="cmim-empty">Nenhum confronto agendado foi publicado no circuito até o momento.</div>';
     schedule.querySelectorAll('[data-goto-event]').forEach(button=>button.addEventListener('click',()=>{
@@ -97,6 +100,7 @@ function render(){
   const members=membersFor(t.id);
   const canInvite=members.length<5;
   return '<article class="cmim-cup" style="margin-bottom:10px"><h3>'+esc(t.name)+'</h3><small>'+members.length+'/5 jogadores · '+esc(t.short_name||'')+'</small>'+
+  '<a class="cmim-team-inline-link" href="./equipe.html?id='+encodeURIComponent(t.id)+'">VER PERFIL DA EQUIPE →</a>'+
   '<div style="font-size:12px;margin:10px 0">'+members.map(m=>{
    const pl=state.profiles.find(p=>p.id===m.user_id);
    return '<span class="cmim-badge">'+esc(pl?pl.nick+'#'+pl.tag:'Jogador')+' · '+esc(m.lane)+'</span>'
@@ -127,7 +131,7 @@ function render(){
   const buttons=c.status==='open'&&state.me?'<button class="cmim-button" data-register="'+c.id+'">INSCREVER MEU TIME →</button>':'';
   return '<article class="cmim-cup"><span class="cmim-kicker">'+esc(label(c.structure))+' · MD'+Number(c.series_games||3)+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
   '<div><span class="cmim-badge">'+esc(leagueLabel(c.league_tier))+'</span><span class="cmim-badge">'+esc(label(c.status))+'</span><span class="cmim-badge">'+count+'/'+c.max_teams+' times</span><span class="cmim-badge">'+formatDate(c.starts_at)+'</span></div>'+
-  '<div class="cmim-actions"><button class="cmim-button ghost" data-select-comp="'+c.id+'">VER CONFRONTOS</button>'+buttons+'</div></article>'
+  '<div class="cmim-actions"><button class="cmim-button ghost" data-select-comp="'+c.id+'">VER CONFRONTOS</button>'+buttons+'</div>'+(c.league_tier&&['open','academy','major'].includes(c.league_tier)?'<a class="cmim-league-event-link" href="./liga.html?liga='+encodeURIComponent(c.league_tier)+'">PÁGINA DA LIGA →</a>':'')+'</article>'
  }).join(''):'<div class="cmim-empty">Ainda não existem eventos publicados nesta categoria. Acompanhe os anúncios oficiais do CMIM.</div>';
  document.querySelectorAll('[data-select-comp]').forEach(b=>b.onclick=()=>{
   $('selected-competition').value=b.dataset.selectComp;state.selected=b.dataset.selectComp;renderOverview();$('competition-overview').scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -188,8 +192,8 @@ function renderOverview(){
     '<section class="cmim-bracket-round" aria-label="Rodada '+round+'"><h4><span>RODADA</span> '+round+'</h4>'+
     list.filter(m=>m.round_number===round).map(m=>
       '<article class="cmim-bracket-match"><span class="cmim-bracket-status">'+esc(m.team_b_id?label(m.status):'FOLGA')+'</span>'+
-      '<div class="cmim-bracket-team"><b>'+readable(m.team_a_id)+'</b><strong>'+(m.status==='approved'?Number(m.score_a):'—')+'</strong></div>'+
-      '<div class="cmim-bracket-team"><b>'+(m.team_b_id?readable(m.team_b_id):'FOLGA · AVANÇA')+'</b><strong>'+(m.team_b_id&&m.status==='approved'?Number(m.score_b):'—')+'</strong></div>'+
+      '<div class="cmim-bracket-team"><b>'+teamLink(m.team_a_id)+'</b><strong>'+(m.status==='approved'?Number(m.score_a):'—')+'</strong></div>'+
+      '<div class="cmim-bracket-team"><b>'+(m.team_b_id?teamLink(m.team_b_id):'FOLGA · AVANÇA')+'</b><strong>'+(m.team_b_id&&m.status==='approved'?Number(m.score_b):'—')+'</strong></div>'+
       (m.room_id?'<a class="cmim-match-link" href="./selecao.html?room='+encodeURIComponent(m.room_id)+'">▶ Assistir seleção</a>':'')+
       '</article>').join('')+'</section>').join('')+'</div>';
  }
