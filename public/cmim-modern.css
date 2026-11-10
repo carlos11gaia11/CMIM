@@ -61,7 +61,7 @@ img{max-width:100%}
 .cmim-league-card .cmim-league-meta{position:relative;z-index:1}
 .cmim-league-card h3{margin:12px 0 11px!important}
 .cmim-league-open{--league:#ffe27a!important;--league-bg:#61471144!important}
-.cmim-league-minor{--league:#77c9ff!important;--league-bg:#173c7544!important}
+.cmim-league-academy{--league:#77c9ff!important;--league-bg:#173c7544!important}
 .cmim-league-major{--league:#ff6d75!important;--league-bg:#731c2140!important}
 .cmim-league-card:hover{transform:translateY(-5px);box-shadow:0 22px 50px #0008}
 /* Ligas: dashboard de equipes e chaveamentos */
