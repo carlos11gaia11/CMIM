@@ -47,3 +47,40 @@ O código da Edge Function está em `supabase/functions/cmim-draft-api/`, e a cr
 ### Limitações
 
 A atualização via Broadcast é um aviso não-autoritativo: a Edge Function sempre relê e valida o estado. Em quedas de conexão, existe polling de segurança a cada 5 segundos. Arquivos MP4 selecionados localmente são válidos apenas no navegador que os selecionou; para compartilhar músicas personalizadas, utilize URL pública HTTPS `.mp4`.
+
+
+## Portal CMIM 2026 — Estrutura de navegação
+
+A reformulação do portal mantém o **in-house** separado do **CMIM Competitive Circuit**:
+
+| Área | Endereço | Responsabilidade |
+|---|---|---|
+| Portal | `/` | Introdução, modalidades, divisões e acesso às ferramentas |
+| Ligas | `/ligas.html` | Open, Academy, Major, criação de times, convites, inscrições, chaveamentos, gestão de eventos |
+| Compatibilidade | `/campeonatos.html` | Redireciona para `ligas.html`, preservando links anteriores |
+| Regulamento | `/regulamento.html` | Regras gerais, reservas, fill lane, tiers, torneio e divisões |
+| Ranking | `/ranking.html` | Dados oficiais do in-house e temporadas |
+| Draft | `/draft.html` | Formação dos elencos de in-house |
+| Seleção | `/selecao.html` | Picks e bans online |
+| Administração | `/admin.html` | Gestão e homologação |
+
+### Design system e emblemas
+
+- `public/cmim-modern.css`: identidade visual compartilhada, cards, motion, layout responsivo e estilos de autenticação;
+- `public/cmim-modern.js`: indicador discreto de rolagem e animações progressivas, sem ocultar conteúdo quando JS está indisponível;
+- `public/cmim-open.svg`, `public/cmim-academy.svg`, `public/cmim-major.svg`: emblemas vetoriais adaptados à identidade CMIM, utilizados nas apresentações do circuito;
+- `public/insalubrao.svg` e `public/insalubrinho.svg`: emblemas vetoriais para High e Low do in-house.
+
+Os emblemas vetoriais são peças de design aplicadas ao portal. **A aprovação institucional das versões definitivas cabe à administração.**
+
+### Acesso e segurança
+
+A página pública `ligas.html` permite que qualquer pessoa conheça as ligas. Criar um time, aceitar convites e se inscrever em eventos continua exigindo autenticação via `CMIMAuth` e autorização do banco. As páginas restritas agora mostram um aviso de login em vez de um documento invisível.
+
+A restrição visual não é um controle de segurança substituto: permissões e RLS devem continuar implementadas no Supabase. O site não publica `service_role` nem chaves secretas.
+
+### Regulamentos
+
+O portal consolida as regras fornecidas em 10/11/2026, inclusive Leões de Vaga sem penalidade por indisponibilidade, fill exclusivo S/A com prioridade da Main Lane, pausas, Regra Denver, Carter, Nery, Dogzi, formação de equipes e divisões temporariamente unificadas. O **circuito Open/Academy/Major** é separado do torneio semanal de in-house.
+
+Critérios de acesso, datas, premiações, formatos e eventuais promoções entre ligas devem ser comunicados especificamente por edição. O portal não os inventa.
