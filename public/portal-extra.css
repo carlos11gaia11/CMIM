@@ -463,3 +463,8 @@ body :where(a,button,input,textarea,select):focus-visible{outline:2px solid #ffe
 .cmim-leagues-notice .button{flex-shrink:0}
 @media(max-width:990px){.cmim-league-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.cmim-league-card.cmim-league-major{grid-column:1/-1}.cmim-league-card h3{font-size:48px}.cmim-leagues-notice{flex-direction:column;align-items:flex-start}}
 @media(max-width:600px){.cmim-league-grid{grid-template-columns:1fr}.cmim-league-card.cmim-league-major{grid-column:auto}.cmim-league-card{min-height:300px}.cmim-league-card h3{margin-top:70px;font-size:46px}.cmim-leagues-notice{padding:19px}.cmim-leagues-notice .button{width:100%}}
+
+/* Emblema institucional oficial CMIM aplicado aos cards do circuito. */
+.cmim-league-mark{position:relative;align-self:flex-start;margin:24px 0 0;height:100px;width:100px;object-fit:cover;flex-shrink:0;border-radius:9px;border:1px solid color-mix(in srgb,var(--league) 44%,#333b33);box-shadow:0 8px 34px #0007}
+.cmim-league-card h3{margin-top:17px}
+.cmim-league-symbol{display:none}
