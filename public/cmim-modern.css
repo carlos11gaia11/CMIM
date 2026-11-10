@@ -200,3 +200,25 @@ body:has(.cmim-mobile-dock) .cmim-mobile-dock{backdrop-filter:blur(14px);box-sha
 .cmim-quick-card b{position:absolute;top:13px;right:14px;font-size:16px;color:#ffdf73}
 @media(max-width:1100px){.cmim-quick-grid{grid-template-columns:1fr 1fr}.cmim-quick-card:last-child{grid-column:1/-1}.cmim-homepage .hero-art-refined-middle img{width:min(57%,220px)!important}}
 @media(max-width:720px){body{background-attachment:scroll,scroll,scroll;background-size:cover,cover,auto 100%}.cmim-quick-grid{grid-template-columns:1fr}.cmim-quick-card:last-child{grid-column:auto}.cmim-quick-doors{padding:20px 0 40px}.cmim-quick-card{min-height:100px}.cmim-league-card{min-height:420px}.cmim-homepage .hero-art-refined-middle img{width:min(58%,190px)!important}}
+
+/* Ligas: panorama público e dados oficiais */
+.cmim-pulse{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:6px 0 38px}
+.cmim-pulse-stat{min-height:128px;padding:19px 19px 17px;border:1px solid #6773487a;border-radius:12px;background:linear-gradient(155deg,#232c1eea,#0e1913f7);box-shadow:0 12px 31px #0003}
+.cmim-pulse-stat small{display:block;color:#d5deca;font-size:9px;letter-spacing:1.2px;font-weight:900}
+.cmim-pulse-stat strong{display:block;font:900 clamp(34px,4vw,50px)/1 "Barlow Condensed",Impact,sans-serif;color:#ffe376;margin:9px 0}
+.cmim-pulse-stat span{display:block;color:#aebeae;font-size:10px;font-weight:700}
+.cmim-official-teams{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cmim-official-team-card{display:flex;align-items:center;gap:16px;min-height:117px;padding:19px;border:1px solid #4c6754;border-radius:13px;background:linear-gradient(135deg,#1c2a20ee,#111914f1)}
+.cmim-team-monogram{display:grid;place-items:center;width:67px;height:67px;flex-shrink:0;border-radius:12px;color:#141912;background:#ffe077;border:1px solid #fff2a9;font:900 23px "Barlow Condensed",Impact,sans-serif;letter-spacing:.4px}
+.cmim-official-team-card small{font-size:9px;font-weight:900;color:#efda7d;letter-spacing:.8px}
+.cmim-official-team-card h3{font:900 25px/1 "Barlow Condensed",Impact,sans-serif;margin:8px 0 4px;color:#fff;overflow-wrap:anywhere}
+.cmim-official-team-card p{font-size:11px;color:#c3d0c1;margin:0}
+.cmim-events-upcoming{margin:23px 0}
+.cmim-official-matches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.cmim-official-match-card{padding:19px 22px;background:linear-gradient(140deg,#213023e9,#121b14ed);border:1px solid #506c55;border-radius:13px}
+.cmim-official-match-card>span{font-size:10px;font-weight:900;letter-spacing:1.1px;color:#ffe16b}
+.cmim-official-match-card h3{font:900 25px/1.1 "Barlow Condensed",Impact,sans-serif;color:#f5f8f3;margin:15px 0 9px;overflow-wrap:anywhere}
+.cmim-official-match-card h3 b{color:#ffe16b;font-weight:900}
+.cmim-official-match-card p{font-size:12px;color:#bdcfbb;margin:0 0 16px}
+@media(max-width:1100px){.cmim-pulse{grid-template-columns:repeat(2,minmax(0,1fr))}.cmim-official-teams{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.cmim-official-teams,.cmim-official-matches{grid-template-columns:1fr}.cmim-pulse-stat{min-height:105px}.cmim-pulse{gap:9px}.cmim-pulse-stat{padding:15px}}
