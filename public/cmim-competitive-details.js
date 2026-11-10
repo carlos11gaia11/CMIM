@@ -89,9 +89,16 @@
   $('detail-results').innerHTML=!ok.matches?empty('Os resultados estão temporariamente indisponíveis.',true):approved.length?[...approved].sort((a,b)=>(Date.parse(b.approved_at||'')||0)-(Date.parse(a.approved_at||'')||0)).slice(0,12).map(gameCard).join(''):empty('Sem resultados homologados nesta liga.');
   $('detail-standings').innerHTML=(!ok.entries||!ok.matches)?empty('Não foi possível carregar a classificação.',true):comps.length?comps.map(c=>'<section class="cmim-detail-card" style="margin-bottom:15px"><h3>'+esc(c.title)+'</h3><p style="margin-bottom:14px">Classificação por confrontos aprovados no sistema; pode mudar durante o evento.</p>'+standingsMarkup(c)+'</section>').join(''):empty('Quando os eventos forem cadastrados, a classificação aparecerá aqui.');
  }
+ function showMissing(message){
+  $('detail-hero').innerHTML='<div class="cmim-detail-hero-content"><span class="eyebrow">CIRCUITO CMIM</span><h1>CONTEÚDO INDISPONÍVEL.</h1><p>'+esc(message)+'</p>'+
+  '<div class="cmim-detail-cta"><a href="./ligas.html">VOLTAR AO CIRCUITO →</a></div></div>';
+  $('detail-metrics').innerHTML='';
+  document.querySelectorAll('.cmim-detail-section').forEach(el=>el.hidden=true);
+  $('detail-loading').textContent=message;
+ }
  function renderTeam(id){
   const t=data.squads.find(t=>t.id===id);
-  if(!t){$('detail-hero').innerHTML=empty('Equipe não encontrada no cadastro público do circuito.',!ok.squads);return}
+  if(!t){showMissing(ok.squads?'A equipe solicitada não foi encontrada no catálogo.':'Não foi possível consultar o catálogo de equipes agora.');return}
   const members=data.members.filter(m=>m.team_id===id);
   const registrations=data.entries.filter(e=>e.team_id===id&&e.status==='approved');
   const comps=registrations.map(e=>data.comps.find(c=>c.id===e.competition_id)).filter(Boolean);
@@ -116,8 +123,7 @@
  }
  async function init(){
   if(mode==='league'&&!leagues[leagueKey]||mode==='team'&&!uuid.test(teamId||'')){
-    $('detail-hero').innerHTML=empty('O endereço informado não corresponde a uma liga ou equipe válida. <a href="./ligas.html">Voltar ao circuito</a>');
-    $('detail-loading').textContent='Confira o endereço e tente novamente.';return;
+    showMissing('O endereço informado não corresponde a uma liga ou equipe válida. Confira o link e tente novamente.');return;
   }
   $('detail-loading').textContent='Consultando dados oficiais do circuito...';
   const requests={
