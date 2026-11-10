@@ -235,3 +235,23 @@ body:has(.cmim-mobile-dock) .cmim-mobile-dock{backdrop-filter:blur(14px);box-sha
 .cmim-rules-search p{margin:9px 0 0;font-size:11px;color:#c3d2bd}
 #regras [hidden]{display:none!important}
 @media(max-width:520px){.cmim-rules-search{padding:15px}.cmim-rules-search-row{flex-direction:column}.cmim-rules-search-row button{width:100%}}
+
+/* Navegação para perfis competitivos e paginação compacta do histórico */
+.cmim-league-detail-link{display:inline-flex;align-self:flex-start;margin:18px 0 2px;padding:11px 0 7px;color:var(--league,#ffe16a);font:900 11px Barlow,Arial,sans-serif;letter-spacing:.7px;text-decoration:none;border-bottom:1px solid currentColor;transition:transform .2s}
+.cmim-league-detail-link:hover{transform:translateX(4px);color:#fff4af}
+.cmim-circuito-actions{display:flex;gap:15px;flex-wrap:wrap;margin-top:8px}
+.cmim-circuito-actions .cmim-circuito-link{font-size:10px}
+.cmim-official-team-card a{color:inherit;text-decoration:none}
+.cmim-official-team-card a:hover{color:#ffe082;text-decoration:underline}
+.cmim-official-team-card .cmim-team-view{display:inline-flex;margin-top:10px;border-bottom:1px solid #ffdc70;color:#ffde78;font-size:11px;font-weight:900;letter-spacing:.4px}
+.cmim-official-match-card h3 a{color:inherit;text-decoration:none}
+.cmim-official-match-card h3 a:hover{color:#ffde80}
+.cmim-team-inline-link{display:inline-flex;margin-top:10px;font-size:11px;color:#ffe487!important;text-decoration:underline}
+.cmim-league-event-link{display:inline-flex;margin-top:10px;font-size:11px;font-weight:900;color:#ffe376!important;text-decoration:underline}
+.cmim-players-pagination{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:14px;margin:20px auto 5px}
+.cmim-players-pagination[hidden]{display:none!important}
+.cmim-players-pagination button{background:#243126;color:#ffe782;border:1px solid #a08c43;border-radius:8px;padding:10px 16px;min-height:42px;font:900 11px Barlow,Arial,sans-serif;letter-spacing:.5px}
+.cmim-players-pagination button:hover:not(:disabled){background:#364337;border-color:#ffe58b}
+.cmim-players-pagination button:disabled{opacity:.34;cursor:not-allowed}
+.cmim-players-pagination span{color:#e5f0de;font:800 12px Barlow,Arial,sans-serif}
+@media(max-width:560px){.cmim-circuito-actions{gap:9px}.cmim-players-pagination{gap:8px}.cmim-players-pagination button{padding:9px 11px}.cmim-league-detail-link{min-height:40px}}
