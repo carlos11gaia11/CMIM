@@ -142,3 +142,21 @@ body:has(.cmim-mobile-dock) .cmim-mobile-dock{backdrop-filter:blur(14px);box-sha
 @media(max-width:800px){.cmim-division-grid{grid-template-columns:1fr}.cmim-homepage .hero{min-height:initial}.cmim-homepage .hero:before{display:none}.cmim-homepage .hero-art{animation:none}.cmim-league-hub .cmim-league-header{padding:30px 25px}.cmim-account-page .cmim-topbar{position:relative}.cmim-league-hub .cmim-circuito-card{min-height:295px}}
 @media(max-width:550px){.cmim-division-card{grid-template-columns:96px minmax(0,1fr);padding:18px;gap:10px}.cmim-division-card img{width:94px;height:113px}.cmim-division-card h3{font-size:31px}.cmim-division-card p{font-size:12px}.cmim-login-wall{padding:14px}.cmim-login-wall-panel{padding:25px 22px}.cmim-login-wall-actions>*{flex:1}.cmim-league-hub .cmim-circuito-card{min-height:295px}.cmim-league-hub .cmim-league-header{padding:29px 21px}.cmim-account-page .cmim-shell{width:calc(100% - 28px)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:0s!important}.cmim-reveal-ready{animation:none!important}.cmim-homepage .hero-art{animation:none!important}}
+
+/* Bracket UI — o sistema usa confrontos reais, sem fabricar posições ou partidas. */
+.cmim-bracket-title{font:900 28px "Barlow Condensed",Impact,sans-serif;color:#ffe179;margin:26px 0 8px}
+.cmim-bracket{display:flex;gap:18px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;padding:18px 5px 28px;margin:15px 0 5px;border-top:1px solid #455945}
+.cmim-bracket-round{flex:0 0 clamp(240px,28vw,320px);min-width:0;display:flex;flex-direction:column;gap:13px;scroll-snap-align:start}
+.cmim-bracket-round h4{font:900 25px "Barlow Condensed",Impact,sans-serif;margin:0 0 7px;color:#fff}
+.cmim-bracket-round h4 span{font:900 10px Barlow,Arial,sans-serif;letter-spacing:1.4px;color:#a7bda7;margin-right:5px}
+.cmim-bracket-match{position:relative;padding:14px;background:linear-gradient(145deg,#233126,#121b14);border:1px solid #56715a;border-radius:11px;box-shadow:0 8px 20px #0004}
+.cmim-bracket-match:before{content:"";height:2px;position:absolute;top:0;left:12px;right:12px;background:linear-gradient(90deg,#e6d477,transparent)}
+.cmim-bracket-status{display:inline-block;color:#d3decf;font-weight:900;letter-spacing:.7px;text-transform:uppercase;font-size:9px;margin:0 0 10px}
+.cmim-bracket-team{display:flex;justify-content:space-between;align-items:center;min-height:43px;gap:14px;padding:8px 12px;background:#0e1712;border:1px solid #415546;border-radius:6px;margin:5px 0}
+.cmim-bracket-team b{color:#e8f2e5;font-size:12px;min-width:0;overflow-wrap:anywhere}
+.cmim-bracket-team strong{display:grid;place-items:center;width:29px;height:29px;flex-shrink:0;background:#263627;color:#ffe27b;border:1px solid #5d7659;border-radius:5px;font-size:17px}
+.cmim-bracket-match .cmim-match-link{display:inline-flex;margin-top:12px;font-size:11px;color:#ffdf71;font-weight:900;text-decoration:none}
+.cmim-bracket:focus-visible{outline:2px solid #ffe16a}
+.cmim-league-hub [hidden]{display:none!important}
+.cmim-homepage .cmim-league-grid{gap:17px}
+@media(max-width:800px){.cmim-bracket{gap:12px}.cmim-bracket-round{flex-basis:260px}}
