@@ -112,7 +112,7 @@ async function signUp(values){
     wall.setAttribute('role','dialog');wall.setAttribute('aria-modal','true');
     wall.setAttribute('aria-labelledby','cmim-login-wall-title');
     wall.innerHTML='<div class="cmim-login-wall-panel">'+
-      '<img src="./cmim.jpeg" alt="Emblema oficial CMIM" class="cmim-login-wall-logo">'+
+      '<img src="./assets/branding/cmim-main.webp" alt="Emblema oficial CMIM" class="cmim-login-wall-logo">'+
       '<div class="cmim-login-wall-eyebrow">ÁREA RESERVADA A JOGADORES</div>'+
       '<h2 id="cmim-login-wall-title">ENTRE NA SUA <span style="color:#ffe16a">CONTA CMIM.</span></h2>'+
       '<p id="cmim-login-wall-description">Para utilizar esta ferramenta, entre com a sua conta ou cadastre-se. Você poderá retornar a esta página após a autenticação.</p>'+
