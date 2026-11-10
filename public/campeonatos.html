@@ -1,57 +1,16 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Campeonatos e Inscrições</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><script defer src="./campeonatos.js"></script><style>
-html.cmim-auth-pending body{visibility:hidden!important}
-.cmim-circuito{margin:0 0 26px;scroll-margin-top:28px}
-.cmim-circuito-head{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
-.cmim-circuito-head h2{margin:8px 0 0;font:900 clamp(36px,5vw,55px)/1 "Barlow Condensed",Impact,sans-serif;letter-spacing:.3px;color:#f6f7ee}
-.cmim-circuito-head h2 em{color:#ffe03b;font-style:normal}
-.cmim-circuito-head p{max-width:510px;font-size:13px;color:#c7d3c4;line-height:1.8;margin:0}
-.cmim-circuito-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
-.cmim-circuito-card{--league-color:#eff0ec;--league-bg:#393d40;position:relative;overflow:hidden;padding:22px;min-height:235px;border-radius:10px;border:1px solid color-mix(in srgb,var(--league-color) 35%,#455145);background:radial-gradient(ellipse at top right,var(--league-bg),transparent 67%),#171e19;display:flex;flex-direction:column}
-.cmim-circuito-card.minor{--league-color:#7ac8ff;--league-bg:#1d405a}
-.cmim-circuito-card.major{--league-color:#ffdc76;--league-bg:#534120}
-.cmim-circuito-card:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--league-color)}
-.cmim-circuito-card small{font-size:10px;letter-spacing:1.3px;font-weight:900;color:var(--league-color)}
-.cmim-circuito-logo{display:block;width:94px;height:94px;object-fit:cover;margin-top:15px;border:1px solid #77754b;border-radius:9px;box-shadow:0 6px 22px #0008}\n.cmim-circuito-card h3{margin:14px 0 13px;font:900 clamp(32px,4vw,43px)/1 "Barlow Condensed",Impact,sans-serif;color:#f5f8f0}
-.cmim-circuito-card h3 span{color:var(--league-color)}
-.cmim-circuito-card p{font-size:13px;line-height:1.75;color:#c6d1c6;margin:0}
-.cmim-circuito-card .cmim-circuito-foot{margin-top:auto;padding-top:15px;color:var(--league-color);font-size:10px;font-weight:800;letter-spacing:.9px}
-.cmim-circuito-note{margin-top:13px;padding:16px 20px;border:1px solid #6a6637;border-radius:8px;background:#282819;color:#d9e0c8;font-size:12px;line-height:1.8}
-.cmim-circuito-note strong{color:#ffea9c}
-@media(max-width:830px){.cmim-circuito-grid{grid-template-columns:1fr}.cmim-circuito-card{min-height:195px}.cmim-circuito-card h3{margin:23px 0 10px;font-size:39px}}
-</style>
-<script>document.documentElement.classList.add('cmim-auth-pending')</script></head><body data-cmim-protected="1" class="cmim-account-page" data-no-auth-badge="1">
-<header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>COMPETITIVE CIRCUIT</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./draft.html?jogar=1">Jogar</a><a href="./perfil.html">Meu Perfil</a><a href="./conta.html">Login</a></nav></header>
-<main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">TORNEIOS • LIGAS • SISTEMA SUÍÇO</span><h1>CAMPEONATOS <em>CMIM.</em></h1><p>Inscreva seu time, acompanhe inscrições, rodadas, tabelas, confrontos e resultados. Os organizadores administram tudo nesta mesma plataforma.</p></div>
-<p class="cmim-status" role="status" id="champ-status"></p>
-<section class="cmim-circuito" id="circuito-cmim" aria-labelledby="cmim-circuito-title">
-  <div class="cmim-circuito-head"><div><span class="cmim-kicker">CIRCUITO COMPETITIVO DE EQUIPES · EM DESENVOLVIMENTO</span><h2 id="cmim-circuito-title">CMIM <em>OPEN · MINOR · MAJOR</em></h2></div><p>O cenário competitivo do CMIM terá três ligas. Cada uma representa um espaço diferente do circuito, independente do torneio semanal de in-house.</p></div>
-  <div class="cmim-circuito-grid">
-    <article class="cmim-circuito-card open"><small>01 / CIRCUITO DE EQUIPES</small><img class="cmim-circuito-logo" src="./cmim.jpeg" alt="Logo institucional oficial do CMIM"><h3>CMIM <span>OPEN</span></h3><p>A porta de entrada do circuito, criada para dar visibilidade a equipes interessadas em competir no CMIM.</p><div class="cmim-circuito-foot">CATEGORIA DE ENTRADA · EM PLANEJAMENTO</div></article>
-    <article class="cmim-circuito-card minor"><small>02 / CIRCUITO DE EQUIPES</small><img class="cmim-circuito-logo" src="./cmim.jpeg" alt="Logo institucional oficial do CMIM"><h3>CMIM <span>MINOR</span></h3><p>A categoria intermediária, com foco na evolução e na consolidação competitiva das equipes.</p><div class="cmim-circuito-foot">CATEGORIA INTERMEDIÁRIA · EM PLANEJAMENTO</div></article>
-    <article class="cmim-circuito-card major"><small>03 / CIRCUITO DE EQUIPES</small><img class="cmim-circuito-logo" src="./cmim.jpeg" alt="Logo institucional oficial do CMIM"><h3>CMIM <span>MAJOR</span></h3><p>O palco principal do circuito, voltado às competições de maior destaque do CMIM.</p><div class="cmim-circuito-foot">CATEGORIA PRINCIPAL · EM PLANEJAMENTO</div></article>
-  </div>
-  <div class="cmim-circuito-note"><strong>REGULAMENTOS DAS LIGAS AINDA EM DEFINIÇÃO.</strong> Datas, inscrições, elegibilidade, vagas, formatos, critérios de classificação, possíveis acessos entre ligas e premiações dependerão de comunicados oficiais de cada edição. A marca mostrada nos três cards é a logo institucional do CMIM, não um escudo próprio de cada liga. <a href="./regulamento.html#ligas">Entenda a diferença entre ligas e in-house no regulamento →</a></div>
-</section>
-
-<div class="cmim-grid" style="margin-bottom:20px"><section class="cmim-card"><h2>SEU TIME</h2><p class="cmim-muted">Cadastre um time e convide os cinco jogadores antes de disputar um campeonato.</p>
-<div id="my-teams"></div><form id="create-squad"><div class="cmim-form-row"><label class="cmim-field">NOME DO TIME<input name="name" maxlength="55" minlength="3" placeholder="Ex.: CMIM PHANTOMS" required></label>
-<label class="cmim-field">SIGLA (2–6)<input name="short_name" minlength="2" maxlength="6" placeholder="CMP" required></label>
-<label class="cmim-field">SUA POSIÇÃO NO TIME<select name="captain_lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label></div>
-<button class="cmim-button" type="submit">＋ CRIAR TIME</button></form></section>
-<section class="cmim-card"><h2>CONVITES RECEBIDOS</h2><p class="cmim-muted">Aceite ou recuse convites dos capitães para completar seu elenco.</p><div id="my-invites" class="cmim-empty">Entre na sua conta para ver os convites.</div></section></div>
-<h2 class="cmim-kicker">TEMPORADA COMPETITIVA · EVENTOS</h2><div id="competition-list" class="cmim-competition-grid"><div class="cmim-empty">Carregando campeonatos...</div></div>
-<section class="cmim-card" style="margin-top:20px"><h2>TABELAS, CONFRONTOS E CLASSIFICAÇÃO</h2><p class="cmim-muted">Selecione um campeonato para ver os jogos e o formato da disputa.</p>
-<label class="cmim-field">CAMPEONATO<select id="selected-competition"><option value="">Escolha um campeonato</option></select></label><div id="competition-overview"></div></section>
-<section id="competition-admin" class="cmim-card" hidden style="margin-top:20px;border-color:#b99b56"><span class="cmim-kicker">ÁREA RESTRITA · ORGANIZAÇÃO</span><h2>GESTÃO DE CAMPEONATOS</h2>
-<div class="cmim-tabs"><button class="active" data-admin-screen="create">Criar campeonato</button><button data-admin-screen="manage">Inscrições e rodadas</button></div>
-<form id="admin-comp-create"><div class="cmim-form-row">
-<label class="cmim-field">NOME DO CAMPEONATO<input name="title" minlength="4" maxlength="140" required placeholder="Ex.: Copa Insalubrão"></label>
-<label class="cmim-field">FORMATO DA COMPETIÇÃO<select name="structure"><option value="copa">🏆 Copa / Mata-mata</option><option value="liga">📊 Liga / Pontos corridos</option><option value="suico">⚔ Suíço / Rodadas</option></select></label>
-<label class="cmim-field">SÉRIE DAS PARTIDAS<select name="series_games"><option value="1">MD1</option><option value="3" selected>MD3</option><option value="5">MD5</option></select></label>
-<label class="cmim-field">RODADAS DO SUÍÇO<select name="swiss_rounds"><option value="3">3 rodadas</option><option value="4">4 rodadas</option><option value="5" selected>5 rodadas</option><option value="6">6 rodadas</option><option value="7">7 rodadas</option></select></label><label class="cmim-field">Nº MÁXIMO DE TIMES<input name="max_teams" type="number" min="2" max="128" value="16" required></label>
-<label class="cmim-field">INÍCIO<input name="starts_at" type="datetime-local" required></label>
-<label class="cmim-field">STATUS INICIAL<select name="status"><option value="draft">Rascunho</option><option value="open" selected>Inscrições abertas</option></select></label>
-</div><label class="cmim-field">DESCRIÇÃO E REGULAMENTO<textarea name="description" rows="4" maxlength="5000"></textarea></label><div class="cmim-actions"><button class="cmim-button">＋ PUBLICAR CAMPEONATO</button></div></form>
-<div id="admin-comp-manage" hidden><label class="cmim-field">SELECIONE O CAMPEONATO<select id="admin-competition-select"></select></label>
-<div id="admin-competition-body" style="margin-top:20px"></div></div></section>
-</main></body></html>
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b110e">
+<meta http-equiv="refresh" content="0;url=./ligas.html">
+<title>CMIM · Ambiente Competitivo</title>
+<link rel="icon" href="./favicon.svg">
+<link rel="stylesheet" href="./cmim-auth.css">
+<link rel="stylesheet" href="./cmim-modern.css">
+<script>location.replace(new URL('./ligas.html'+location.search+location.hash,location.href).href)</script>
+</head><body class="cmim-account-page"><main class="cmim-shell"><section class="cmim-card" style="max-width:670px;margin:12vh auto;padding:38px">
+<img src="./cmim.jpeg" width="90" height="90" alt="Logo CMIM" style="border-radius:15px">
+<span class="cmim-kicker" style="display:block;margin-top:20px">NOVIDADE NO PORTAL</span>
+<h1 style="font:900 52px/1 'Barlow Condensed',sans-serif;margin:12px 0">O COMPETITIVO TEM <span style="color:#ffe16a">UMA NOVA CASA.</span></h1>
+<p>Criação de times, inscrições, confrontos, chaves e administração foram organizados no ambiente das Ligas Competitivas.</p>
+<a class="cmim-button" style="display:inline-block;text-decoration:none" href="./ligas.html">ENTRAR NO CIRCUITO CMIM →</a>
+</section></main></body></html>
