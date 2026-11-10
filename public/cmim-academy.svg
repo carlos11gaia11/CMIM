@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="660" viewBox="0 0 600 660" role="img" aria-labelledby="title desc">
+<title id="title">ACADEMY</title><desc id="desc">Emblema vetorial CMIM com escudo, coroa, máscara de gás e detalhes da comunidade.</desc>
+<defs><linearGradient id="metal" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ffffff"/><stop offset=".36" stop-color="#a4a9aa"/><stop offset=".52" stop-color="#ffffff"/><stop offset="1" stop-color="#626970"/></linearGradient><linearGradient id="color" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#41adff"/><stop offset=".55" stop-color="#103b83"/><stop offset="1" stop-color="#41adff"/></linearGradient><linearGradient id="armor" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#30363b"/><stop offset=".5" stop-color="#0b1014"/><stop offset="1" stop-color="#353d45"/></linearGradient><filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="13"/></filter><filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="13" flood-color="#000" flood-opacity=".75"/></filter></defs>
+<circle cx="300" cy="297" r="234" fill="#41adff" opacity=".14" filter="url(#glow)"/>
+<g filter="url(#shadow)">
+<path d="M300 32 522 124 512 429 300 610 88 429 78 124Z" fill="#070b0f" stroke="#41adff" stroke-width="12"/>
+<path d="M300 55 503 138 493 415 300 578 107 415 97 138Z" fill="url(#armor)" stroke="#f6f6f4" stroke-opacity=".55" stroke-width="4"/>
+<path d="M300 74 472 145 463 395 300 548 137 395 128 145Z" fill="url(#color)" opacity=".17"/>
+<path d="M190 112 231 67 271 96 300 44 329 96 369 67 410 112 394 145 205 145Z" fill="url(#color)" stroke="#eff3ee" stroke-width="5"/>
+<path d="M224 115 241 101 280 117 300 83 320 117 359 101 376 115Z" fill="#0b0e13"/>
+<path d="M168 278 Q156 140 300 149 Q444 140 432 278 L394 336 Q391 379 300 410 Q209 379 206 336Z" fill="#070c12" stroke="#41adff" stroke-width="8"/>
+<path d="M211 287 Q199 199 300 159 Q401 199 389 287 L351 332 249 332Z" fill="url(#armor)" stroke="#c9d4d5" stroke-width="4"/>
+<path d="M225 263 273 250 282 275 249 296 215 290Z" fill="#41adff" opacity=".9"/>
+<path d="M375 263 327 250 318 275 351 296 385 290Z" fill="#41adff" opacity=".9"/>
+<path d="M266 304 300 280 334 304 330 352 300 368 270 352Z" fill="#0b0f12" stroke="#cbd5d9" stroke-width="7"/>
+<circle cx="208" cy="348" r="38" fill="#0b1015" stroke="#41adff" stroke-width="12"/><circle cx="392" cy="348" r="38" fill="#0b1015" stroke="#41adff" stroke-width="12"/>
+<circle cx="208" cy="348" r="22" fill="none" stroke="#c7d3d6" stroke-width="6" stroke-dasharray="6 6"/><circle cx="392" cy="348" r="22" fill="none" stroke="#c7d3d6" stroke-width="6" stroke-dasharray="6 6"/>
+<path d="M60 375 540 375 513 456 300 476 87 456Z" fill="#080c10" stroke="#41adff" stroke-width="10"/>
+<path d="M88 393 512 393 496 438 300 455 104 438Z" fill="url(#armor)" stroke="#f4f5f6" stroke-opacity=".4" stroke-width="3"/>
+<text x="300" y="425" font-family="Impact,Arial Black,sans-serif" font-size="70" font-style="italic" font-weight="900" fill="url(#metal)" text-anchor="middle" letter-spacing="1">CMIM</text>
+<path d="M154 483 300 511 446 483 420 535 300 558 180 535Z" fill="url(#color)" stroke="#f0f2f0" stroke-width="3"/>
+<text x="300" y="525" font-family="Impact,Arial Black,sans-serif" font-size="43" font-weight="900" fill="#ffffff" stroke="#11151b" stroke-width="1.2" paint-order="stroke" text-anchor="middle" letter-spacing="2">ACADEMY</text>
+<text x="300" y="588" font-family="Arial,sans-serif" font-size="17" font-weight="900" fill="#41adff" text-anchor="middle" letter-spacing="5">CIRCUITO · ACADEMY</text>
+<path d="M118 175 84 188 72 212 111 202 M482 175 516 188 528 212 489 202 M108 246 65 263 69 287 105 274 M492 246 535 263 531 287 495 274" fill="none" stroke="#41adff" stroke-width="9" stroke-linecap="round"/>
+</g></svg>
