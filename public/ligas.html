@@ -20,7 +20,7 @@ html.cmim-auth-pending body{visibility:visible!important}
 @media(max-width:830px){.cmim-circuito-grid{grid-template-columns:1fr}.cmim-circuito-card{min-height:195px}.cmim-circuito-card h3{margin:23px 0 10px;font-size:39px}}
 </style>
 <link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head><body class="cmim-account-page cmim-league-hub" data-no-auth-badge="1">
-<header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>COMPETITIVE CIRCUIT</small></a><nav class="cmim-mini-nav" aria-label="Navegação do circuito"><a href="./">Portal</a><a href="#circuito-cmim">Ligas</a><a href="#equipes">Times</a><a href="#chaveamentos">Chaveamentos</a><a href="./regulamento.html#ligas">Regras</a><a href="./perfil.html">Meu Perfil</a></nav></header>
+<header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>COMPETITIVE CIRCUIT</small></a><nav class="cmim-mini-nav" aria-label="Navegação do circuito"><a href="./">Portal</a><a href="#circuito-cmim">Ligas</a><a href="#equipes-oficiais">Equipes</a><a href="#agenda">Partidas</a><a href="#chaveamentos">Classificação</a><a href="./regulamento.html#ligas">Regras</a><a href="./perfil.html">Meu Perfil</a></nav></header>
 <main class="cmim-shell" id="ligas">
 <section class="cmim-league-header" aria-labelledby="cmim-league-hero">
   <span class="cmim-kicker">CMIM COMPETITIVE CIRCUIT · TEMPORADA COMPETITIVA</span>
@@ -29,6 +29,12 @@ html.cmim-auth-pending body{visibility:visible!important}
   <div class="cmim-league-actions"><a href="#circuito-cmim">CONHECER AS LIGAS ↓</a><a class="secondary" href="#equipes">MONTAR MEU TIME ↗</a><a class="secondary" href="#chaveamentos">VER CHAVEAMENTOS ↗</a></div>
 </section>
 <p class="cmim-status" role="status" id="champ-status"></p>
+<section class="cmim-pulse" id="panorama" aria-label="Panorama do circuito CMIM">
+  <div class="cmim-pulse-stat"><small>LIGAS COMPETITIVAS</small><strong>03</strong><span>OPEN · ACADEMY · MAJOR</span></div>
+  <div class="cmim-pulse-stat"><small>EVENTOS NO SISTEMA</small><strong id="cmim-pulse-events" aria-live="polite">—</strong><span>Informações publicadas</span></div>
+  <div class="cmim-pulse-stat"><small>INSCRIÇÕES ABERTAS</small><strong id="cmim-pulse-open" aria-live="polite">—</strong><span>Competições disponíveis</span></div>
+  <div class="cmim-pulse-stat"><small>EQUIPES APROVADAS</small><strong id="cmim-pulse-teams" aria-live="polite">—</strong><span>Elencos distintos por evento</span></div>
+</section>
 <section class="cmim-circuito" id="circuito-cmim" aria-labelledby="cmim-circuito-title">
   <div class="cmim-circuito-head"><div><span class="cmim-kicker">CIRCUITO COMPETITIVO DE EQUIPES</span><h2 id="cmim-circuito-title">CMIM <em>OPEN · ACADEMY · MAJOR</em></h2></div><p>O cenário competitivo do CMIM reúne três ligas com identidades próprias. Diferente do in-house, aqui os times se inscrevem e disputam as competições de equipes.</p></div>
   <div class="cmim-circuito-grid">
@@ -51,14 +57,22 @@ html.cmim-auth-pending body{visibility:visible!important}
 <label class="cmim-field">SUA POSIÇÃO NO TIME<select name="captain_lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label></div>
 <button class="cmim-button" type="submit">＋ CRIAR TIME</button></form></section>
 <section class="cmim-card"><h2>CONVITES RECEBIDOS</h2><p class="cmim-muted">Aceite ou recuse convites dos capitães para completar seu elenco.</p><div id="my-invites" class="cmim-empty">Entre na sua conta para ver os convites.</div></section></div></section>
-<section class="cmim-hub-section" id="eventos"><div class="cmim-hub-section-heading"><div><span class="cmim-kicker">02 / TEMPORADA COMPETITIVA</span><h2>EVENTOS OFICIAIS</h2></div><p>Competições publicadas pela organização. Consulte o status de inscrição, o calendário e os formatos definidos para cada evento.</p></div><div id="league-filter" class="cmim-league-filters" role="group" aria-label="Filtrar eventos por liga">
+<section class="cmim-hub-section" id="equipes-oficiais">
+  <div class="cmim-hub-section-heading"><div><span class="cmim-kicker">02 / ELENCOS HOMOLOGADOS</span><h2>EQUIPES DO CIRCUITO</h2></div><p>Conheça os times confirmados nos campeonatos. Apenas inscrições aprovadas pela organização aparecem aqui.</p></div>
+  <div id="cmim-teams-catalog" class="cmim-official-teams" aria-live="polite"><div class="cmim-empty">Carregando equipes...</div></div>
+</section>
+<section class="cmim-hub-section" id="eventos"><div class="cmim-hub-section-heading"><div><span class="cmim-kicker">03 / TEMPORADA COMPETITIVA</span><h2>EVENTOS OFICIAIS</h2></div><p>Competições publicadas pela organização. Consulte o status de inscrição, o calendário e os formatos definidos para cada evento.</p></div><div id="league-filter" class="cmim-league-filters" role="group" aria-label="Filtrar eventos por liga">
   <button type="button" class="is-active" data-filter-league="all" aria-pressed="true">TODAS AS LIGAS</button>
   <button type="button" data-filter-league="open" aria-pressed="false">CMIM OPEN</button>
   <button type="button" data-filter-league="academy" aria-pressed="false">CMIM ACADEMY</button>
   <button type="button" data-filter-league="major" aria-pressed="false">CMIM MAJOR</button>
 </div>
+<section class="cmim-events-upcoming" id="agenda" aria-labelledby="cmim-agenda-title">
+  <div class="cmim-hub-section-heading"><div><span class="cmim-kicker">04 / ACOMPANHE OS CONFRONTOS</span><h2 id="cmim-agenda-title">AGENDA &amp; PARTIDAS</h2></div><p>Confrontos oficiais das competições cadastradas. Sem datas fictícias: horários só são apresentados quando a organização publica.</p></div>
+  <div id="cmim-upcoming-matches" class="cmim-official-matches" aria-live="polite"><div class="cmim-empty">Buscando confrontos...</div></div>
+</section>
 <div id="competition-list" class="cmim-competition-grid"><div class="cmim-empty">Carregando eventos...</div></div></section>
-<section class="cmim-hub-section" id="chaveamentos"><div class="cmim-hub-section-heading"><div><span class="cmim-kicker">03 / CAMPEONATOS E RESULTADOS</span><h2>CHAVEAMENTOS &amp; CLASSIFICAÇÃO</h2></div><p>Escolha um evento para explorar confrontos por rodada, placares, ranking de equipes e resultados homologados.</p></div><section class="cmim-card" style="margin-top:18px"><h2>TABELAS, CONFRONTOS E CLASSIFICAÇÃO</h2><p class="cmim-muted">Selecione um campeonato para ver os jogos e o formato da disputa.</p>
+<section class="cmim-hub-section" id="chaveamentos"><div class="cmim-hub-section-heading"><div><span class="cmim-kicker">05 / CAMPEONATOS E RESULTADOS</span><h2>CHAVEAMENTOS &amp; CLASSIFICAÇÃO</h2></div><p>Escolha um evento para explorar confrontos por rodada, placares, ranking de equipes e resultados homologados.</p></div><section class="cmim-card" style="margin-top:18px"><h2>TABELAS, CONFRONTOS E CLASSIFICAÇÃO</h2><p class="cmim-muted">Selecione um campeonato para ver os jogos e o formato da disputa.</p>
 <label class="cmim-field">CAMPEONATO<select id="selected-competition"><option value="">Escolha um campeonato</option></select></label><div id="competition-overview"></div></section></section>
 <section class="cmim-hub-section" id="gestao"><section id="competition-admin" class="cmim-card" hidden style="margin-top:20px;border-color:#b99b56"><span class="cmim-kicker">ÁREA RESTRITA · ORGANIZAÇÃO</span><h2>GESTÃO DAS LIGAS E EVENTOS</h2>
 <div class="cmim-tabs"><button class="active" data-admin-screen="create">Criar campeonato</button><button data-admin-screen="manage">Inscrições e rodadas</button></div>
