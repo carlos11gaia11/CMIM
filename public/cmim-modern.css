@@ -222,3 +222,16 @@ body:has(.cmim-mobile-dock) .cmim-mobile-dock{backdrop-filter:blur(14px);box-sha
 .cmim-official-match-card p{font-size:12px;color:#bdcfbb;margin:0 0 16px}
 @media(max-width:1100px){.cmim-pulse{grid-template-columns:repeat(2,minmax(0,1fr))}.cmim-official-teams{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.cmim-official-teams,.cmim-official-matches{grid-template-columns:1fr}.cmim-pulse-stat{min-height:105px}.cmim-pulse{gap:9px}.cmim-pulse-stat{padding:15px}}
+
+/* Busca local e acessível no regulamento CMIM */
+.cmim-rules-search{max-width:850px;display:block;border:1px solid #706837;background:linear-gradient(130deg,#272817ee,#141e17ed);padding:19px 22px 17px;border-radius:13px;margin:0 0 23px}
+.cmim-rules-search label{display:block;color:#ffe177;font-size:11px;font-weight:900;letter-spacing:1.4px;margin-bottom:11px}
+.cmim-rules-search-row{display:flex;gap:10px}
+.cmim-rules-search-row input{flex:1;min-width:0;min-height:46px;border:1px solid #708064;border-radius:8px;background:#0c1510;color:#f7f9f1;padding:10px 15px;font:600 14px Barlow,Arial,sans-serif}
+.cmim-rules-search-row input:focus{outline:2px solid #ffe16a;outline-offset:2px}
+.cmim-rules-search-row input::placeholder{color:#a6b5a1}
+.cmim-rules-search-row button{min-width:90px;min-height:45px;padding:10px 14px;border:1px solid #776d3a;border-radius:8px;background:#332f1e;color:#ffdf71;font:900 11px Barlow,Arial,sans-serif}
+.cmim-rules-search-row button:hover{border-color:#ffe16a;background:#4c4528}
+.cmim-rules-search p{margin:9px 0 0;font-size:11px;color:#c3d2bd}
+#regras [hidden]{display:none!important}
+@media(max-width:520px){.cmim-rules-search{padding:15px}.cmim-rules-search-row{flex-direction:column}.cmim-rules-search-row button{width:100%}}
