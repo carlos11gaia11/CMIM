@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
 'use strict';
 const a=window.CMIMAuth,$=id=>document.getElementById(id),esc=a.esc;
 const txt=x=>String(x??'');
-const state={me:null,admin:false,comps:[],entries:[],squads:[],members:[],profiles:[],matches:[],invites:[],selected:null};
+const initialLeague=new URLSearchParams(location.search).get('liga');
+const state={me:null,admin:false,comps:[],entries:[],squads:[],members:[],profiles:[],matches:[],invites:[],selected:null,league:['open','academy','major'].includes(initialLeague)?initialLeague:'all'};
 const safeErr=e=>txt(e?.message||e);
 const status=(message,bad=false)=>{
  const node=$('champ-status');node.textContent=message;node.className='cmim-status'+(bad?' error':'');
@@ -14,6 +15,7 @@ const status=(message,bad=false)=>{
  toast.textContent=message;toast.className='cmim-toast'+(bad?' error':'');toast.hidden=false;
  clearTimeout(status.timer);status.timer=setTimeout(()=>toast.hidden=true,bad?9000:4500);
 };
+const leagueLabel=x=>({open:'CMIM OPEN',academy:'CMIM ACADEMY',major:'CMIM MAJOR'}[x]||'CIRCUITO GERAL');
 const label=s=>({copa:'Copa / Mata-mata',liga:'Liga / Pontos corridos',suico:'Suíço',draft:'Rascunho',open:'Inscrições abertas',closed:'Inscrições encerradas',live:'Em andamento',finished:'Finalizado',pending:'Pendente',approved:'Aprovado',rejected:'Rejeitado',scheduled:'Agendado'}[s]||s);
 const team=id=>state.squads.find(x=>x.id===id);
 const competition=id=>state.comps.find(x=>x.id===id);
@@ -69,18 +71,25 @@ function render(){
  document.querySelectorAll('[data-invite-id]').forEach(b=>b.onclick=async()=>{
   b.disabled=true;try{await a.call('/rest/v1/rpc/cmim_answer_invite',{method:'POST',secure:true,body:{p_invite:b.dataset.inviteId,p_accept:b.dataset.accept==='true'}});status('Convite respondido.');await read()}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
  });
- $('competition-list').innerHTML=state.comps.length?state.comps.map(c=>{
+ const visibleComps=state.comps.filter(c=>state.league==='all'||c.league_tier===state.league);
+ document.querySelectorAll('[data-filter-league]').forEach(button=>{
+  const active=button.dataset.filterLeague===state.league;
+  button.classList.toggle('is-active',active);
+  button.setAttribute('aria-pressed',String(active));
+ });
+ $('competition-list').innerHTML=visibleComps.length?visibleComps.map(c=>{
   const count=state.entries.filter(e=>e.competition_id===c.id&&e.status!=='rejected').length;
   const buttons=c.status==='open'&&state.me?'<button class="cmim-button" data-register="'+c.id+'">INSCREVER MEU TIME →</button>':'';
   return '<article class="cmim-cup"><span class="cmim-kicker">'+esc(label(c.structure))+' · MD'+Number(c.series_games||3)+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
-  '<div><span class="cmim-badge">'+esc(label(c.status))+'</span><span class="cmim-badge">'+count+'/'+c.max_teams+' times</span><span class="cmim-badge">'+formatDate(c.starts_at)+'</span></div>'+
+  '<div><span class="cmim-badge">'+esc(leagueLabel(c.league_tier))+'</span><span class="cmim-badge">'+esc(label(c.status))+'</span><span class="cmim-badge">'+count+'/'+c.max_teams+' times</span><span class="cmim-badge">'+formatDate(c.starts_at)+'</span></div>'+
   '<div class="cmim-actions"><button class="cmim-button ghost" data-select-comp="'+c.id+'">VER CONFRONTOS</button>'+buttons+'</div></article>'
- }).join(''):'<div class="cmim-empty">Nenhum campeonato público cadastrado ainda.</div>';
+ }).join(''):'<div class="cmim-empty">Ainda não existem eventos publicados nesta categoria. Acompanhe os anúncios oficiais do CMIM.</div>';
  document.querySelectorAll('[data-select-comp]').forEach(b=>b.onclick=()=>{
   $('selected-competition').value=b.dataset.selectComp;state.selected=b.dataset.selectComp;renderOverview();$('competition-overview').scrollIntoView({behavior:'smooth',block:'nearest'});
  });
  document.querySelectorAll('[data-register]').forEach(b=>b.onclick=()=>register(b.dataset.register));
- $('selected-competition').innerHTML='<option value="">Escolha um campeonato</option>'+state.comps.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('');
+ if(state.selected&&!visibleComps.some(c=>c.id===state.selected))state.selected=null;
+ $('selected-competition').innerHTML='<option value="">Escolha um campeonato</option>'+visibleComps.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('');
  if(state.selected&&competition(state.selected))$('selected-competition').value=state.selected;
  renderOverview();
  if(state.admin){$('competition-admin').hidden=false;
@@ -143,6 +152,13 @@ function renderOverview(){
  target.innerHTML=html;
 }
 async function refresh(){try{await read();status('Dados de campeonatos atualizados.')}catch(e){status('Erro ao atualizar: '+safeErr(e),true)}}
+document.querySelectorAll('[data-filter-league]').forEach(button=>button.addEventListener('click',()=>{
+ state.league=button.dataset.filterLeague||'all';state.selected=null;
+ const url=new URL(location.href);
+ if(state.league==='all')url.searchParams.delete('liga');else url.searchParams.set('liga',state.league);
+ history.replaceState({},'',url.pathname+url.search+url.hash);
+ render();
+}));
 const loginLink=$('league-login-link');
 if(loginLink)loginLink.addEventListener('click',e=>{e.preventDefault();a.gotoLogin()});
 $('selected-competition').onchange=e=>{state.selected=e.target.value;renderOverview()};
@@ -273,7 +289,7 @@ $('admin-comp-create').onsubmit=async e=>{
  btn.disabled=true;
  try{
   await a.call('/rest/v1/cmim_competitions',{method:'POST',secure:true,body:{
-   title:txt(f.get('title')).trim(),description:txt(f.get('description')).trim(),structure:f.get('structure'),
+   title:txt(f.get('title')).trim(),description:txt(f.get('description')).trim(),structure:f.get('structure'),league_tier:txt(f.get('league_tier')).toLowerCase(),
    series_games:Number(f.get('series_games')),format:'MD'+f.get('series_games'),starts_at:new Date(f.get('starts_at')).toISOString(),
    max_teams:Number(f.get('max_teams')),swiss_rounds:Number(f.get('swiss_rounds')||5),status:f.get('status')
   }});
