@@ -1,0 +1,144 @@
+/* CMIM / Arena UI 2026 — camada visual compartilhada.
+   Mantém layout e regras de negócio existentes; acessibilidade e redução de movimento suportadas. */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap');
+:root{--cmim-void:#080b0a;--cmim-ink:#121815;--cmim-panel:#19221c;--cmim-edge:#3d4d40;--cmim-gold:#ffe16a;--cmim-cream:#f8faee;--cmim-mist:#b7c7b5;--cmim-radius:16px;--cmim-shadow:0 22px 60px #0005}
+html{scroll-behavior:smooth;scrollbar-color:#6a6c37 #0d1510}
+body{background-image:radial-gradient(ellipse at 90% 0,#fdde3721,transparent 44%),radial-gradient(ellipse at 5% 40%,#2e61502a,transparent 54%),linear-gradient(180deg,#0b100d,#0a0e0c 40%,#080b0a)!important;background-attachment:fixed;color:#f5f8f0}
+body::selection{background:#f3df4c;color:#111}
+button,a,input,select,textarea{transition:background-color .19s,border-color .19s,color .19s,box-shadow .19s,transform .19s}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #ffe26a!important;outline-offset:3px}
+button:not(:disabled){cursor:pointer}
+button:disabled{cursor:not-allowed}
+img{max-width:100%}
+.cmim-motion-progress{position:fixed;z-index:9999;left:0;top:0;height:3px;width:100%;background:linear-gradient(90deg,#ffe875,#ffba25,#c8f9a7);transform-origin:left;transform:scaleX(var(--cmim-scroll,0));pointer-events:none;box-shadow:0 0 11px #ffe16666}
+.cmim-reveal-ready{animation:cmim-rise .52s cubic-bezier(.16,.8,.22,1) both}
+@keyframes cmim-rise{from{opacity:.01;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cmim-shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes cmim-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes cmim-breathe{0%,100%{box-shadow:0 0 0 0 #ffe06614}50%{box-shadow:0 0 0 12px #ffe06600}}
+@keyframes cmim-soft-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+/* Página de entrada */
+.cmim-homepage .site-header{background:#0a0e0cdd!important;border-bottom:1px solid #55644366;box-shadow:0 8px 30px #0004}
+.cmim-homepage .identity img{border:1px solid #cbb957;box-shadow:0 0 0 4px #ffe2510d}
+.cmim-homepage .nav a{font-weight:800;letter-spacing:.7px;border-radius:6px;position:relative}
+.cmim-homepage .nav a:after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:2px;transform:scaleX(0);transform-origin:left;background:#ffe16a;transition:transform .2s}
+.cmim-homepage .nav a:hover:after{transform:scaleX(1)}
+.cmim-homepage .hero{position:relative;isolation:isolate;min-height:590px;gap:clamp(24px,5vw,74px)}
+.cmim-homepage .hero:before{content:"";position:absolute;inset:17px -25px 16px;z-index:-1;pointer-events:none;border:1px solid #5d583231;border-radius:22px;background:linear-gradient(115deg,#f7d84e05,transparent 45%)}
+.cmim-homepage .hero h1{font-size:clamp(72px,8vw,112px);line-height:.85;letter-spacing:-1.8px;text-shadow:0 14px 42px #0009}
+.cmim-homepage .hero h1 em{background:linear-gradient(120deg,#fff5b0,#ffe260 45%,#e7ad2b 90%);color:transparent;background-clip:text;-webkit-background-clip:text}
+.cmim-homepage .hero-copy{max-width:595px;font-size:16px;color:#cedacb}
+.cmim-homepage .hero-art{border-radius:20px;border-color:#8c804759;box-shadow:0 35px 85px #0008,0 0 65px #d8bc3420;animation:cmim-float 7s ease-in-out infinite}
+.cmim-homepage .hero-art img{filter:drop-shadow(0 10px 24px #000)}
+.cmim-homepage .portal-section{position:relative}
+.cmim-homepage .portal-section .section-head h2,.cmim-homepage .section-head h2{letter-spacing:.1px}
+.cmim-homepage .button,.cmim-account-page .cmim-button{border-radius:9px;box-shadow:0 9px 25px #0003}
+.cmim-homepage .button.primary,.cmim-account-page .cmim-button:not(.ghost){background:linear-gradient(125deg,#fff2a6,#ffe36c 56%,#e2b53b);border-color:#ffe16b;color:#181b11}
+.cmim-homepage .button.primary:hover,.cmim-account-page .cmim-button:not(.ghost):hover{transform:translateY(-3px);box-shadow:0 15px 35px #d8ae322b}
+.cmim-homepage .tool,.cmim-homepage .commandment,.cmim-homepage .pane,.cmim-homepage .inhouse-how-step,.cmim-homepage .soon-card{border-radius:13px;transition:transform .25s,border-color .25s,box-shadow .25s}
+.cmim-homepage .tool:hover,.cmim-homepage .commandment:hover,.cmim-homepage .inhouse-how-step:hover{transform:translateY(-5px);border-color:#d1bd6999;box-shadow:0 17px 45px #0006}
+.cmim-homepage .feature-strip{border-radius:13px}
+.cmim-homepage .closing{background:linear-gradient(105deg,#242915,#121d14,#201a10)!important;overflow:hidden}
+.cmim-homepage .closing h2{letter-spacing:.1px}
+.cmim-homepage .portal-section,.cmim-homepage .section{scroll-margin-top:90px}
+/* Divisões oficiais do in-house */
+.cmim-divisions{scroll-margin-top:64px}
+.cmim-division-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.cmim-division-card{position:relative;overflow:hidden;display:grid;grid-template-columns:155px minmax(0,1fr);gap:22px;align-items:center;min-height:215px;padding:23px 26px;border-radius:15px;border:1px solid color-mix(in srgb,var(--division-color) 45%,#3d4c40);background:radial-gradient(ellipse at 0% 20%,var(--division-bg),transparent 75%),linear-gradient(120deg,#212520,#101613);box-shadow:0 22px 45px #0004}
+.cmim-division-card:after{content:"";position:absolute;top:0;right:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--division-color),transparent)}
+.cmim-division-card.high{--division-color:#ffc16b;--division-bg:#80331444}
+.cmim-division-card.low{--division-color:#83caff;--division-bg:#103e9640}
+.cmim-division-card img{width:152px;height:170px;object-fit:contain;filter:drop-shadow(0 12px 21px #000b);transition:transform .3s}
+.cmim-division-card:hover img{transform:translateY(-6px) scale(1.035)}
+.cmim-division-card span{font-size:10px;color:var(--division-color);font-weight:900;letter-spacing:1.7px}
+.cmim-division-card h3{font:900 clamp(29px,3.5vw,46px)/1 "Barlow Condensed",Impact,sans-serif;margin:9px 0 12px;color:#fff}
+.cmim-division-card p{font-size:13px;line-height:1.65;color:#ccd9cd;margin:0}
+.cmim-division-note{font-size:12px;color:#cedac7;border:1px solid #78703c;background:#28271a;border-radius:10px;padding:17px 21px;margin-top:14px}
+/* Cards de circuito */
+.cmim-league-card{overflow:hidden!important}
+.cmim-league-card .cmim-league-mark{width:130px;height:142px;margin:10px 0 0;object-fit:contain;border:0;border-radius:0;background:transparent;box-shadow:none;filter:drop-shadow(0 14px 18px #000a);transition:transform .3s}
+.cmim-league-card:hover .cmim-league-mark{transform:translateY(-5px) scale(1.045)}
+.cmim-league-card .cmim-league-meta{position:relative;z-index:1}
+.cmim-league-card h3{margin:12px 0 11px!important}
+.cmim-league-open{--league:#ffe27a!important;--league-bg:#61471144!important}
+.cmim-league-minor{--league:#77c9ff!important;--league-bg:#173c7544!important}
+.cmim-league-major{--league:#ff6d75!important;--league-bg:#731c2140!important}
+.cmim-league-card:hover{transform:translateY(-5px);box-shadow:0 22px 50px #0008}
+/* Ligas: dashboard de equipes e chaveamentos */
+.cmim-account-page .cmim-topbar{position:sticky;top:0;z-index:30;background:#0e1511ed;border-bottom-color:#455a48;backdrop-filter:blur(16px);box-shadow:0 8px 22px #0005}
+.cmim-account-page .cmim-shell{width:min(1300px,calc(100% - 38px));margin:42px auto 110px}
+.cmim-account-page .cmim-brand{font-size:31px;color:#ffe371!important}
+.cmim-account-page .cmim-brand small{color:#c4d1c2}
+.cmim-account-page .cmim-mini-nav a{border-color:#526650;color:#eef5e9;padding:10px 14px;border-radius:8px}
+.cmim-account-page .cmim-mini-nav a:hover{background:#263827;border-color:#ffe16a}
+.cmim-account-page .cmim-hero{padding:20px 0 24px}
+.cmim-account-page .cmim-hero h1{font-size:clamp(53px,7vw,88px);letter-spacing:-.5px}
+.cmim-account-page .cmim-card,.cmim-account-page .cmim-cup,.cmim-account-page .cmim-match,.cmim-account-page .cmim-stat{border-radius:14px;background:linear-gradient(145deg,#1c2920,#111a14);border-color:#4f6852;box-shadow:0 12px 34px #0004}
+.cmim-account-page .cmim-card h2{font-size:30px}
+.cmim-account-page .cmim-field input,.cmim-account-page .cmim-field textarea,.cmim-account-page .cmim-field select{background:#0f1813;border-color:#5f7560}
+.cmim-account-page .cmim-field input:focus,.cmim-account-page .cmim-field select:focus,.cmim-account-page .cmim-field textarea:focus{border-color:#ffe371;box-shadow:0 0 0 3px #ffe37122}
+.cmim-account-page .cmim-button{border-radius:8px}
+.cmim-account-page .cmim-tabs button{border-radius:8px}
+.cmim-account-page .cmim-table th{background:#273827}
+.cmim-account-page .cmim-table tr:hover td{background:#243126}
+.cmim-league-hub .cmim-shell{margin-top:30px}
+.cmim-league-hub .cmim-league-header{position:relative;isolation:isolate;border:1px solid #85754166;border-radius:20px;padding:43px 44px;margin:12px 0 26px;background:radial-gradient(ellipse at 82% 10%,#b38a1b23,transparent 54%),linear-gradient(100deg,#19231b,#101813);overflow:hidden}
+.cmim-league-hub .cmim-league-header:after{content:"";position:absolute;right:-75px;top:-80px;width:370px;height:370px;border:1px solid #ffe17a25;border-radius:50%;box-shadow:0 0 0 50px #ffe17a05,0 0 0 100px #ffe17a04;pointer-events:none;z-index:-1}
+.cmim-league-hub .cmim-league-header h1{font:900 clamp(58px,8vw,98px)/.88 'Barlow Condensed',Impact,sans-serif;letter-spacing:-.6px;max-width:780px;margin:15px 0 18px}
+.cmim-league-hub .cmim-league-header h1 em{font-style:normal;color:#ffe16c}
+.cmim-league-hub .cmim-league-header p{max-width:700px;font-size:15px;line-height:1.75;color:#c7d5c6}
+.cmim-league-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:23px}
+.cmim-league-actions a{display:inline-flex;align-items:center;min-height:44px;border-radius:8px;padding:10px 17px;background:#ffe26b;color:#162016;font-weight:900;font-size:12px;text-decoration:none}
+.cmim-league-actions a.secondary{background:#1b2b1f;color:#e8f2df;border:1px solid #637c62}
+.cmim-league-hub .cmim-circuito-card{min-height:365px;border-radius:15px}
+.cmim-league-hub .cmim-circuito-card .cmim-circuito-logo{width:142px;height:156px;object-fit:contain;margin:12px 0 0;border:0;background:none;box-shadow:none;filter:drop-shadow(0 12px 16px #000b)}
+.cmim-league-hub .cmim-circuito-card h3{margin:16px 0 10px}
+.cmim-league-hub .cmim-circuito-card:hover{transform:translateY(-5px);box-shadow:0 19px 39px #0007}
+.cmim-league-hub .cmim-circuito-head{margin-top:20px}
+.cmim-league-hub .cmim-circuito-card.open{--league-color:#ffdb71;--league-bg:#573b1c}
+.cmim-league-hub .cmim-circuito-card.minor{--league-color:#82caff;--league-bg:#164065}
+.cmim-league-hub .cmim-circuito-card.major{--league-color:#ff7a7b;--league-bg:#581c21}
+.cmim-league-hub .cmim-circuito-card .cmim-circuito-foot{font-size:9px}
+.cmim-hub-section{scroll-margin-top:110px;margin-top:33px}
+.cmim-hub-section-heading{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 19px}
+.cmim-hub-section-heading h2{font:900 clamp(31px,4vw,46px)/1 'Barlow Condensed',Impact,sans-serif;margin:8px 0 0}
+.cmim-hub-section-heading p{font-size:13px;max-width:490px;line-height:1.75;color:#c4d1c2;margin:0}
+.cmim-access-banner{display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;border:1px solid #837445;background:linear-gradient(110deg,#31301b,#152118);padding:18px 22px;border-radius:13px;margin:17px 0 22px}
+.cmim-access-banner strong{font:900 23px 'Barlow Condensed',Impact,sans-serif;color:#ffe381;display:block}
+.cmim-access-banner p{font-size:12px;line-height:1.6;color:#d7e2d4;max-width:700px;margin:5px 0 0}
+.cmim-access-banner a{background:#ffe26b;color:#0e1712;border:1px solid #ffdb62;border-radius:9px;padding:11px 15px;text-decoration:none;font-size:11px;font-weight:900}
+.cmim-hub-section h2,.cmim-hub-section .cmim-card h2{letter-spacing:.2px}
+.cmim-hub-section .cmim-card{min-width:0}
+.cmim-competition-grid{gap:15px}
+.cmim-league-hub .cmim-cup{padding:23px}
+.cmim-league-hub .cmim-cup h3{font-size:28px}
+/* Login: replaces blank page with explicit, accessible authentication gate */
+html.cmim-auth-pending body{visibility:visible!important}
+body.cmim-auth-locked{overflow:hidden}
+body.cmim-auth-locked main,body.cmim-auth-locked .admin-layout{filter:blur(7px);pointer-events:none;user-select:none}
+.cmim-login-wall{position:fixed;inset:0;display:grid;place-items:center;overflow:auto;background:#060b08d9;backdrop-filter:blur(10px);z-index:9998;padding:26px}
+.cmim-login-wall-panel{position:relative;width:min(540px,100%);padding:36px;border:1px solid #bda758a3;border-radius:22px;background:radial-gradient(ellipse at 100% 0,#bca13926,transparent 56%),linear-gradient(145deg,#1b291e,#0d1510);box-shadow:0 35px 100px #000b}
+.cmim-login-wall-panel:before{content:"";position:absolute;top:0;left:32px;right:32px;height:3px;border-radius:4px;background:linear-gradient(90deg,transparent,#ffe076,transparent)}
+.cmim-login-wall-logo{width:74px;height:74px;object-fit:cover;border:1px solid #ab9652;border-radius:13px}
+.cmim-login-wall-eyebrow{color:#fce085;font-size:11px;letter-spacing:1.6px;font-weight:900;margin-top:22px}
+.cmim-login-wall-panel h2{font:900 clamp(36px,5.5vw,53px)/.98 "Barlow Condensed",Impact,sans-serif;letter-spacing:.3px;margin:12px 0 15px}
+.cmim-login-wall-panel p{color:#d3e1d0;font-size:14px;line-height:1.75;margin-bottom:26px}
+.cmim-login-wall-actions{display:flex;gap:12px;flex-wrap:wrap}
+.cmim-login-wall-actions a,.cmim-login-wall-actions button{display:inline-flex;justify-content:center;align-items:center;border-radius:9px;padding:13px 18px;text-decoration:none;font-weight:900;font-size:12px}
+.cmim-login-wall-actions button{background:#ffe16a;color:#101811;border:1px solid #ffe16a}
+.cmim-login-wall-actions a{border:1px solid #667b64;color:#eff8eb;background:#203022}
+.cmim-login-wall-hint{display:block;margin-top:20px;font-size:11px;color:#9fb19c}
+body.cmim-login-checking .cmim-login-wall-panel{animation:cmim-breathe 1.3s infinite}
+.cmim-login-wall-panel .cmim-loading-line{display:block;margin-top:20px;color:#e3d9b0;font-size:12px}
+/* Rankings, draft, stats, dados e admin conservam seus controles e ganham acabamento */
+body:not(.cmim-account-page) .panel,body:not(.cmim-account-page) .stat,body.admin-page .admin-card{border-radius:12px}
+body:not(.cmim-account-page) .panel{box-shadow:0 12px 38px #0003}
+body:not(.cmim-account-page) button.primary,body:not(.cmim-account-page) .primary{border-radius:9px}
+body.admin-page .admin-sidebar{box-shadow:12px 0 42px #0003}
+body.admin-page .admin-topbar{background:#0e1712df;backdrop-filter:blur(12px)}
+body.admin-page .admin-page-heading h1{letter-spacing:-.5px}
+body:has(.cmim-mobile-dock) .cmim-mobile-dock{backdrop-filter:blur(14px);box-shadow:0 -10px 36px #0009}
+@media(max-width:1100px){.cmim-division-card{grid-template-columns:120px minmax(0,1fr);gap:15px}.cmim-division-card img{width:116px;height:140px}.cmim-league-hub .cmim-circuito-card{min-height:320px}}
+@media(max-width:800px){.cmim-division-grid{grid-template-columns:1fr}.cmim-homepage .hero{min-height:initial}.cmim-homepage .hero:before{display:none}.cmim-homepage .hero-art{animation:none}.cmim-league-hub .cmim-league-header{padding:30px 25px}.cmim-account-page .cmim-topbar{position:relative}.cmim-league-hub .cmim-circuito-card{min-height:295px}}
+@media(max-width:550px){.cmim-division-card{grid-template-columns:96px minmax(0,1fr);padding:18px;gap:10px}.cmim-division-card img{width:94px;height:113px}.cmim-division-card h3{font-size:31px}.cmim-division-card p{font-size:12px}.cmim-login-wall{padding:14px}.cmim-login-wall-panel{padding:25px 22px}.cmim-login-wall-actions>*{flex:1}.cmim-league-hub .cmim-circuito-card{min-height:295px}.cmim-league-hub .cmim-league-header{padding:29px 21px}.cmim-account-page .cmim-shell{width:calc(100% - 28px)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:0s!important}.cmim-reveal-ready{animation:none!important}.cmim-homepage .hero-art{animation:none!important}}
