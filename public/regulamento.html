@@ -42,6 +42,11 @@
 
     <section class="wrap section" id="regras">
       <span class="kicker">02 / CONVIVÊNCIA E ORGANIZAÇÃO</span><h2 class="section-title">REGRAS <em>GERAIS.</em></h2><p class="lede">Estas orientações complementam os dez mandamentos já divulgados pelo CMIM. A pontuação e a classificação são tratadas separadamente na <a href="./ranking.html"><strong>página de ranking</strong></a>.</p>
+      <form id="cmim-rules-search" class="cmim-rules-search" role="search">
+  <label for="cmim-rules-search-input">PESQUISE UMA REGRA</label>
+  <div class="cmim-rules-search-row"><input id="cmim-rules-search-input" type="search" autocomplete="off" placeholder="Ex.: Fill, Leão de Vaga, Carter, pausa, Denver..." aria-controls="regras"><button id="cmim-rules-search-reset" type="reset">LIMPAR</button></div>
+  <p id="cmim-rules-search-result" role="status" aria-live="polite">Pesquise por assunto, situação ou nome de uma regra.</p>
+</form>
       <ol class="rules-list">
         <li><span class="num">01</span><div><h3>RESPEITO É OBRIGATÓRIO</h3><p>Rivalidade e brincadeiras são bem-vindas, mas ofensas, hostilidade, discriminação, ameaças, apologia a crimes ou condutas ilícitas não são aceitas.</p></div></li>
         <li><span class="num">02</span><div><h3>COMPROMISSO COM A PARTIDA</h3><p>Proibidos trollagem intencional, entrega deliberada do jogo, abandono e desistência por FF. A partida iniciada deve ser jogada até o fim.</p></div></li>
@@ -147,5 +152,25 @@
     </section>
   </main>
   <footer class="wrap foot"><span>© 2026 CMIM · COMUNIDADE MAIS INSALUBRE DO MUNDO · REGULAMENTO DA COMUNIDADE</span><a href="./">VOLTAR À PÁGINA INICIAL ↑</a></footer>
-</body>
+<script>
+(()=>{'use strict';
+function init(){
+ const form=document.getElementById('cmim-rules-search');
+ if(!form)return;
+ const input=document.getElementById('cmim-rules-search-input');
+ const status=document.getElementById('cmim-rules-search-result');
+ const normalize=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const clauses=[...document.querySelectorAll('#regras .rules-list > li,#regras .grid .card')];
+ const query=()=>{
+  const q=normalize(input.value.trim());let found=0;
+  for(const el of clauses){const match=!q||normalize(el.textContent).includes(q);el.hidden=!match;if(match)found++;}
+  status.textContent=q?found+' regra(s) encontrada(s) para “'+input.value.trim()+'”.': 'Pesquise por assunto, situação ou nome de uma regra.';
+ };
+ input.addEventListener('input',query);
+ form.addEventListener('submit',e=>e.preventDefault());
+ form.addEventListener('reset',()=>{setTimeout(query,0);input.focus()});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script></body>
 </html>
