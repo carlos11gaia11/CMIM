@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d0c">
   <meta name="description" content="CMIM — Comunidade Mais Insalubre do Mundo. Central de ferramentas: draft de jogadores, ranking e seleção de campeões de League of Legends.">
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="./assets/branding/cmim-main.webp" type="image/webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -113,7 +113,7 @@
 <body data-no-auth-badge="1" class="cmim-homepage">
   <header class="site-header">
     <div class="wrap topbar">
-      <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./cmim.jpeg" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
+      <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./assets/branding/cmim-main.webp" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
       <nav class="nav" aria-label="Menu principal"><a href="./draft.html?jogar=1" class="play-nav-link">▶ JOGAR</a><a href="#como-funciona">COMO FUNCIONA</a><a href="./inhouse.html">IN-HOUSE</a><a href="./ligas.html">LIGAS</a><a href="#divisoes">DIVISÕES</a><a href="./perfil.html">MEU PERFIL</a><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="./regulamento.html">REGULAMENTO</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><a id="portal-auth-button" class="portal-auth-entry" href="./conta.html" aria-label="Entrar ou criar conta no CMIM">◉ ENTRAR / CRIAR CONTA <span aria-hidden="true">↗</span></a>
     </div>
   </header>
@@ -132,12 +132,21 @@
       <div class="hero-art hero-art-refined" aria-label="Marca da Comunidade Mais Insalubre do Mundo">
         <div class="hero-art-refined-top"><span><i></i> COMUNIDADE MAIS INSALUBRE DO MUNDO</span><b>COME BACK / 2026</b></div>
         <div class="hero-art-refined-middle">
-          <img src="./cmim.jpeg" alt="Logo oficial do CMIM: figura mascarada sobre o amarelo">
+          <img src="./assets/branding/cmim-main.webp" alt="Logo oficial do CMIM: figura mascarada sobre o amarelo">
           <div class="hero-art-refined-copy"><span>UM TIME.</span><span>UMA HISTÓRIA.</span><strong>UM CMIM.</strong></div>
         </div>
         <div class="hero-art-refined-bottom"><div><small>NASCEU DO ZERO. VOLTOU MAIS FORTE.</small><strong>PLAY <span>·</span> COMPETE <span>·</span> REPEAT</strong></div></div>
       </div>
     </section>
+    <section class="wrap cmim-quick-doors" aria-labelledby="cmim-quick-title">
+      <div class="cmim-quick-intro"><span class="mini yellow">EXPLORE O ECOSSISTEMA</span><h2 id="cmim-quick-title">POR ONDE <em>COMEÇAR?</em></h2><p>Uma comunidade, dois ambientes de competição. Escolha seu caminho no CMIM.</p></div>
+      <div class="cmim-quick-grid">
+        <a href="./draft.html?jogar=1" class="cmim-quick-card"><img src="./assets/branding/insalubrao.webp" alt="" loading="lazy"><span><small>01 / IN-HOUSE</small><strong>JOGAR COM A COMUNIDADE</strong><em>Listas, tiers, divisões e draft de jogadores</em></span><b aria-hidden="true">↗</b></a>
+        <a href="./ligas.html" class="cmim-quick-card"><img src="./assets/branding/cmim-major.webp" alt="" loading="lazy"><span><small>02 / COMPETITIVO</small><strong>LIGAS OPEN · ACADEMY · MAJOR</strong><em>Equipes, inscrições, confrontos e classificação</em></span><b aria-hidden="true">↗</b></a>
+        <a href="./regulamento.html" class="cmim-quick-card"><img src="./assets/branding/cmim-main.webp" alt="" loading="lazy"><span><small>03 / COMUNIDADE</small><strong>REGRAS E FUNCIONAMENTO</strong><em>Leões de Vaga, fill lane, conduta e torneio</em></span><b aria-hidden="true">↗</b></a>
+      </div>
+    </section>
+
     <div class="wrap divider"></div>
 
     <section class="wrap inhouse-how section" id="como-funciona" aria-labelledby="inhouse-how-title">
@@ -244,11 +253,11 @@
       </div>
       <div class="cmim-division-grid">
         <article class="cmim-division-card high">
-          <img src="./insalubrao.svg" alt="Emblema do Insalubrão, divisão High do CMIM" loading="lazy">
+          <img src="./assets/branding/insalubrao.webp" alt="Emblema do Insalubrão, divisão High do CMIM" loading="lazy">
           <div><span>HIGH DIVISION</span><h3>INSALUBRÃO</h3><p>A divisão mais competitiva do in-house, voltada aos jogadores de maior classificação técnica. Em temporadas unificadas, pode reunir todos os tiers.</p></div>
         </article>
         <article class="cmim-division-card low">
-          <img src="./insalubrinho.svg" alt="Emblema do Insalubrinho, divisão Low do CMIM" loading="lazy">
+          <img src="./assets/branding/insalubrinho.webp" alt="Emblema do Insalubrinho, divisão Low do CMIM" loading="lazy">
           <div><span>LOW DIVISION</span><h3>INSALUBRINHO</h3><p>A divisão voltada ao desenvolvimento e ao equilíbrio entre jogadores de classificações mais baixas. Pode ser retomada quando houver participantes suficientes.</p></div>
         </article>
       </div>
@@ -263,21 +272,21 @@
       <div class="cmim-league-grid">
         <article class="cmim-league-card cmim-league-open">
           <div class="cmim-league-meta"><span>01 · CIRCUITO CMIM</span><span class="cmim-league-status">EM PLANEJAMENTO</span></div>
-          <img class="cmim-league-mark" src="./cmim-open.svg" alt="Emblema CMIM Open" loading="lazy">
+          <img class="cmim-league-mark" src="./assets/branding/cmim-open.webp" alt="Emblema CMIM Open" loading="lazy">
           <h3>CMIM <strong>OPEN</strong></h3>
           <p>A porta de entrada do cenário competitivo do CMIM. Uma categoria pensada para abrir espaço a equipes que queiram disputar o circuito.</p>
           <div class="cmim-league-bottom"><span>ENTRADA NO CENÁRIO</span><span>01 / 03</span></div>
         </article>
         <article class="cmim-league-card cmim-league-academy">
           <div class="cmim-league-meta"><span>02 · CIRCUITO CMIM</span><span class="cmim-league-status">EM PLANEJAMENTO</span></div>
-          <img class="cmim-league-mark" src="./cmim-academy.svg" alt="Emblema CMIM Academy" loading="lazy">
+          <img class="cmim-league-mark" src="./assets/branding/cmim-academy.webp" alt="Emblema CMIM Academy" loading="lazy">
           <h3>CMIM <strong>ACADEMY</strong></h3>
           <p>A liga de desenvolvimento do circuito, dedicada ao crescimento, à consistência e à evolução de novas equipes.</p>
           <div class="cmim-league-bottom"><span>DESENVOLVIMENTO COMPETITIVO</span><span>02 / 03</span></div>
         </article>
         <article class="cmim-league-card cmim-league-major">
           <div class="cmim-league-meta"><span>03 · CIRCUITO CMIM</span><span class="cmim-league-status">EM PLANEJAMENTO</span></div>
-          <img class="cmim-league-mark" src="./cmim-major.svg" alt="Emblema CMIM Major" loading="lazy">
+          <img class="cmim-league-mark" src="./assets/branding/cmim-major.webp" alt="Emblema CMIM Major" loading="lazy">
           <h3>CMIM <strong>MAJOR</strong></h3>
           <p>A principal vitrine competitiva do circuito: o palco de maior destaque para equipes que buscam disputar o topo do CMIM.</p>
           <div class="cmim-league-bottom"><span>PALCO PRINCIPAL</span><span>03 / 03</span></div>
@@ -384,7 +393,7 @@
           <p>Com o tempo, o movimento esfriou, os encontros ficaram raros e muita coisa pareceu se apagar. Mas a lembrança da comunidade nunca foi embora.</p>
           <p>Então, como conta a nossa lenda, <strong>um rato caiu em uma máquina do tempo</strong> e trouxe de volta a esperança. Em <strong>27 de outubro de 2026</strong>, a CMIM anunciou o retorno. Não para juntar milhões de jogadores — mas para reencontrar uma parte da galera e reviver a alegria que fez tudo valer a pena.</p>
         </div>
-        <div class="history-visual"><img src="./cmim.jpeg" alt="Símbolo da comunidade CMIM" loading="lazy"><small>DE VOLTA ÀS RAÍZES · 2026</small></div>
+        <div class="history-visual"><img src="./assets/branding/cmim-main.webp" alt="Símbolo da comunidade CMIM" loading="lazy"><small>DE VOLTA ÀS RAÍZES · 2026</small></div>
       </div>
       <div class="timeline">
         <article><span class="date">12.02.2025 · O INÍCIO</span><h3>DO ZERO À COMUNIDADE</h3><p>Os primeiros encontros, os primeiros times e uma identidade própria entre amigos de League of Legends.</p></article>
