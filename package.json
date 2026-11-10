@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test lib/engine.test.mjs"
+    "test": "node --test lib/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.0",
