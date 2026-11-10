@@ -447,7 +447,7 @@ body :where(a,button,input,textarea,select):focus-visible{outline:2px solid #ffe
 .cmim-league-card{--league:#ffcf51;--league-bg:#513b1d;position:relative;isolation:isolate;display:flex;flex-direction:column;min-height:345px;overflow:hidden;padding:23px 24px 20px;border:1px solid color-mix(in srgb,var(--league) 44%,#2b352c);background:radial-gradient(ellipse at 100% 0,var(--league-bg),transparent 65%),linear-gradient(145deg,#20261f,#121713);border-radius:11px;box-shadow:inset 0 1px #ffffff09}
 .cmim-league-card:before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--league),transparent);z-index:1}
 .cmim-league-card.cmim-league-open{--league:#dcdfde;--league-bg:#41484b}
-.cmim-league-card.cmim-league-minor{--league:#7bccff;--league-bg:#163f58}
+.cmim-league-card.cmim-league-academy{--league:#7bccff;--league-bg:#163f58}
 .cmim-league-card.cmim-league-major{--league:#ffd15d;--league-bg:#524018}
 .cmim-league-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;color:#c8d4c5;font-size:9px;letter-spacing:1px;font-weight:900}
 .cmim-league-status{border:1px solid color-mix(in srgb,var(--league) 45%,#4c554c);border-radius:4px;padding:4px 7px;color:var(--league);letter-spacing:.4px;background:#0b0d0c65}
