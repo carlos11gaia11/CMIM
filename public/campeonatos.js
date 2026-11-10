@@ -36,6 +36,7 @@ async function read(){
  const responses=await Promise.allSettled(requests.map(url=>a.call(url)));
  const [comps,squads,members,profiles,matches,entries]=responses.map(x=>x.status==='fulfilled'&&Array.isArray(x.value)?x.value:[]);
  Object.assign(state,{comps,squads,members,profiles,matches,entries});
+ state.loaded={comps:responses[0].status==='fulfilled',squads:responses[1].status==='fulfilled',members:responses[2].status==='fulfilled',matches:responses[4].status==='fulfilled',entries:responses[5].status==='fulfilled'};
  if(responses.some(x=>x.status==='rejected')&&state.me){
   $('champ-status').textContent='Algumas informações estão temporariamente indisponíveis. Atualize a página para tentar novamente.';
  }
@@ -44,7 +45,51 @@ async function read(){
  }
  render();
 }
+
+function renderPublicDashboard(){
+ const write=(id,value)=>{const node=$(id);if(node)node.textContent=String(value)};
+ const approved=state.entries.filter(e=>e.status==='approved');
+ const confirmedTeams=new Set(approved.map(e=>e.team_id));
+ write('cmim-pulse-events',state.loaded?.comps?state.comps.length:'—');
+ write('cmim-pulse-open',state.loaded?.comps?state.comps.filter(c=>c.status==='open').length:'—');
+ write('cmim-pulse-teams',state.loaded?.entries?confirmedTeams.size:'—');
+ const teamsEl=$('cmim-teams-catalog');
+ if(teamsEl){
+  if(!state.loaded?.squads||!state.loaded?.entries){
+    teamsEl.innerHTML='<div class="cmim-empty">As equipes oficiais estão temporariamente indisponíveis.</div>';
+  }else{
+    const visibleTeams=state.squads.filter(t=>confirmedTeams.has(t.id));
+    teamsEl.innerHTML=visibleTeams.length?visibleTeams.map(t=>{
+      const compsFor=approved.filter(e=>e.team_id===t.id).map(e=>competition(e.competition_id)).filter(Boolean);
+      const leagues=[...new Set(compsFor.map(c=>leagueLabel(c.league_tier)))];
+      return '<article class="cmim-official-team-card"><span class="cmim-team-monogram">'+esc((t.short_name||t.name||'CM').slice(0,4))+'</span><div><small>TIME HOMOLOGADO</small><h3>'+esc(t.name)+'</h3><p>'+leagues.map(x=>esc(x)).join(' · ')+'</p></div></article>';
+    }).join(''):'<div class="cmim-empty">Ainda não há equipes homologadas nas competições cadastradas.</div>';
+  }
+ }
+ const schedule=$('cmim-upcoming-matches');
+ if(schedule){
+  if(!state.loaded?.matches){
+    schedule.innerHTML='<div class="cmim-empty">Agenda temporariamente indisponível. Tente atualizar mais tarde.</div>';
+  }else{
+    const games=state.matches.filter(m=>['scheduled','live','pending'].includes(m.status)&&m.team_a_id&&m.team_b_id)
+      .sort((a,b)=>Number(a.round_number)-Number(b.round_number)||Number(a.match_number)-Number(b.match_number)).slice(0,6);
+    schedule.innerHTML=games.length?games.map(m=>{
+      const comp=competition(m.competition_id);
+      return '<article class="cmim-official-match-card"><span>'+esc(leagueLabel(comp?.league_tier))+' · RODADA '+Number(m.round_number)+'</span>'+
+      '<h3>'+readable(m.team_a_id)+' <b>×</b> '+readable(m.team_b_id)+'</h3>'+
+      '<p>'+esc(comp?.title||'Competição CMIM')+' · '+esc(label(m.status))+'</p>'+
+      '<button class="cmim-button ghost" data-goto-event="'+esc(m.competition_id)+'" type="button">VER CHAVEAMENTO →</button></article>';
+    }).join(''):'<div class="cmim-empty">Nenhum confronto agendado foi publicado no circuito até o momento.</div>';
+    schedule.querySelectorAll('[data-goto-event]').forEach(button=>button.addEventListener('click',()=>{
+      const id=button.dataset.gotoEvent;state.selected=id;state.league='all';render();
+      document.getElementById('chaveamentos')?.scrollIntoView({behavior:'smooth'});
+    }));
+  }
+ }
+}
+
 function render(){
+ renderPublicDashboard();
  const access=$('leagues-access-banner');if(access)access.hidden=!!state.me;
  $('create-squad').hidden=!state.me;
  if(!state.me)$('my-teams').innerHTML='<div class="cmim-empty">Entre em sua <a href="./conta.html">conta CMIM</a> para criar um time e se inscrever.</div>';
