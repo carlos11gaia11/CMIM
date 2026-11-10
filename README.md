@@ -84,3 +84,10 @@ A restrição visual não é um controle de segurança substituto: permissões e
 O portal consolida as regras fornecidas em 10/11/2026, inclusive Leões de Vaga sem penalidade por indisponibilidade, fill exclusivo S/A com prioridade da Main Lane, pausas, Regra Denver, Carter, Nery, Dogzi, formação de equipes e divisões temporariamente unificadas. O **circuito Open/Academy/Major** é separado do torneio semanal de in-house.
 
 Critérios de acesso, datas, premiações, formatos e eventuais promoções entre ligas devem ser comunicados especificamente por edição. O portal não os inventa.
+
+### Vinculação dos campeonatos às ligas
+
+O Supabase `cmim` recebeu a coluna opcional `public.cmim_competitions.league_tier`, com valores `open`, `academy`, `major` ou `NULL` (legado). A migração foi aplicada em 10/11/2026 e o SQL está documentado em `supabase/sql/2026-11-10-circuito-open-academy-major.sql`.
+
+A gestão de eventos, dentro de `ligas.html`, agora seleciona explicitamente a liga e grava a escolha no registro. A página pública oferece filtros por liga e mantém eventos anteriores sem classificação na opção "Todas as ligas". Não foram alterados registros anteriores, permissões do banco ou métodos do motor de chaveamento.
+
