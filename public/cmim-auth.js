@@ -71,14 +71,15 @@ async function signUp(values){
  
  // Page access is enforced using Supabase Auth, not merely the presence of a stored token.
  // Pages intentionally marked data-cmim-protected=1 are gated even when opened by direct URL.
- const PROTECTED_PAGES=new Set(['draft.html','ranking.html','selecao.html','inhouse.html','relatorios.html','campeonatos.html','pontuacao.html','perfil.html']);
+ const PROTECTED_PAGES=new Set(['draft.html','ranking.html','selecao.html','inhouse.html','relatorios.html','pontuacao.html','perfil.html']);
+ const RETURN_PAGES=new Set([...PROTECTED_PAGES,'ligas.html','campeonatos.html']);
  function safeReturn(raw){
   if(!raw||typeof raw!=='string'||raw.length>1500)return null;
   try{
    const target=new URL(raw,location.href);
    const root=location.pathname.replace(/[^/]*$/,'');
    const page=target.pathname.split('/').pop();
-   if(target.origin!==location.origin||!target.pathname.startsWith(root)||!PROTECTED_PAGES.has(page))return null;
+   if(target.origin!==location.origin||!target.pathname.startsWith(root)||!RETURN_PAGES.has(page))return null;
    return target.href;
   }catch{return null}
  }
@@ -97,16 +98,50 @@ async function signUp(values){
   try{sessionStorage.setItem('cmim:login-return',requested)}catch{}
   location.replace(new URL('./conta.html?required=1',location.href).href);
  }
+ // A tela permanece legível mesmo quando o usuário não está autenticado.
+ // O bloqueio visual não substitui as permissões do banco (RLS).
+ function showLoginGate(checking=false){
+  if(!document.body)return;
+  document.documentElement.classList.remove('cmim-auth-pending');
+  document.body.classList.add('cmim-auth-locked');
+  document.body.classList.toggle('cmim-login-checking',checking);
+  let wall=document.getElementById('cmim-login-wall');
+  if(!wall){
+    wall=document.createElement('section');
+    wall.id='cmim-login-wall';wall.className='cmim-login-wall';
+    wall.setAttribute('role','dialog');wall.setAttribute('aria-modal','true');
+    wall.setAttribute('aria-labelledby','cmim-login-wall-title');
+    wall.innerHTML='<div class="cmim-login-wall-panel">'+
+      '<img src="./cmim.jpeg" alt="Emblema oficial CMIM" class="cmim-login-wall-logo">'+
+      '<div class="cmim-login-wall-eyebrow">ÁREA RESERVADA A JOGADORES</div>'+
+      '<h2 id="cmim-login-wall-title">ENTRE NA SUA <span style="color:#ffe16a">CONTA CMIM.</span></h2>'+
+      '<p id="cmim-login-wall-description">Para utilizar esta ferramenta, entre com a sua conta ou cadastre-se. Você poderá retornar a esta página após a autenticação.</p>'+
+      '<div class="cmim-login-wall-actions"><button type="button" id="cmim-login-wall-cta">ENTRAR / CRIAR CONTA →</button><a href="./">VOLTAR AO PORTAL</a></div>'+
+      '<small class="cmim-login-wall-hint">Seu cadastro é gratuito. O sistema mantém seus dados protegidos.</small></div>';
+    document.body.append(wall);
+    wall.querySelector('#cmim-login-wall-cta').addEventListener('click',()=>gotoLogin());
+  }
+  wall.querySelector('#cmim-login-wall-description').textContent=checking?
+    'Verificando sua sessão com segurança…':'Você precisa estar logado para acessar esta área. Faça login ou crie sua conta para continuar de onde parou.';
+  wall.querySelector('#cmim-login-wall-cta').disabled=checking;
+ }
+ function hideLoginGate(){
+  document.documentElement.classList.remove('cmim-auth-pending');
+  document.body?.classList.remove('cmim-auth-locked','cmim-login-checking');
+  document.getElementById('cmim-login-wall')?.remove();
+ }
  async function requireLogin(){
-  // Only a valid Supabase Auth user unlocks the page. Expired and forged sessions fail.
-  if(document.body?.dataset?.cmimProtected!=='1')return true;
+  if(document.body?.dataset?.cmimProtected!=='1'){hideLoginGate();return true;}
+  showLoginGate(true);
   try{
    const verified=await user();
-   if(!verified?.id){gotoLogin();return false}
-   document.documentElement.classList.remove('cmim-auth-pending');
+   if(!verified?.id){showLoginGate(false);return false;}
+   hideLoginGate();
    document.dispatchEvent(new Event('cmim-auth-ready'));
    return true;
-  }catch{gotoLogin();return false}
+  }catch{
+   showLoginGate(false);return false;
+  }
  }
 
  function badgeMarkup(){return '<div class="cmim-auth-bar" id="cmim-auth-badge"><a href="./conta.html" title="Conta CMIM">◌ Entrar / Cadastrar</a></div>'}
@@ -134,7 +169,7 @@ async function signUp(values){
   const links=[
    ['⌂','Portal','./'],
    ['▶','Jogar','./draft.html?jogar=1'],
-   ['♛','Torneios','./campeonatos.html'],
+   ['♛','Ligas','./ligas.html'],
    ['◉','Perfil','./perfil.html'],
    ['▥','Ranking','./ranking.html']
   ];
@@ -151,8 +186,10 @@ async function signUp(values){
  }
  window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save,requireLogin,gotoLogin,requestedDestination};
  function initialize(){
+  document.documentElement.classList.remove('cmim-auth-pending');
   if(document.body?.dataset?.cmimProtected==='1'){
-   void requireLogin().then(ok=>{if(ok){mountBadge();mountMobileDock();updateBadge()}});
+   mountMobileDock();
+   void requireLogin().then(ok=>{if(ok){mountBadge();updateBadge()}});
   }else{mountBadge();mountMobileDock();updateBadge()}
   if(document.getElementById('portal-auth-button')&&session?.access_token)
    current().then(updateBadge).catch(()=>updateBadge());
