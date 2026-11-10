@@ -3,7 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap');
 :root{--cmim-void:#080b0a;--cmim-ink:#121815;--cmim-panel:#19221c;--cmim-edge:#3d4d40;--cmim-gold:#ffe16a;--cmim-cream:#f8faee;--cmim-mist:#b7c7b5;--cmim-radius:16px;--cmim-shadow:0 22px 60px #0005}
 html{scroll-behavior:smooth;scrollbar-color:#6a6c37 #0d1510}
-body{background-image:radial-gradient(ellipse at 90% 0,#fdde3721,transparent 44%),radial-gradient(ellipse at 5% 40%,#2e61502a,transparent 54%),linear-gradient(180deg,#0b100d,#0a0e0c 40%,#080b0a)!important;background-attachment:fixed;color:#f5f8f0}
+body{background-color:#080d0b;background-image:radial-gradient(ellipse at 83% 5%,#ffcd2520,transparent 34%),linear-gradient(180deg,#080d0bdc 0%,#070d0be7 52%,#070d0be9 100%),url('./assets/branding/cmim-industrial-background.webp')!important;background-repeat:no-repeat,no-repeat,no-repeat;background-size:cover,cover,cover;background-position:center,center,center top;background-attachment:fixed,fixed,fixed;color:#f5f8f0}
 body::selection{background:#f3df4c;color:#111}
 button,a,input,select,textarea{transition:background-color .19s,border-color .19s,color .19s,box-shadow .19s,transform .19s}
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #ffe26a!important;outline-offset:3px}
@@ -170,3 +170,33 @@ body:has(.cmim-mobile-dock) .cmim-mobile-dock{backdrop-filter:blur(14px);box-sha
 .cmim-circuito-link:hover{transform:translateX(4px);filter:brightness(1.25)}
 .cmim-league-hub .cmim-circuito-card{min-height:390px}
 @media(max-width:550px){.cmim-league-filters button{flex:1 1 auto}.cmim-league-hub .cmim-circuito-card{min-height:330px}}
+
+/* Identidade visual oficial — transparência preservada e fundo sutil */
+.cmim-homepage .hero-art-refined-middle img{border:0!important;border-radius:0!important;box-shadow:none!important;mix-blend-mode:normal!important;object-fit:contain!important;filter:drop-shadow(0 18px 24px #0009)!important;aspect-ratio:auto!important;max-height:300px!important;width:min(65%,275px)!important}
+.cmim-homepage .identity img{object-fit:contain;background:#0509074d;border-radius:9px}
+.cmim-homepage .hero-art{background-image:linear-gradient(125deg,#141b16ee,#242419e8),url('./assets/branding/cmim-industrial-background.webp');background-position:center;background-size:cover}
+.cmim-division-card img{filter:drop-shadow(0 17px 22px #000b);height:178px}
+.cmim-league-card .cmim-league-mark{width:175px!important;height:186px!important;object-fit:contain!important;margin:5px 0 0!important}
+.cmim-league-card{min-height:430px}
+.cmim-league-hub .cmim-circuito-card .cmim-circuito-logo{width:178px;height:184px;object-fit:contain}
+.cmim-league-hub .cmim-circuito-card{min-height:434px}
+.cmim-league-hub .cmim-circuito-card.major{--league-color:#ff626b;--league-bg:#622126}
+.cmim-league-hub .cmim-circuito-card.open{--league-color:#f9d550;--league-bg:#644e22}
+.cmim-login-wall-logo{object-fit:contain!important;background:#111911}
+.cmim-quick-doors{padding:24px 0 54px}
+.cmim-quick-intro{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:0 0 17px}
+.cmim-quick-intro .mini{font-weight:900;letter-spacing:1.4px}
+.cmim-quick-intro h2{font:900 clamp(31px,4vw,43px)/1 'Barlow Condensed',Impact,sans-serif;letter-spacing:.1px;margin:0;color:#f2f7e9}
+.cmim-quick-intro h2 em{font-style:normal;color:#ffe16a}
+.cmim-quick-intro p{color:#b7c7b4;font-size:13px;max-width:410px;margin:0}
+.cmim-quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.cmim-quick-card{position:relative;display:flex;align-items:center;gap:15px;min-height:129px;padding:17px 16px;border:1px solid #5b6c4c;border-radius:13px;background:linear-gradient(125deg,#19241cde,#101713f0);box-shadow:0 12px 31px #0005;text-decoration:none;color:#f4f7ea;transition:border-color .22s,transform .22s,box-shadow .22s}
+.cmim-quick-card:hover{border-color:#efce6c;transform:translateY(-5px);box-shadow:0 17px 40px #0008;color:#fff}
+.cmim-quick-card img{width:89px;height:91px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 6px 12px #000a)}
+.cmim-quick-card span{display:grid;gap:5px;min-width:0}
+.cmim-quick-card small{color:#ffe087;font-size:9px;letter-spacing:.9px;font-weight:900}
+.cmim-quick-card strong{font:900 19px/1.05 'Barlow Condensed',Impact,sans-serif}
+.cmim-quick-card em{font:500 11px/1.5 Barlow,Arial,sans-serif;color:#c0d0bd}
+.cmim-quick-card b{position:absolute;top:13px;right:14px;font-size:16px;color:#ffdf73}
+@media(max-width:1100px){.cmim-quick-grid{grid-template-columns:1fr 1fr}.cmim-quick-card:last-child{grid-column:1/-1}.cmim-homepage .hero-art-refined-middle img{width:min(57%,220px)!important}}
+@media(max-width:720px){body{background-attachment:scroll,scroll,scroll;background-size:cover,cover,auto 100%}.cmim-quick-grid{grid-template-columns:1fr}.cmim-quick-card:last-child{grid-column:auto}.cmim-quick-doors{padding:20px 0 40px}.cmim-quick-card{min-height:100px}.cmim-league-card{min-height:420px}.cmim-homepage .hero-art-refined-middle img{width:min(58%,190px)!important}}
