@@ -109,12 +109,12 @@
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
   </style>
   <link rel="stylesheet" href="./portal-extra.css">
-<link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script></head>
+<link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head>
 <body data-no-auth-badge="1" class="cmim-homepage">
   <header class="site-header">
     <div class="wrap topbar">
       <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./cmim.jpeg" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
-      <nav class="nav" aria-label="Menu principal"><a href="./draft.html?jogar=1" class="play-nav-link">▶ JOGAR</a><a href="#como-funciona">COMO FUNCIONA</a><a href="./inhouse.html">IN-HOUSE</a><a href="./campeonatos.html">CAMPEONATOS</a><a href="#ligas">LIGAS</a><a href="./perfil.html">MEU PERFIL</a><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="./regulamento.html">REGULAMENTO</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><a id="portal-auth-button" class="portal-auth-entry" href="./conta.html" aria-label="Entrar ou criar conta no CMIM">◉ ENTRAR / CRIAR CONTA <span aria-hidden="true">↗</span></a>
+      <nav class="nav" aria-label="Menu principal"><a href="./draft.html?jogar=1" class="play-nav-link">▶ JOGAR</a><a href="#como-funciona">COMO FUNCIONA</a><a href="./inhouse.html">IN-HOUSE</a><a href="./ligas.html">LIGAS</a><a href="#divisoes">DIVISÕES</a><a href="./perfil.html">MEU PERFIL</a><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="./regulamento.html">REGULAMENTO</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><a id="portal-auth-button" class="portal-auth-entry" href="./conta.html" aria-label="Entrar ou criar conta no CMIM">◉ ENTRAR / CRIAR CONTA <span aria-hidden="true">↗</span></a>
     </div>
   </header>
   <main>
@@ -237,37 +237,55 @@
     </section>
 
 
+    <section class="wrap portal-section cmim-divisions" id="divisoes" aria-labelledby="divisoes-title">
+      <div class="section-head">
+        <div><div class="portal-label">IN-HOUSE · TEMPORADAS E BALANCEAMENTO</div><h2 id="divisoes-title">DUAS DIVISÕES. <span class="yellow">UMA COMUNIDADE.</span></h2></div>
+        <p>As divisões do in-house organizam os jogadores por nível e disponibilidade, criando condições para partidas equilibradas — sem confundir com as ligas de equipes.</p>
+      </div>
+      <div class="cmim-division-grid">
+        <article class="cmim-division-card high">
+          <img src="./insalubrao.svg" alt="Emblema do Insalubrão, divisão High do CMIM" loading="lazy">
+          <div><span>HIGH DIVISION</span><h3>INSALUBRÃO</h3><p>A divisão mais competitiva do in-house, voltada aos jogadores de maior classificação técnica. Em temporadas unificadas, pode reunir todos os tiers.</p></div>
+        </article>
+        <article class="cmim-division-card low">
+          <img src="./insalubrinho.svg" alt="Emblema do Insalubrinho, divisão Low do CMIM" loading="lazy">
+          <div><span>LOW DIVISION</span><h3>INSALUBRINHO</h3><p>A divisão voltada ao desenvolvimento e ao equilíbrio entre jogadores de classificações mais baixas. Pode ser retomada quando houver participantes suficientes.</p></div>
+        </article>
+      </div>
+      <div class="cmim-division-note">A organização poderá manter uma única divisão Insalubrão em determinadas temporadas. A separação entre High e Low depende da quantidade de jogadores, lanes e tiers disponíveis. <a href="./regulamento.html#divisoes"><strong>Conheça as regras de divisões →</strong></a></div>
+    </section>
+
     <section class="wrap portal-section cmim-leagues" id="ligas" aria-labelledby="leagues-title">
       <div class="section-head">
         <div><div class="portal-label">CMIM COMPETITIVE CIRCUIT · EM DESENVOLVIMENTO</div><h2 id="leagues-title">TRÊS LIGAS. <span class="yellow">UMA ARENA.</span></h2></div>
-        <p>O CMIM também terá um circuito competitivo para equipes: Open, Minor e Major. Uma estrutura própria, diferente das listas de in-house e das divisões Insalubrão e Insalubrinho.</p>
+        <p>O CMIM também terá um circuito competitivo para equipes: Open, Academy e Major. Uma estrutura própria, diferente das listas de in-house e das divisões Insalubrão e Insalubrinho.</p>
       </div>
       <div class="cmim-league-grid">
         <article class="cmim-league-card cmim-league-open">
           <div class="cmim-league-meta"><span>01 · CIRCUITO CMIM</span><span class="cmim-league-status">EM PLANEJAMENTO</span></div>
-          <img class="cmim-league-mark" src="./cmim.jpeg" alt="Emblema institucional oficial do CMIM">
+          <img class="cmim-league-mark" src="./cmim-open.svg" alt="Emblema CMIM Open" loading="lazy">
           <h3>CMIM <strong>OPEN</strong></h3>
           <p>A porta de entrada do cenário competitivo do CMIM. Uma categoria pensada para abrir espaço a equipes que queiram disputar o circuito.</p>
           <div class="cmim-league-bottom"><span>ENTRADA NO CENÁRIO</span><span>01 / 03</span></div>
         </article>
-        <article class="cmim-league-card cmim-league-minor">
+        <article class="cmim-league-card cmim-league-academy">
           <div class="cmim-league-meta"><span>02 · CIRCUITO CMIM</span><span class="cmim-league-status">EM PLANEJAMENTO</span></div>
-          <img class="cmim-league-mark" src="./cmim.jpeg" alt="Emblema institucional oficial do CMIM">
-          <h3>CMIM <strong>MINOR</strong></h3>
-          <p>O espaço intermediário de competição, voltado ao desenvolvimento, à consistência e à evolução das equipes no cenário do CMIM.</p>
+          <img class="cmim-league-mark" src="./cmim-academy.svg" alt="Emblema CMIM Academy" loading="lazy">
+          <h3>CMIM <strong>ACADEMY</strong></h3>
+          <p>A liga de desenvolvimento do circuito, dedicada ao crescimento, à consistência e à evolução de novas equipes.</p>
           <div class="cmim-league-bottom"><span>DESENVOLVIMENTO COMPETITIVO</span><span>02 / 03</span></div>
         </article>
         <article class="cmim-league-card cmim-league-major">
           <div class="cmim-league-meta"><span>03 · CIRCUITO CMIM</span><span class="cmim-league-status">EM PLANEJAMENTO</span></div>
-          <img class="cmim-league-mark" src="./cmim.jpeg" alt="Emblema institucional oficial do CMIM">
+          <img class="cmim-league-mark" src="./cmim-major.svg" alt="Emblema CMIM Major" loading="lazy">
           <h3>CMIM <strong>MAJOR</strong></h3>
           <p>A principal vitrine competitiva do circuito: o palco de maior destaque para equipes que buscam disputar o topo do CMIM.</p>
           <div class="cmim-league-bottom"><span>PALCO PRINCIPAL</span><span>03 / 03</span></div>
         </article>
       </div>
       <div class="cmim-leagues-notice">
-        <div><strong>UM CIRCUITO SEPARADO DO IN-HOUSE.</strong><p>Regras de inscrição, critérios de acesso, formatos, calendário, classificações e eventuais premiações de cada liga serão definidos e anunciados pela organização. A existência das três ligas não significa promoção automática entre elas. Por enquanto, os cards exibem a marca institucional oficial do CMIM; emblemas específicos de cada liga só serão usados após a confirmação dos arquivos correspondentes.</p></div>
-        <a class="button primary" href="./campeonatos.html#circuito-cmim">EXPLORAR AS LIGAS →</a>
+        <div><strong>UM CIRCUITO SEPARADO DO IN-HOUSE.</strong><p>Regras de inscrição, critérios de acesso, formatos, calendário, classificações e eventuais premiações de cada liga serão definidos e anunciados pela organização. A existência das três ligas não significa promoção automática entre elas. Os emblemas exibidos são versões vetoriais desenvolvidas com a identidade visual do CMIM.</p></div>
+        <a class="button primary" href="./ligas.html#circuito-cmim">ENTRAR NO COMPETITIVO →</a>
       </div>
     </section>
 
@@ -332,7 +350,7 @@
         <article class="commandment"><span class="commandment-num">03</span><div><h3>INSALUBRÃO E INSALUBRINHO</h3><p>High e Low podem ter listas separadas. A depender do número de jogadores, todos ficam no Insalubrão.</p></div></article>
         <article class="commandment"><span class="commandment-num">04</span><div><h3>TORNEIO: SEXTA E SÁBADO</h3><p>Quatro times, capitães equivalentes e escolhas ABCDDCBA. Formato suíço até a final.</p></div></article>
       </div>
-      <div class="inhouse-how-footer" style="margin-top:24px"><a class="button primary" href="./regulamento.html">LER REGULAMENTO COMPLETO →</a><a class="button" href="./campeonatos.html">VER CAMPEONATOS</a></div>
+      <div class="inhouse-how-footer" style="margin-top:24px"><a class="button primary" href="./regulamento.html">LER REGULAMENTO COMPLETO →</a><a class="button" href="./ligas.html">VER CAMPEONATOS</a></div>
     </section>
     <section class="wrap portal-section" id="regras" aria-labelledby="rules-title">
       <div class="section-head">
