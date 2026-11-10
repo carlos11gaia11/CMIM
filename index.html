@@ -347,6 +347,11 @@
             <tbody id="players-body"><tr><td colspan="5" class="roster-empty">Conectando ao banco de dados do CMIM...</td></tr></tbody>
           </table>
         </div>
+        <div id="players-pagination" class="cmim-players-pagination" aria-label="Paginação de jogadores" hidden>
+          <button type="button" data-players-page="prev" aria-label="Página anterior de jogadores">← ANTERIOR</button>
+          <span data-players-page-label aria-live="polite">Página 1 de 1</span>
+          <button type="button" data-players-page="next" aria-label="Próxima página de jogadores">PRÓXIMA →</button>
+        </div>
         <p class="players-note"><span id="players-count">Carregando...</span> · <strong>Tier, tag e lane dependem de perfil vinculado.</strong> A ausência desses dados não significa que o jogador não tenha elo. A colocação é final somente em temporadas encerradas.</p>
       </div>
       <div class="hero-actions" style="margin-top:18px"><a class="button" href="./ranking.html">VER TABELA DE PONTUAÇÃO COMPLETA →</a></div>
