@@ -68,10 +68,10 @@ A reformulação do portal mantém o **in-house** separado do **CMIM Competitive
 
 - `public/cmim-modern.css`: identidade visual compartilhada, cards, motion, layout responsivo e estilos de autenticação;
 - `public/cmim-modern.js`: indicador discreto de rolagem e animações progressivas, sem ocultar conteúdo quando JS está indisponível;
-- `public/cmim-open.svg`, `public/cmim-academy.svg`, `public/cmim-major.svg`: emblemas vetoriais adaptados à identidade CMIM, utilizados nas apresentações do circuito;
-- `public/insalubrao.svg` e `public/insalubrinho.svg`: emblemas vetoriais para High e Low do in-house.
+- `public/assets/branding/cmim-open.webp`, `cmim-academy.webp`, `cmim-major.webp`: logos recebidas da organização e recortadas com fundo transparente para o circuito;
+- `public/assets/branding/insalubrao.webp` e `insalubrinho.webp`: logos recebidas da organização para High e Low do in-house; `cmim-main.webp` é a marca institucional recortada.
 
-Os emblemas vetoriais são peças de design aplicadas ao portal. **A aprovação institucional das versões definitivas cabe à administração.**
+As logos desta versão foram fornecidas pela organização; os arquivos WebP foram otimizados e tiveram o fundo removido sem redesenhar a marca.
 
 ### Acesso e segurança
 
@@ -90,4 +90,24 @@ Critérios de acesso, datas, premiações, formatos e eventuais promoções entr
 O Supabase `cmim` recebeu a coluna opcional `public.cmim_competitions.league_tier`, com valores `open`, `academy`, `major` ou `NULL` (legado). A migração foi aplicada em 10/11/2026 e o SQL está documentado em `supabase/sql/2026-11-10-circuito-open-academy-major.sql`.
 
 A gestão de eventos, dentro de `ligas.html`, agora seleciona explicitamente a liga e grava a escolha no registro. A página pública oferece filtros por liga e mantém eventos anteriores sem classificação na opção "Todas as ligas". Não foram alterados registros anteriores, permissões do banco ou métodos do motor de chaveamento.
+
+
+## Atualização de identidade oficial — 10/11/2026
+
+As **seis logos enviadas pela organização** substituem os ícones vetoriais temporários:
+
+| Logo | Arquivo no GitHub |
+|---|---|
+| CMIM institucional | `public/assets/branding/cmim-main.webp` |
+| Insalubrão / High | `public/assets/branding/insalubrao.webp` |
+| Insalubrinho / Low | `public/assets/branding/insalubrinho.webp` |
+| CMIM Open | `public/assets/branding/cmim-open.webp` |
+| CMIM Academy | `public/assets/branding/cmim-academy.webp` |
+| CMIM Major | `public/assets/branding/cmim-major.webp` |
+
+Os arquivos possuem transparência nas áreas externas da marca, foram otimizados em WebP de até 720 px e são carregados pelos componentes de `index.html`, `public/ligas.html`, `public/regulamento.html` e outras páginas que exibem o símbolo CMIM. O fundo de marca está em `public/assets/branding/cmim-industrial-background.webp`, em baixa intensidade para preservar o contraste.
+
+### Melhorias de experiência inspiradas na organização de ligas competitivas
+
+O portal mantém o in-house separado do circuito, mas agora apresenta portas de entrada para ambos logo após o hero. A área `ligas.html` reúne panorama do circuito, equipes homologadas, eventos, agenda de partidas e classificação, exibindo apenas os dados disponíveis no Supabase. O regulamento ganhou pesquisa local por termo. Nenhum placar, cronograma ou premiação é inventado.
 
