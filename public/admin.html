@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./admin-ui.css">
   <title>CMIM | Administração</title>
-  <script defer src="./portal-admin.js"></script><script defer src="./admin-users.js"></script><script defer src="./admin-manual-games.js"></script>
+  <script defer src="./portal-admin.js"></script><script defer src="./admin-users.js?v=20261111-2"></script><script defer src="./admin-manual-games.js"></script>
 <link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head>
 <body data-no-auth-badge="1" class="admin-page">
   <div class="admin-layout">
@@ -122,9 +122,9 @@
                 <form id="registered-tier-form" class="registered-tier-form" hidden>
                   <h3 id="registered-tier-name">Editar cadastro do jogador</h3>
                   <div class="admin-fields">
-                    <label>NOME REAL (PRIVADO)<input id="registered-edit-name" maxlength="90" required></label>
+                    <label>NOME REAL (PRIVADO)<input id="registered-edit-name" maxlength="90" placeholder="Nome real não informado"></label>
                     <label>TELEFONE (PRIVADO)<input id="registered-edit-phone" type="tel" maxlength="20" placeholder="(11) 99999-9999"></label>
-                    <label>NICK<input id="registered-edit-nick" maxlength="32" required></label>
+                    <label>NICK<input id="registered-edit-nick" minlength="2" maxlength="32" required></label>
                     <label>TAG RIOT<input id="registered-edit-tag" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
                     <label>LANE PRIMÁRIA<select id="registered-edit-lane" required><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
                     <label>LANE SECUNDÁRIA<select id="registered-edit-secondary" required><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
@@ -176,14 +176,14 @@
             <form id="manage-user-form" class="card-body admin-form">
              <label>JOGADOR CADASTRADO<select id="manage-user-select" required><option value="">Carregando contas...</option></select></label>
              <div class="admin-fields">
-              <label>NOME REAL (PRIVADO)<input id="manage-user-name" maxlength="90" required></label>
+              <label>NOME REAL (PRIVADO)<input id="manage-user-name" maxlength="90" placeholder="Nome real não informado"></label>
 <label>TELEFONE COM DDD (PRIVADO)<input id="manage-user-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="(11) 99999-9999"></label>
-              <label>NICK<input id="manage-user-nick" maxlength="32" required></label>
+              <label>NICK<input id="manage-user-nick" minlength="2" maxlength="32" required></label>
               <label>TAG RIOT<input id="manage-user-tag" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
               <label>LANE PRIMÁRIA<select id="manage-user-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
               <label>LANE SECUNDÁRIA<select id="manage-user-secondary"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label><label>VINCULAR AO JOGADOR DO RANKING<select id="manage-user-rank"><option value="">Ainda não vinculado</option></select><span id="manage-rank-verification" class="field-help" role="status">◷ Aguardando seleção</span><span class="field-help">Permite que o perfil exiba a temporada e a posição oficial. Vincule somente após confirmar a identidade do jogador.</span></label>
              </div>
-             <button class="admin-main-button">✓ SALVAR DADOS DO USUÁRIO</button>
+             <button class="admin-main-button" type="submit">✓ SALVAR DADOS DO USUÁRIO</button>
             </form></div>
            <div class="admin-register-grid" style="margin-top:18px">
             <section class="admin-card"><header class="card-header"><div><span class="card-step">02</span><div><h3>Criar cargo</h3></div></div></header>
