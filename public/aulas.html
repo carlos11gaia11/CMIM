@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b0d0c">
+<meta name="description" content="CMIM Academy: aulas de League of Legends por lane, macro, visão, gerenciamento de waves e jogo em equipe.">
+<title>CMIM Academy — Aulas e Dicas</title>
+<link rel="icon" type="image/webp" href="./assets/branding/cmim-main.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./aulas.css?v=20261111">
+<script type="module" src="./aulas.js?v=20261111"></script>
+</head>
+<body>
+<header class="header"><div class="shell headrow"><a href="./" class="brand"><img src="./assets/branding/cmim-main.webp" alt="Logo do CMIM"><span>CMIM <b>ACADEMY</b><small>CENTRO DE APRENDIZADO</small></span></a><nav aria-label="Navegação"><a href="./">INÍCIO</a><a href="./comp-maker.html">COMP MAKER</a><a href="./ranking.html">RANKING</a></nav></div></header>
+<main class="shell">
+<section class="hero"><div class="eyebrow">CMIM / TREINAMENTO COMPETITIVO</div><h1>EVOLUA SEU <em>JOGO.</em></h1><p>Aulas práticas de League of Legends, separadas por função, dificuldade e fundamentos. Aprenda a tomar decisões melhores dentro e fora da sua lane.</p><div class="hero-actions"><a class="action primary" href="#biblioteca">EXPLORAR AULAS ↗</a><a class="action" href="./comp-maker.html">PRATICAR NO COMP MAKER</a></div><div class="hero-foot"><span>22 AULAS</span><span>7 TRILHAS</span><span>TESTES RÁPIDOS</span></div></section>
+<section class="section" id="biblioteca" aria-labelledby="libraryTitle"><div class="section-head"><div><span class="eyebrow">BIBLIOTECA CMIM</span><h2 id="libraryTitle">ESCOLHA SUA <em>TRILHA.</em></h2></div><p>Conteúdo focado em fundamentos duradouros, não em promessas de vitória ou builds fixas.</p></div>
+<div class="filters"><div id="laneFilters" class="lane-filters" role="group" aria-label="Filtrar por rota"></div><div class="filter-row"><label class="search-label">BUSCAR AULA <input id="search" type="search" placeholder="Ex.: freeze, gank, visão, macro..." autocomplete="off"></label><label class="select-label">NÍVEL <select id="level"><option value="todos">Todos os níveis</option><option>Iniciante</option><option>Intermediário</option><option>Avançado</option></select></label></div></div>
+<div class="results-bar"><strong id="resultCount" aria-live="polite">Carregando aulas...</strong><button type="button" class="text-button" id="clearFilters">LIMPAR FILTROS</button></div>
+<div id="lessonGrid" class="lesson-grid"></div><div id="emptyState" class="empty" hidden>Nenhuma aula encontrada. Tente outra busca ou selecione todas as rotas.</div></section>
+<section class="section practice"><div><span class="eyebrow">TEORIA + PRÁTICA</span><h2>DA AULA PARA O <em>DRAFT.</em></h2><p>Depois de estudar sinergias, condições de vitória e controle de mapa, experimente diferentes composições no Comp Maker.</p></div><a class="action primary" href="./comp-maker.html">ABRIR COMP MAKER ↗</a></section>
+<section class="sources"><h2>FONTES E ATUALIZAÇÕES</h2><p>O conteúdo é uma síntese educativa com exemplos elaborados pelo CMIM. Conceitos gerais são baseados em materiais oficiais da Riot Games e referências sobre gerenciamento de waves. Mudanças de itens, campeões, objetivos e mecânicas podem variar por patch: consulte as notas oficiais.</p><div class="source-links"><a target="_blank" rel="noopener noreferrer" href="https://www.leagueoflegends.com/pt-br/how-to-play/">GUIA OFICIAL RIOT ↗</a><a target="_blank" rel="noopener noreferrer" href="https://wiki.leagueoflegends.com/en-us/Farm">GERENCIAMENTO DE WAVES ↗</a><a target="_blank" rel="noopener noreferrer" href="https://www.leagueoflegends.com/pt-br/news/game-updates/patch-26-1-notes/">VISÃO — TEMPORADA 2026 ↗</a><a target="_blank" rel="noopener noreferrer" href="https://www.leagueoflegends.com/en-us/news/tags/patch-notes/">NOTAS DE ATUALIZAÇÃO ↗</a></div><small>Material educacional independente da comunidade CMIM. Não representa aconselhamento oficial da Riot Games.</small></section>
+</main>
+<dialog id="lessonDialog" aria-labelledby="dialogTitle"><div class="dialog-top"><span id="dialogCategory"></span><button id="closeDialog" class="close" aria-label="Fechar aula" type="button">✕</button></div><div class="dialog-scroll"><h2 id="dialogTitle"></h2><p class="dialog-summary" id="dialogSummary"></p><section class="lesson-detail"><h3>COMO APLICAR</h3><p id="dialogApplication"></p></section><section class="lesson-detail mistake"><h3>ERRO COMUM</h3><p id="dialogMistake"></p></section><section class="lesson-detail"><h3>EXERCÍCIO PRÁTICO</h3><p id="dialogExercise"></p></section><section class="quiz"><span class="eyebrow">TESTE RÁPIDO</span><h3 id="quizQuestion"></h3><div id="quizAnswers" class="quiz-answers"></div><p id="quizFeedback" aria-live="polite"></p></section><div class="dialog-bottom"><a id="dialogSource" target="_blank" rel="noopener noreferrer">CONSULTAR REFERÊNCIA ↗</a><button id="nextLesson" type="button" class="action primary">PRÓXIMA AULA →</button></div></div></dialog>
+<footer class="footer">CMIM ACADEMY · ESTUDE, PRATIQUE E EVOLUA · <a href="./">VOLTAR AO PORTAL</a></footer>
+</body></html>
