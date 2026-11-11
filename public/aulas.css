@@ -6,3 +6,80 @@
 .practice{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:35px;border:1px solid #827439;border-radius:14px;background:linear-gradient(115deg,#2a2b18,#15231a)}.practice h2{font-size:clamp(36px,4vw,53px)}.practice p{color:#d2ddc8;max-width:690px}.sources{border-top:1px solid var(--line);padding:25px 0 45px;color:#aebfa9}.sources h2{font:900 24px 'Barlow Condensed',sans-serif;color:#f3e4a0}.sources p{max-width:900px}.source-links{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0}.source-links a{font-size:11px;font-weight:900;letter-spacing:.5px;color:#ffe26b;border:1px solid #615e37;border-radius:7px;padding:9px 11px}.source-links a:hover{background:#34331d}.footer{text-align:center;border-top:1px solid #384537;padding:25px;color:#b6c3af;font-size:11px;font-weight:800;letter-spacing:1px}.footer a{color:var(--yellow)}
 dialog{border:1px solid #8d7e3d;border-radius:17px;padding:0;width:min(720px,calc(100% - 24px));max-height:min(90vh,900px);background:#111a13;color:var(--cream);box-shadow:0 30px 100px #000b}dialog::backdrop{background:#030805db;backdrop-filter:blur(5px)}.dialog-top{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:15px 24px;background:#202b1e;border-bottom:1px solid #46553d;color:#ffe277;font-size:11px;font-weight:900;letter-spacing:1px}.close{width:36px;height:36px;border-radius:8px;background:#303b2c;border:1px solid #637158;color:#f6f6ef}.dialog-scroll{padding:24px 28px 30px;overflow-y:auto;max-height:calc(90vh - 68px)}.dialog-scroll h2{font:900 clamp(34px,5vw,51px)/1 'Barlow Condensed',sans-serif;margin:4px 0 13px}.dialog-summary{font-size:16px;color:#d2e1cd}.lesson-detail{margin:18px 0;padding:18px 20px;border-left:3px solid #ffe03b;background:#1d2a1f;border-radius:4px 10px 10px 4px}.lesson-detail.mistake{border-left-color:#f68b78;background:#302521}.lesson-detail h3{font:900 19px 'Barlow Condensed',sans-serif;margin:0 0 5px;color:#ffe079}.lesson-detail.mistake h3{color:#ffb4a4}.lesson-detail p{margin:0;color:#d6e0d0}.quiz{margin-top:23px;padding:22px;background:#26311f;border:1px solid #626d43;border-radius:12px}.quiz h3{font:900 24px 'Barlow Condensed',sans-serif;margin:12px 0}.quiz-answers{display:grid;gap:10px}.quiz-answers button{padding:12px 14px;text-align:left;border:1px solid #61705b;background:#131e16;color:#f4f7ef;border-radius:8px}.quiz-answers button:hover:not(:disabled){border-color:#ffe03b}.quiz-answers button.correct{background:#24482d;border-color:#a4e2a7}.quiz-answers button.wrong{background:#502922;border-color:#ff9e87}#quizFeedback{min-height:24px;color:#e9e4b0;font-weight:800}.dialog-bottom{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:22px}.dialog-bottom a{font-size:11px;color:#ffe06a;font-weight:900}
 @media(max-width:960px){.lesson-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.section-head{align-items:start;flex-direction:column}.headrow nav{gap:12px}}@media(max-width:640px){.headrow{min-height:70px}.headrow nav a{font-size:10px}.headrow nav a:nth-child(3){display:none}.brand{font-size:21px}.brand img{width:44px;height:44px}.hero{margin-top:18px;padding:27px 22px;min-height:auto}.hero h1{font-size:55px}.hero p{font-size:15px}.lesson-grid{grid-template-columns:1fr}.lesson-card{min-height:220px}.select-label{width:100%}.practice{align-items:start;flex-direction:column}.dialog-scroll{padding:20px}.hero-foot{gap:12px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
+
+
+/* CMIM Academy 2.0 — editorial, planner, diagnosis and media */
+.academy-overview{margin:-33px 0 60px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.overview-stat{background:linear-gradient(125deg,#203022,#121b14);border:1px solid #53633d;border-radius:12px;min-height:114px;padding:19px;display:flex;flex-direction:column;justify-content:center}
+.overview-stat span{color:var(--yellow);font:900 39px/1 'Barlow Condensed',sans-serif}
+.overview-stat small{font-size:10px;color:#bacbb2;letter-spacing:1.2px;font-weight:900;margin-top:7px}
+.academy-disclaimer{grid-column:1/-1;color:#9ead98;font-size:11px;margin:0}
+.diagnostic-panel{margin-top:23px;padding:clamp(24px,4vw,42px);border:1px solid #8d793a;border-radius:16px;background:linear-gradient(120deg,#273023,#111a13);min-height:320px;box-shadow:inset 0 0 70px #ffe03b09}
+.diagnostic-panel h3{font:900 clamp(30px,4vw,48px)/1 'Barlow Condensed',sans-serif;margin:10px 0;color:#fbf5d5}
+.diagnostic-question{max-width:900px;font-size:19px;line-height:1.5;color:#e6eede}
+.diagnostic-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:26px 0}
+.diagnostic-options button{padding:20px;border:1px solid #52694b;border-radius:10px;background:#152219;color:#e9f2e2;text-align:left;min-height:110px;font-weight:700;line-height:1.45}
+.diagnostic-options button:hover:not(:disabled){border-color:var(--yellow);background:#273526}
+.diagnostic-options button.correct{border-color:#9cd89e;background:#24472d}
+.diagnostic-options button.wrong{border-color:#bd685f;background:#382b25}
+.diagnostic-feedback{color:#f7e397;font-size:14px;max-width:850px}
+.diagnostic-note{font-size:16px;color:#c9d7c2;max-width:700px}
+.training-toolbar{display:flex;align-items:end;gap:25px;flex-wrap:wrap;margin:27px 0 16px}.training-toolbar .select-label{width:250px}
+.study-plan{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.week-card{padding:20px;background:#141e16;border:1px solid #4e633e;border-radius:14px}
+.week-head{border-bottom:1px solid #3f5339;padding:3px 0 15px;min-height:132px}
+.week-head h3{font:900 30px/1 'Barlow Condensed',sans-serif;color:#f7edc4;margin:7px 0}
+.week-head p{color:#b8c9ae;margin:7px 0 0;font-size:13px}
+.week-progress{font-size:11px;font-weight:900;letter-spacing:1.5px;color:#ffe071;padding:14px 0 8px}
+.day-list{display:grid;gap:7px}
+.study-day{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1px solid #3b5038;background:#1d291e;color:#edf1e7;border-radius:9px;padding:10px 12px}
+.study-day:hover{border-color:#b8a24d}
+.study-day.checked{border-color:#77ac75;background:#213929}
+.day-count{flex:none;font:900 23px 'Barlow Condensed',sans-serif;color:#e4d476}
+.day-text{flex:1;display:flex;flex-direction:column;gap:2px}
+.day-text strong{font-size:13px}
+.day-text small{font-size:11px;color:#b1c0a9;line-height:1.4}
+.day-check{font-size:25px;color:#eada76}
+.saved-toggle{margin-top:auto;align-self:end}.saved-toggle[aria-pressed=true]{background:#ffe03b;color:#111910}
+.lesson-card.completed{border-top-color:#7fbc87}
+.lesson-card .card-diagram{width:100%;height:124px;object-fit:cover;border-radius:7px;background:#0d150f;margin-top:15px;border:1px solid #3a4a35}
+.lesson-card h3{margin-top:13px}
+.lesson-tag.muted{opacity:.8;color:#aabdac}
+.resource-filters{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 15px}
+.resource-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.resource-card{display:flex;flex-direction:column;overflow:hidden;border:1px solid #40533a;border-radius:14px;background:linear-gradient(160deg,#1e291f,#111b14);transition:transform .2s,border-color .2s}
+.resource-card:hover{transform:translateY(-3px);border-color:#dec54c}
+.resource-card img{width:100%;height:160px;object-fit:cover}
+.resource-icon{display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 20%,#5e5427,#1c251d 60%);height:160px;color:#ffe03b;font:900 31px 'Barlow Condensed',sans-serif;letter-spacing:2px}
+.resource-body{display:flex;flex:1;flex-direction:column;gap:8px;padding:18px}
+.resource-body .eyebrow{font-size:9px;letter-spacing:1px}
+.resource-body h3{font:900 27px/1.05 'Barlow Condensed',sans-serif;margin:0}
+.resource-body p{margin:0;color:#e2eadb;font-size:13px}
+.resource-body small{color:#a9bca7;line-height:1.6}
+.resource-cta{margin-top:auto;padding-top:10px;color:#ffe071;font-size:11px;letter-spacing:1px;border-top:1px solid #3f503c}
+dialog{width:min(880px,calc(100% - 24px))}
+.lesson-diagram{margin:19px 0 0}
+.lesson-diagram img{display:block;width:100%;max-height:280px;object-fit:contain;background:#111b14;border:1px solid #516541;border-radius:11px}
+.lesson-diagram figcaption{font-size:11px;color:#adbfa7;margin-top:6px}
+.decision-steps{margin:12px 0 0;padding:0 0 0 22px;display:grid;gap:8px;color:#dce5d8;font-size:13px}
+.decision-steps li::marker{color:#ffe03b;font-weight:900}
+.lesson-detail.practice-detail{border-left-color:#6fba80;background:#15281c}
+.lesson-detail.practice-detail h3{color:#bde5bf}
+.training-hint{font-size:12px;color:#b8d4b9}
+.lesson-toolrow{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
+.notes-label{display:flex;flex-direction:column;gap:8px;color:#d9e3d0;font-size:11px;font-weight:900;letter-spacing:1px}
+.notes-label textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #536b52;border-radius:8px;background:#0f1a12;color:#f0f5ea;padding:13px;font:14px/1.5 Barlow,system-ui,sans-serif}
+.notes-status{font-size:11px;color:#a9d7aa;margin-top:6px}
+.lesson-media{margin:24px 0}
+.lesson-media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.media-item{display:flex;gap:11px;align-items:center;border:1px solid #4d5b40;border-radius:10px;padding:10px;background:#1a241c}
+.media-item:hover{border-color:#e1bf48;background:#2a3021}
+.media-item img{width:95px;height:72px;object-fit:cover;border-radius:5px;flex:none}
+.media-item div{min-width:0;display:flex;flex-direction:column;gap:3px}
+.media-item strong{font-size:12px;line-height:1.3}
+.media-item small{font-size:10px;color:#b3c1af}
+.media-item .eyebrow{font-size:9px;letter-spacing:.5px}
+.quiz-explanation{margin:6px 0 0;font-size:13px;color:#c5d7c1}
+#dialogFramework:empty{display:none}
+@media(max-width:1040px){.resource-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.diagnostic-options{grid-template-columns:1fr}}
+@media(max-width:680px){.academy-overview{grid-template-columns:repeat(2,minmax(0,1fr));margin:0 0 25px}.overview-stat{min-height:90px}.overview-stat span{font-size:32px}.study-plan,.resource-grid,.lesson-media-grid{grid-template-columns:1fr}.week-head{min-height:auto}.training-toolbar .select-label{width:100%}.diagnostic-panel{padding:20px}.diagnostic-question{font-size:16px}.diagnostic-options button{min-height:75px}.lesson-toolrow .action{width:100%}.media-item img{width:83px;height:62px}.resource-card img,.resource-icon{height:170px}.academy-disclaimer{font-size:10px}}
