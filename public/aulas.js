@@ -15,7 +15,7 @@ state.done=Array.isArray(state.done)?state.done:[];
 state.saved=Array.isArray(state.saved)?state.saved:[];
 state.days=state.days&&typeof state.days==='object'?state.days:{};
 state.notes=state.notes&&typeof state.notes==='object'?state.notes:{};
-let lane='todos',level='todos',search='',order='curadoria',onlySaved=false,currentId=null,visible=[],resourcesFilter='todos';
+let lane='todos',level='todos',search='',order='curadoria',onlySaved=false,currentId=null,visible=[],resourcesFilter='todos',resourceLane='todos',resourceQuery='';
 let diagnosticStep=0,diagnosticScore=0,diagnosticAnswers=[];
 const diagramOf=x=>x.visual||(/wave|freeze|farm|recall|crash|troca/i.test(x.title)?'waves':x.lane==='equipe'?'draft':/teamfight|engage|peel|posicionamento|trading/i.test(x.title)?'fight':'map');
 const diagramPaths={waves:'./assets/academy/waves.svg',map:'./assets/academy/map.svg',fight:'./assets/academy/fight.svg',draft:'./assets/academy/draft.svg'};
@@ -254,17 +254,25 @@ function paraLines(target,text){
  const items=String(text||'').split(/;\s*/).filter(Boolean);
  const box=$(target);box.replaceChildren();for(let i=0;i<items.length;i++)box.append(node('li','',items[i].replace(/\.$/,'')+'.'));
 }
+const isStalePatch=r=>Boolean(r.patchSensitive&&r.status!=='historico'&&r.publishedAt&&
+ Date.now()-new Date(r.publishedAt+'T00:00:00Z').getTime()>21*24*60*60*1000);
+const isArchived=r=>r.status==='historico'||isStalePatch(r);
+const isActive=r=>!isArchived(r);
 function lessonResources(x){
- const pick=RESOURCES.filter(r=>r.lanes.includes(x.lane));
- const priority=(r)=>r.id==='vid-wave'&&diagramOf(x)==='waves'?5:r.author.includes('Djoko')&&x.lane==='equipe'?4:r.type==='video'?3:r.type==='busca-video'?2:r.type==='oficial'?0:1;
- return pick.sort((a,b)=>priority(b)-priority(a)).slice(0,4);
+ const candidates=RESOURCES.filter(r=>r.lanes.includes(x.lane)&&isActive(r));
+ const rank=r=>(r.type==='video'?100:r.type==='busca-video'?50:r.type==='oficial'?20:10)
+  +(7-r.lanes.length)*7+(r.patchSensitive?-30:0)
+  +(diagramOf(x)==='waves'&&/wave|freeze|push/i.test(r.topic)?12:0);
+ const sorted=candidates.sort((a,b)=>rank(b)-rank(a));
+ const selected=[...sorted.filter(r=>r.type==='video').slice(0,2),...sorted.filter(r=>r.type==='busca-video').slice(0,1),...sorted.filter(r=>!['video','busca-video'].includes(r.type)).slice(0,1)];
+ return selected.length?selected:sorted.slice(0,4);
 }
 function renderMedia(x){
  const target=$('dialogMedia');target.replaceChildren();
  for(const r of lessonResources(x)){
   const a=node('a','media-item');a.href=r.url;a.target='_blank';a.rel='noopener noreferrer';
   if(r.videoId){const img=document.createElement('img');img.src='https://img.youtube.com/vi/'+r.videoId+'/hqdefault.jpg';img.alt='Miniatura do vídeo '+r.title;img.loading='lazy';a.append(img)}
-  const b=node('div','');b.append(node('span','eyebrow',r.type==='video'?'VÍDEO PT-BR':r.type==='busca-video'?'BUSCA YOUTUBE':'REFERÊNCIA EXTERNA'),node('strong','',r.title),node('small','',r.author+' · '+r.era));
+  const b=node('div','');b.append(node('span','eyebrow',r.type==='video'?'VÍDEO 2026':r.type==='busca-video'?'BUSCA TEMÁTICA · CONFIRA PATCH':'REFERÊNCIA EXTERNA'),node('strong','',r.title),node('small','',r.author+' · '+r.era));
   a.append(b);target.append(a);
  }
 }
@@ -309,17 +317,37 @@ function openLesson(id){
 }
 function closeLesson(){if($('lessonDialog').open)$('lessonDialog').close();if(location.hash.startsWith('#aula-'))history.replaceState(null,'',location.pathname+location.search+'#biblioteca')}
 function resourceCard(r){
- const a=node('a','resource-card');a.href=r.url;a.target='_blank';a.rel='noopener noreferrer';
+ const a=node('a','resource-card'+(isArchived(r)?' resource-archived':''));a.href=r.url;a.target='_blank';a.rel='noopener noreferrer';
  if(r.videoId){const img=document.createElement('img');img.src='https://img.youtube.com/vi/'+r.videoId+'/hqdefault.jpg';img.alt='Miniatura de vídeo '+r.title;img.loading='lazy';a.append(img)}
- else{const img=node('div','resource-icon',r.type==='curso'||r.type==='escola'?'ACADEMIA ↗':r.type==='oficial'?'RIOT ↗':r.type==='busca-video'?'YOUTUBE ↗':'GUIA ↗');a.append(img)}
+ else{const img=node('div','resource-icon',r.type==='curso'||r.type==='escola'?'ACADEMIA ↗':r.type==='oficial'?'RIOT ↗':r.type==='busca-video'?'PESQUISAR ↗':'GUIA ↗');a.append(img)}
  const b=node('div','resource-body');
- b.append(node('span','eyebrow',(r.free?'ACESSO EXTERNO':'ACESSO PODE SER PAGO')+' · '+r.author),node('h3','',r.title),node('p','',r.topic),node('small','',r.era+' · '+r.note),node('strong','resource-cta','ABRIR FONTE EXTERNA ↗'));a.append(b);return a;
+ const label=isArchived(r)?'ARQUIVO · NÃO APLICAR COMO META ATUAL':r.type==='video'?'VÍDEO DIRETO · 2026':r.type==='busca-video'?'BUSCA · RESULTADOS NÃO VERIFICADOS':r.free?'FONTE EXTERNA':'PODE SER PAGO';
+ const badge=node('span','resource-status'+(isArchived(r)?' archived':r.type==='busca-video'?' search':''),label);
+ b.append(badge,node('span','eyebrow',r.author),node('h3','',r.title),node('p','',r.topic),
+  node('small','',r.era+' · '+r.note));
+ if(r.type==='video'&&!isArchived(r))b.append(node('small','', 'Metadados conferidos em '+(r.reviewedAt||'2026-11-11')+'; vídeo não auditado integralmente.'));
+ b.append(node('strong','resource-cta',r.type==='busca-video'?'PESQUISAR NO YOUTUBE ↗':isArchived(r)?'ABRIR ARQUIVO HISTÓRICO ↗':'ABRIR FONTE EXTERNA ↗'));
+ a.append(b);return a;
 }
 function renderResources(){
  const grid=$('resourceGrid');grid.replaceChildren();
- const match=RESOURCES.filter(r=>resourcesFilter==='todos'||resourcesFilter==='video'&&(r.type==='video'||r.type==='busca-video'||r.type==='canal')||resourcesFilter==='djoko'&&r.author.toLowerCase().includes('djoko')||resourcesFilter==='courses'&&['curso','escola','artigo','biblioteca','oficial'].includes(r.type));
+ const match=RESOURCES.filter(r=>{
+  const archived=isArchived(r);
+  if(resourcesFilter==='archive')return archived;
+  if(archived)return false;
+  if(resourcesFilter==='video'&&r.type!=='video')return false;
+  if(resourcesFilter==='djoko'&&!r.author.toLowerCase().includes('djoko'))return false;
+  if(resourcesFilter==='search'&&r.type!=='busca-video')return false;
+  if(resourcesFilter==='courses'&&!['curso','escola','artigo','biblioteca','oficial','canal'].includes(r.type))return false;
+  return true;
+ }).filter(r=>resourceLane==='todos'||r.lanes.includes(resourceLane))
+ .filter(r=>!resourceQuery||safeNormalize([r.title,r.author,r.topic,r.note].join(' ')).includes(safeNormalize(resourceQuery)));
+ const rank=r=>r.type==='video'?0:r.type==='busca-video'?1:r.type==='oficial'?2:3;
+ match.sort((a,b)=>rank(a)-rank(b)||(b.publishedAt||'').localeCompare(a.publishedAt||''));
  for(const r of match)grid.append(resourceCard(r));
- const buttonMap={todos:'resourcesAll',video:'resourcesVideo',djoko:'resourcesDjoko',courses:'resourcesCourses'};
+ $('resourceCount').textContent=match.length+' '+(match.length===1?'RECURSO ENCONTRADO':'RECURSOS ENCONTRADOS');
+ $('resourceEmpty').hidden=match.length!==0;
+ const buttonMap={todos:'resourcesAll',video:'resourcesVideo',djoko:'resourcesDjoko',search:'resourcesSearch',courses:'resourcesCourses',archive:'resourcesArchive'};
  for(const [value,id] of Object.entries(buttonMap))$(id).setAttribute('aria-pressed',String(resourcesFilter===value));
 }
 const weekHeads=[
@@ -390,7 +418,9 @@ $('lessonNotes').addEventListener('input',e=>{if(!currentId)return;state.notes[c
 $('studyLane').value=state.studyLane||'top';
 $('studyLane').addEventListener('change',renderPlan);
 $('resetStudy').addEventListener('click',()=>{const prefix=$('studyLane').value+':';if(!confirm('Reiniciar os 28 dias desta função? Suas aulas concluídas e notas serão preservadas.'))return;for(const key of Object.keys(state.days))if(key.startsWith(prefix))delete state.days[key];persist();renderPlan()});
-for(const [id,mode] of [['resourcesAll','todos'],['resourcesVideo','video'],['resourcesDjoko','djoko'],['resourcesCourses','courses']])$(id).addEventListener('click',()=>{resourcesFilter=mode;renderResources()});
+for(const [id,mode] of [['resourcesAll','todos'],['resourcesVideo','video'],['resourcesDjoko','djoko'],['resourcesSearch','search'],['resourcesCourses','courses'],['resourcesArchive','archive']])$(id).addEventListener('click',()=>{resourcesFilter=mode;renderResources()});
+$('resourceLane').addEventListener('change',e=>{resourceLane=e.target.value;renderResources()});
+$('resourceSearch').addEventListener('input',e=>{resourceQuery=e.target.value;renderResources()});
 renderFilters();render();renderResources();renderPlan();diagnosticRender();
 if(location.hash.startsWith('#aula-'))openLesson(location.hash.slice(1));
 window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#aula-'))openLesson(location.hash.slice(1))});
