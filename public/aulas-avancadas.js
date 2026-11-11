@@ -330,7 +330,7 @@ export const ADVANCED_LESSONS = [
     "summary": "Dives são operações de tempo e números: chegam com wave, controle de entrada, dano e saída planejada. Countergank depende de previsão.",
     "application": "Chegue antes da wave crítica; faça leitura de TP e cobertura rival; defina primeiro alvo e ordem de controle; abandone se a wave não bate.",
     "mistake": "Chegar ao dive depois que todos os minions morreram e forçar sem resetar aggro.",
-    "exercise": "Analise 3 d iv es, corrigindo início, cobertura de flank e caminho de saída.",
+    "exercise": "Analise 3 dives, corrigindo início, cobertura de flank e caminho de saída.",
     "question": "Sua wave bot chegou à torre, mas mid inimigo sumiu e seu suporte gastou engage. O que fazer?",
     "correct": "Suspender o dive até recuperar informação e recursos, preservando a posição de wave.",
     "wrong": "Dive imediatamente porque há sete minions.",
