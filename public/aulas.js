@@ -1,6 +1,6 @@
 import {LESSONS as BASIC_LESSONS} from './aulas-data.js';
 import {ADVANCED_LESSONS} from './aulas-avancadas.js';
-import {RESOURCES} from './aulas-recursos.js';
+import {RESOURCES} from './aulas-recursos.js?v=20261111-videos2';
 
 const LESSONS=[...ADVANCED_LESSONS,...BASIC_LESSONS];
 const lanes=[['todos','TODAS'],['fundamentos','FUNDAMENTOS'],['top','TOP'],['jg','JUNGLE'],['mid','MID'],['adc','ADC'],['sup','SUPORTE'],['equipe','EQUIPES']];
