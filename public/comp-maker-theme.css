@@ -1,0 +1,258 @@
+/* CMIM / COMP MAKER — identidade industrial oficial.
+   Camada visual isolada: preserva lógica de picks, counters e análises. */
+:root {
+  color-scheme: dark;
+  --base: #0b0d0c;
+  --white: #161d17;
+  --ink: #f6f6ef;
+  --muted: #b6c4b4;
+  --line: #3d4b3d;
+  --coral: #f59a84;
+  --mint: #ffe03b;
+  --violet: #b9a5e8;
+  --pale: #1c2b20;
+  --blue: #79c7ec;
+  --red: #fa8c86;
+  --dark: #0e1510;
+  --gold: #ffe03b;
+  --green: #a4e2a7;
+}
+body {
+  background-color: var(--base);
+  background-image: linear-gradient(145deg,#080c0beb,#0b120ded),url('./assets/branding/cmim-industrial-background.webp');
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: Barlow,'DM Sans',system-ui,sans-serif;
+}
+h1,h2,h3,.brand-name,.slot-name,.rec-name,.feature-title,.counter-card-title h3 {
+  font-family:'Barlow Condensed','Space Grotesk',sans-serif;
+  letter-spacing: .01em;
+  color: var(--ink);
+}
+h1 {font-size: clamp(32px,3vw,45px);letter-spacing:.01em;text-transform:uppercase}
+h2 {font-size:23px;text-transform:uppercase}
+h3 {font-size:19px}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,textarea:focus-visible {
+  outline:3px solid var(--gold);
+  outline-offset:3px;
+}
+::selection {background:var(--gold);color:#101610}
+.app {background:transparent}
+.topbar {
+  background:#0c130ff2;
+  border-bottom:1px solid #71653399;
+  box-shadow:0 12px 35px #0006;
+  backdrop-filter:blur(16px);
+}
+.brand-icon {
+  width:46px;height:46px;
+  background:#0b120d;
+  border:1px solid #a8933b;
+  border-radius:10px;
+  box-shadow:0 0 0 3px #ffe03b0b;
+}
+.brand-icon img {display:block;width:100%;height:100%;object-fit:contain;border-radius:8px}
+.brand-name {font-size:25px;letter-spacing:.3px}
+.brand-name small {font-family:Barlow,system-ui,sans-serif;color:#adbba6;letter-spacing:2px}
+.chip {
+  background:#1c271e;
+  border-color:#42533e;
+  color:#e5ebd9;
+}
+.dot {background:var(--gold);box-shadow:0 0 0 3px #ffe03b17}
+.btn {
+  background:#242e25;
+  color:#eef3e6;
+  border:1px solid #55634f;
+  border-radius:9px;
+}
+.btn:hover {background:#34412f;border-color:#a6ae7b;color:#fff7dd}
+.btn.primary,.rec-action:hover {
+  background:linear-gradient(120deg,#fff1a0,#ffe03b 65%,#dcb82b);
+  color:#141a0e;
+  border-color:#ffe264;
+  box-shadow:0 8px 28px #ffe03b20;
+}
+.btn.primary:hover {background:#fff1a1;color:#13190d}
+.btn.danger {color:#ffada3;border-color:#85524a}
+.side {
+  background:#101712f2;
+  border-right:1px solid var(--line);
+}
+.nav-label,.side-footer {color:#a9b8a3}
+.nav-btn {color:#c5d0bf;border:1px solid transparent;border-radius:8px}
+.nav-btn:hover:not(.active) {background:#263125;color:#f1f3e9}
+.nav-btn.active {
+  background:#35351c;
+  border-color:#9d883a;
+  color:#ffe57f;
+  box-shadow:inset 3px 0 0 var(--gold);
+}
+.side-note {
+  background:linear-gradient(145deg,#31351d,#1a291e);
+  border:1px solid #6c6536;
+}
+.side-note strong {color:#ffe274}
+.side-note p {color:#d0d9c5}
+.main {background:#0b110dcc}
+.right {
+  background:#111913f4;
+  border-left:1px solid var(--line);
+}
+.eyebrow,.aside-kicker {color:var(--gold)}
+p.subtle,.note,.hint,.count,.role,.right-info,.source p,.source .state {
+  color:#b5c5b6;
+}
+.hero-stripe {
+  background:linear-gradient(116deg,#292c19,#121e17 75%);
+  border:1px solid #80723b;
+  box-shadow:0 16px 45px #0004;
+}
+.hero-stripe span {color:#edd987}
+.hero-stripe strong {color:#fff0a8;font-size:22px}
+.hero-stripe p {color:#d7dec9}
+.hero-stripe:after {border-color:#d2bf5950;box-shadow:0 0 0 27px #ffe03b08,0 0 0 55px #ffe03b05}
+.team-card,.insight,.panel,.rec,.source,.list-card,.counter-card,.counter-kpi {
+  background:#161f18;
+  border-color:#394a3d;
+  box-shadow:0 9px 27px #0003;
+  color:var(--ink);
+}
+.team-card-header {background:#152530;border-bottom-color:#3d5460}
+.team-card.red .team-card-header {background:#32231f;border-bottom-color:#57443b}
+.team-mark {background:var(--blue)}
+.red .team-mark {background:var(--red)}
+.slot:hover {background:#233025}
+.slot.active {background:#263d35;border-color:#78b3ab}
+.red .slot.active {background:#44302e;border-color:#e09a8a}
+.avatar,.rec-avatar {background:#2d392e;color:#d2dacb}
+.slot .remove {background:#303d33;color:#e0eadb}
+.bans-line {border-top-color:var(--line)}
+.bans-line label {color:#b7c8b3}
+.ban-dot {background:#28312a;border-color:#627161}
+.insight .label,.counter-kpi small {color:#aabda7}
+.insight .value {color:#ffe57c}
+.insight p {color:#c1cebe}
+.selector-box {
+  background:#1c2920;
+  border-color:#415043;
+}
+.selector-box label,.control-label {color:#b8c8b4}
+.toggle {background:#0f1711}
+.toggle button {color:#bec9b9}
+.toggle button.active {
+  background:#3b381d;
+  color:#ffe36a;
+  box-shadow:inset 0 0 0 1px #877538;
+}
+select,input[type=search],input[type=text],input[type=number],input[type=url],textarea {
+  background:#0e1712;
+  color:#f0f5e9;
+  border:1px solid #54614e;
+}
+input::placeholder,textarea::placeholder {color:#9aab99}
+select option {background:#142018;color:#f0f3e7}
+select:focus,input:focus,textarea:focus {border-color:var(--gold)}
+.rec:hover {border-color:#bba34b}
+.rec-top small,.rec-reason {color:#c3d0c1}
+.tag {background:#283d2c;color:#bde8b2}
+.tag.warn {background:#4c3924;color:#ffcf8e}
+.rec-action {
+  background:#26352b;
+  color:#ecf5e5;
+  border-color:#54674c;
+}
+.right-info {border-top-color:#475646}
+.right-info a,.source a,.boldlink {color:#ffe36b}
+.right-info strong {color:#ebf1dc}
+.metric-head {color:#e4eddc}
+.metric-head b {color:#ffe071}
+.track {background:#334235}
+.fill {background:var(--gold)}
+.compare-row .label {color:#c7d4c2}
+.compare-row .b {color:var(--blue)}
+.compare-row .r {color:var(--red)}
+.report-block {
+  background:#1d2c22;
+  border-color:#a3cd8f;
+}
+.report-block.warn {
+  background:#332a22;
+  border-color:#ee9a65;
+}
+.report-block h3 {color:#ffe4a1}
+.report-block p,.report-block li {color:#d0decf}
+.pill {background:#293b2d;color:#d8f3d0}
+.source .state {color:#f3c578}
+.source b {color:#f1e9b8}
+.source-chip {
+  background:#393123;
+  color:#f5dca7;
+  border-color:#766441;
+}
+.modal-backdrop {background:#050905df}
+.modal {background:#141d16;border:1px solid #57664b;color:#f1f7e9}
+.modal-head {border-bottom-color:#485a44}
+.champ-btn {
+  background:#1e2a20;
+  color:#edf5e8;
+  border-color:#425545;
+}
+.champ-btn:hover {border-color:#e3cc5d;background:#313b23}
+.champ-btn span {color:#e9f2dc}
+.empty,.counter-empty {
+  background:#17221a;
+  border-color:#627052;
+  color:#c7d6c4;
+}
+.toast {background:#30381d;color:#fff4b6;border:1px solid #ac9944}
+.counter-version {background:#4b441d;color:#ffe67e;border:1px solid #807436}
+.weight-grid label {color:#c4d3c0}
+.weight-grid b {color:#ffe578}
+.weight-grid input {accent-color:#ffe03b}
+.counter-kpi strong {color:#ffe176}
+.counter-kpi span {color:#c2d2c3}
+.counter-card.best {
+  border-color:#e3c44c;
+  box-shadow:inset 0 0 0 2px #e7c94d50,0 10px 26px #0005;
+}
+.counter-card-title p {color:#c0cfbd}
+.counter-score {
+  background:#3e381c;
+  border:1px solid #806e2c;
+}
+.counter-score b {color:#ffe570}
+.counter-score small {color:#dece9a}
+.counter-breakdown {
+  background:#1a251c;
+  border-color:#3a4d3d;
+}
+.factor-name {color:#c3d1bc}
+.factor-name b {color:#ffe58f}
+.factor-track {background:#354538}
+.factor-fill {background:#e5c741}
+.factor-fill.lane {background:#ee9d74}
+.factor-fill.evidence {background:#baa6ed}
+.counter-detail h4 {color:#f1d67e}
+.counter-detail p {color:#d4e0d3}
+.counter-bottom {border-top-color:#3d4b3c}
+.stats-status {background:#263724;color:#d0eec4}
+.format-example {
+  background:#0e1710;
+  color:#eaf4e0;
+  border:1px solid #41553d;
+}
+.counter-empty p {color:#b7cbb3}
+@media(max-width:1050px) {
+  .right {border-top-color:var(--line)}
+}
+@media(max-width:690px) {
+  .topbar {background:#101811}
+  .side {background:#0d1510;border-bottom:1px solid var(--line)}
+  .brand-name {font-size:22px}
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {transition-duration:0.01ms!important;animation-duration:0.01ms!important}
+}
