@@ -25,6 +25,188 @@ const specialCases={
  'aula-03':{question:'Você quer resetar, mas a wave adversária ainda está fora do alcance da torre rival e o inimigo chega com TP. Qual é a melhor decisão?',options:['Avaliar se consegue completar crash ou pedir ajuda antes de resetar.','Recall instantâneo e aceitar freeze adversário por duas waves.','Fingir roam sem gerir o estado da wave.'],explanation:'Recall é parte de uma sequência wave–compra–retorno.'},
  'aula-04':{question:'Faltam 45 segundos para o dragão, mid está empurrada contra sua equipe e você tem só uma sentinela. Qual é a melhor entrada?',options:['Recuperar a wave e ocupar uma linha de visão que sua equipe consegue defender.','Ir sozinho ao fundo da selva inimiga antes de empurrar mid.','Gastar a ward dentro do pit e esperar sem entrada coberta.'],explanation:'Sem pressão de lane, visão profunda fica indefensável.'}
 };
+Object.assign(specialCases,{
+ "aula-05": {
+  "question": "Seu rival gastou mobilidade para farmar, mas possui uma wave com seis minions a mais e jungle inimigo sumiu há 20s. Qual troca faz sentido?",
+  "correct": "Punir espaço e farm, sem assumir all-in na wave adversária até ter informação.",
+  "options": [
+   "Punir espaço e farm, sem assumir all-in na wave adversária até ter informação.",
+   "All-in total porque a principal mobilidade está em cooldown.",
+   "Correr para o rio em busca do jungler rival sozinho."
+  ],
+  "explanation": "Cooldown é apenas uma variável: números de minions e ausência de informação podem inverter a troca."
+ },
+ "aula-06": {
+  "question": "Você estabeleceu freeze no top, mas o adversário trouxe o jungler e seu mid está sem prioridade. Como proteger o ganho anterior?",
+  "correct": "Afinar a wave e aceitar quebra controlada do freeze em vez de perder vida ou morrer para defendê-lo.",
+  "options": [
+   "Afinar a wave e aceitar quebra controlada do freeze em vez de perder vida ou morrer para defendê-lo.",
+   "Manter freeze mesmo com ameaça de dive em dupla.",
+   "Abandonar lane e fazer TP agressivo em bot sem planejar a wave."
+  ],
+  "explanation": "Freeze só vale quando pode ser mantido com custo aceitável."
+ },
+ "aula-07": {
+  "question": "Você tem TP e side empurrando, o rival mostra três no mid e seu time não consegue pressionar estrutura. Qual conduta?",
+  "correct": "Segurar a pressão em zona segura e sincronizar a próxima wave com o time antes de avançar.",
+  "options": [
+   "Segurar a pressão em zona segura e sincronizar a próxima wave com o time antes de avançar.",
+   "Avançar contra T2 no escuro porque o TP está pronto.",
+   "Teleportar sem necessidade para apenas agrupar cinco mid."
+  ],
+  "explanation": "TP e pressão lateral dependem de informação e ameaça complementar."
+ },
+ "aula-08": {
+  "question": "Seu plano era terminar o clear para gankar bot, mas bot perdeu prioridade e o suporte aliado está sem vida. Qual adaptação?",
+  "correct": "Redesenhar seu ciclo para conservar XP e buscar crossmap ou resposta ao provável jungler rival.",
+  "options": [
+   "Redesenhar seu ciclo para conservar XP e buscar crossmap ou resposta ao provável jungler rival.",
+   "Forçar gank mesmo com pouca vida e sem wave favorável.",
+   "Esperar escondido dois minutos até bot voltar a ter prioridade."
+  ],
+  "explanation": "O caminho é contingente: uma condição que desapareceu exige nova avaliação."
+ },
+ "aula-09": {
+  "question": "O jungler rival começou bot, sumiu e seu mid tem prio. Uma wave grande top será empurrada em breve. Como rastrear o risco?",
+  "correct": "Tratar topside como hipótese relevante e ajustar ward, wave e resposta ao provável countergank.",
+  "options": [
+   "Tratar topside como hipótese relevante e ajustar ward, wave e resposta ao provável countergank.",
+   "Afirmar com certeza que ele ainda está bot.",
+   "Invadir sozinho o primeiro buff sem acompanhar informação."
+  ],
+  "explanation": "Hipóteses devem ser revisadas com tempo de deslocamento e wave."
+ },
+ "aula-10": {
+  "question": "Seu time tem dois jogadores sem ultimate, mid sem prioridade e o próximo dragão não é alma. Qual plano?",
+  "correct": "Negociar concessão e executar uma troca de mapa com menor risco após limpar as waves.",
+  "options": [
+   "Negociar concessão e executar uma troca de mapa com menor risco após limpar as waves.",
+   "Forçar contestação de 3v5 porque o objetivo está vivo.",
+   "Mandar todos para o pit sem reset e esperar por um roubo."
+  ],
+  "explanation": "Valor de objetivo deve ser comparado ao custo de contestar."
+ },
+ "aula-11": {
+  "question": "Você limpa mid e vê um alvo bot a pouca vida, mas o suporte rival desapareceu e sua wave volta em 20s. Qual roam?",
+  "correct": "Ameaçar movimentação pelo corredor seguro, medir a janela e voltar se a chance real não existir.",
+  "options": [
+   "Ameaçar movimentação pelo corredor seguro, medir a janela e voltar se a chance real não existir.",
+   "Entrar no rio sozinho pelo caminho sem visão.",
+   "Perseguir até a T2 bot mesmo perdendo a próxima wave."
+  ],
+  "explanation": "Roam eficaz contabiliza retorno, visão e possibilidade de seguir a jogada."
+ },
+ "aula-12": {
+  "question": "Você guarda sentinela no rio inferior, mas se posiciona no lado superior do mid com o jungler rival sem informação. Como ajustar?",
+  "correct": "Alinhar posição corporal ao lado com visão e apoio, cedendo alcance de trade no lado cego.",
+  "options": [
+   "Alinhar posição corporal ao lado com visão e apoio, cedendo alcance de trade no lado cego.",
+   "Manter a ward embaixo e pressionar no bush de cima.",
+   "Invadir o lado de cima sozinho para confirmar localização do rival."
+  ],
+  "explanation": "Ward só protege a ameaça alinhada à sua posição."
+ },
+ "aula-13": {
+  "question": "Faltam 40 segundos para dragão, uma wave mid vem contra sua torre e seu suporte entrou na selva rival. Qual decisão?",
+  "correct": "Garantir limpeza central e reagrupar antes de ampliar a linha de visão.",
+  "options": [
+   "Garantir limpeza central e reagrupar antes de ampliar a linha de visão.",
+   "Entrar imediatamente no pit e deixar a torre receber a wave.",
+   "Perseguir o suporte rival em outra metade do mapa."
+  ],
+  "explanation": "Controle de rio exige mid prioridade e rotas de acesso seguras."
+ },
+ "aula-14": {
+  "question": "O ADC rival está a uma tela de distância, mas o bruiser inimigo ameaça flanco e tem engage disponível. Como maximizar DPS?",
+  "correct": "Atacar alvos seguros, preservar deslocamento defensivo e reposicionar quando a ameaça gastar engage.",
+  "options": [
+   "Atacar alvos seguros, preservar deslocamento defensivo e reposicionar quando a ameaça gastar engage.",
+   "Atravessar a frontline para atingir carry rival primeiro.",
+   "Usar mobilidade ofensiva para abrir mais alcance imediatamente."
+  ],
+  "explanation": "DPS sustentável supera dano potencial quando há risco de morte precoce."
+ },
+ "aula-15": {
+  "question": "Você e seu suporte têm poder de all-in, mas a wave rival é duas vezes maior e o jungler inimigo pode chegar. Qual decisão?",
+  "correct": "Afinar a wave e identificar cooldown antes de investir no all-in com cobertura.",
+  "options": [
+   "Afinar a wave e identificar cooldown antes de investir no all-in com cobertura.",
+   "Forçar engage imediato usando apenas vantagem de champion.",
+   "Dar flash agressivo dentro da wave grande porque há dano de sobra."
+  ],
+  "explanation": "A wave e o tempo de chegada alteram o 2v2 antes da primeira habilidade."
+ },
+ "aula-16": {
+  "question": "Você derrubou T1 bot, tem vantagem de item e vê mid ocupada por três aliados enquanto as sides acumulam minions. O que negociar?",
+  "correct": "Distribuir coleta e ocupar lane central segura para ADC, liberando solos para sides conforme ameaça.",
+  "options": [
+   "Distribuir coleta e ocupar lane central segura para ADC, liberando solos para sides conforme ameaça.",
+   "Juntar os cinco mid e ignorar duas waves laterais.",
+   "Continuar bot sozinho até a segunda torre sem visão."
+  ],
+  "explanation": "Rotação ótima busca ouro seguro e presença nas lutas importantes."
+ },
+ "aula-17": {
+  "question": "Barão em 60 segundos, seu time perdeu mid T1 e o jungler aliado está base. Onde começar a visão?",
+  "correct": "Defender acessos próximos, recuperar a mid e só então avançar a linha com cobertura.",
+  "options": [
+   "Defender acessos próximos, recuperar a mid e só então avançar a linha com cobertura.",
+   "Wardar o fundo da jungle inimiga sozinho antes de empurrar mid.",
+   "Guardar todas as wards para colocá-las dentro do pit."
+  ],
+  "explanation": "A linha de visão acompanha a posição defensável do time."
+ },
+ "aula-18": {
+  "question": "Sua bot wave foi presa em freeze adversário, ADC não tem flash e o mid pede roam. Qual sequência?",
+  "correct": "Ajudar a quebrar a wave ou garantir que o ADC possa coletar antes de sair da lane.",
+  "options": [
+   "Ajudar a quebrar a wave ou garantir que o ADC possa coletar antes de sair da lane.",
+   "Deixar o ADC 1v2 sob risco de dive sem avisar.",
+   "Começar roam de base até top mesmo sem tempo para retornar."
+  ],
+  "explanation": "Um roam é bom apenas após contabilizar o custo do companheiro."
+ },
+ "aula-19": {
+  "question": "Sua composição tem dois carries imóveis, e o rival tem dois campeões de dive. Você joga de suporte de engage. Qual função principal?",
+  "correct": "Guardar CC para negar acesso aos carries até a ameaça ser gasta e buscar engage quando houver espaço.",
+  "options": [
+   "Guardar CC para negar acesso aos carries até a ameaça ser gasta e buscar engage quando houver espaço.",
+   "Sempre iniciar no tanque rival independentemente do estado.",
+   "Abandonar os carries e procurar um flank sem visão a qualquer custo."
+  ],
+  "explanation": "A função tática muda com a condição de vitória da composição."
+ },
+ "aula-20": {
+  "question": "Barão em 45 segundos, o mid fala para resetar e o jungle quer entrar na selva rival apesar de wave sob sua T2. Qual call organiza melhor?",
+  "correct": "Comunicar falta de wave e propor reset mais limpeza central antes do primeiro avanço conjunto.",
+  "options": [
+   "Comunicar falta de wave e propor reset mais limpeza central antes do primeiro avanço conjunto.",
+   "Seguir o jungler imediatamente porque é quem faz o objetivo.",
+   "Deixar três pessoas resetarem e duas invadirem sem plano."
+  ],
+  "explanation": "A call eficiente traz estado, proposta e condição de execução."
+ },
+ "aula-21": {
+  "question": "Sua composição tem poke e disengage, mas o adversário tem engage de longo alcance. O que aumenta sua chance antes da luta?",
+  "correct": "Criar visão defensável, desgastar a aproximação e preservar recursos para negar a entrada rival.",
+  "options": [
+   "Criar visão defensável, desgastar a aproximação e preservar recursos para negar a entrada rival.",
+   "Forçar combate corpo a corpo de cinco jogadores em corredor estreito.",
+   "Esperar o engage rival sem controle de flancos."
+  ],
+  "explanation": "Win condition não é só draft: exige espaço e configuração das waves."
+ },
+ "aula-22": {
+  "question": "Barão em 50 segundos, mid e top estão pressionadas contra seu time e jungle aliado está sem cargas de ward. O que priorizar?",
+  "correct": "Reset, limpeza e avanço conjunto de visão com waves sincronizadas antes de decidir se contesta.",
+  "options": [
+   "Reset, limpeza e avanço conjunto de visão com waves sincronizadas antes de decidir se contesta.",
+   "Correr ao pit e iniciar sem prioridade.",
+   "Separar o time em quatro caminhos de jungle para procurar informação."
+  ],
+  "explanation": "Setup começa por waves e recursos; sem eles a visão vira armadilha."
+ }
+});
 function node(tag,cls='',txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify(state))}catch{}}
 function toggleList(key,id){const p=state[key].indexOf(id);if(p<0)state[key].push(id);else state[key].splice(p,1);persist();stats()}
