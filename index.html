@@ -65,7 +65,7 @@
     .section-head{display:flex;align-items:end;justify-content:space-between;gap:25px;margin-bottom:26px}
     .section-head h2{font-size:clamp(38px,4vw,56px);line-height:.98;letter-spacing:.2px;margin:9px 0 0}
     .section-head p{color:#b2bbb1;max-width:315px;font-size:13px;margin:0}
-    .tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
     .tool{min-height:340px;background:linear-gradient(145deg,#1d231d,#151a17);border:1px solid #414b3f;border-radius:11px;overflow:hidden;position:relative;display:flex;flex-direction:column;padding:24px;transition:transform .2s,background .2s,border-color .2s,box-shadow .2s}
     .tool:hover{transform:translateY(-6px);border-color:#b8a83d;background:linear-gradient(140deg,#292d20,#1c211a);box-shadow:0 24px 55px #0007,0 0 25px #f0cd3013}
     .tool:focus-visible{outline-offset:5px}
@@ -114,7 +114,7 @@
   <header class="site-header">
     <div class="wrap topbar">
       <a class="identity" href="./" aria-label="CMIM — página inicial"><img src="./assets/branding/cmim-main.webp" alt="Símbolo do CMIM"><div><span>CMIM<span class="yellow">.</span></span><small>CENTRAL DA COMUNIDADE</small></div></a>
-      <nav class="nav" aria-label="Menu principal"><a href="./draft.html?jogar=1" class="play-nav-link">▶ JOGAR</a><a href="#como-funciona">COMO FUNCIONA</a><a href="./inhouse.html">IN-HOUSE</a><a href="./ligas.html">LIGAS</a><a href="#divisoes">DIVISÕES</a><a href="./perfil.html">MEU PERFIL</a><a href="#ferramentas">FERRAMENTAS</a><a href="#jogadores">JOGADORES</a><a href="./regulamento.html">REGULAMENTO</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><a id="portal-auth-button" class="portal-auth-entry" href="./conta.html" aria-label="Entrar ou criar conta no CMIM">◉ ENTRAR / CRIAR CONTA <span aria-hidden="true">↗</span></a>
+      <nav class="nav" aria-label="Menu principal"><a href="./draft.html?jogar=1" class="play-nav-link">▶ JOGAR</a><a href="#como-funciona">COMO FUNCIONA</a><a href="./inhouse.html">IN-HOUSE</a><a href="./ligas.html">LIGAS</a><a href="#divisoes">DIVISÕES</a><a href="./perfil.html">MEU PERFIL</a><a href="#ferramentas">FERRAMENTAS</a><a href="./comp-maker.html">COMP MAKER</a><a href="#jogadores">JOGADORES</a><a href="./regulamento.html">REGULAMENTO</a><a href="#historia">HISTÓRIA</a><a href="#news">CMIM NEWS</a><a href="#redes">REDES</a></nav><a id="portal-auth-button" class="portal-auth-entry" href="./conta.html" aria-label="Entrar ou criar conta no CMIM">◉ ENTRAR / CRIAR CONTA <span aria-hidden="true">↗</span></a>
     </div>
   </header>
   <main>
@@ -212,7 +212,7 @@
     </section>
     <div class="wrap divider"></div>
     <section class="wrap section" id="ferramentas" aria-labelledby="tools-title">
-      <div class="section-head"><div><div class="mini yellow">SUA CENTRAL DE JOGO</div><h2 id="tools-title">ESCOLHA SUA <span class="yellow">PRÓXIMA JOGADA.</span></h2></div><p>Três ferramentas diferentes, um só lugar. Clique para entrar — cada uma tem seu próprio funcionamento.</p></div>
+      <div class="section-head"><div><div class="mini yellow">SUA CENTRAL DE JOGO</div><h2 id="tools-title">ESCOLHA SUA <span class="yellow">PRÓXIMA JOGADA.</span></h2></div><p>Quatro ferramentas diferentes, um só lugar. Clique para entrar — cada uma tem seu próprio funcionamento.</p></div>
       <div class="tool-grid">
         <a class="tool featured" style="--accent:#ffe03b;--glow:#e1be262e" href="./draft.html" aria-label="Abrir Draft de equipes">
           <div class="tool-top"><span class="tool-no">FERRAMENTA / 01</span><span class="tool-badge">DISPONÍVEL</span></div>
@@ -234,6 +234,13 @@
           <h3>SELEÇÃO DE<br>CAMPEÕES</h3><p>Crie a sala, compartilhe os links Blue e Red, faça bans e picks ao vivo e acompanhe tudo pela visão de espectador.</p>
           <div class="tool-foot">ENTRAR NA ARENA DE PICKS <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></div>
           <span class="micro">BLUE SIDE · RED SIDE · ESPECTADOR</span>
+        </a>
+        <a class="tool" style="--accent:#92dfd4;--glow:#24bd9c25" href="./comp-maker.html" aria-label="Abrir Comp Maker CMIM">
+          <div class="tool-top"><span class="tool-no">FERRAMENTA / 04</span><span class="tool-badge green">COACH TÁTICO</span></div>
+          <div class="tool-icon" style="border-color:#337e77;background:#173530"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 13h7v7h-7zM14 4h6v6h-6zM4 14h6v6H4zM11 8l3 0M8 11l0 3M14 16l-4 0"/></svg></div>
+          <h3>COMP<br>MAKER</h3><p>Monte composições Blue e Red, explore counter picks, sinergias e equilíbrio AD/AP. Compare estilos de jogo e receba sugestões de strong side, weak side e win conditions.</p>
+          <div class="tool-foot">ABRIR ANÁLISE DE COMPOSIÇÃO <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></div>
+          <span class="micro">DRAFT STUDIO · COUNTERS · PLANO DE JOGO</span>
         </a>
       </div>
       <div class="play-ecosystem-card" style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;border:1px solid #aa9441;border-radius:10px;background:linear-gradient(125deg,#30301b,#1a271d);padding:23px;margin:22px 0">
