@@ -255,7 +255,7 @@ function paraLines(target,text){
  const box=$(target);box.replaceChildren();for(let i=0;i<items.length;i++)box.append(node('li','',items[i].replace(/\.$/,'')+'.'));
 }
 const isStalePatch=r=>Boolean(r.patchSensitive&&r.status!=='historico'&&r.publishedAt&&
- Date.now()-new Date(r.publishedAt+'T00:00:00Z').getTime()>21*24*60*60*1000);
+ Date.now()-new Date(r.publishedAt+'T00:00:00Z').getTime()>14*24*60*60*1000);
 const isArchived=r=>r.status==='historico'||isStalePatch(r);
 const isActive=r=>!isArchived(r);
 function lessonResources(x){
