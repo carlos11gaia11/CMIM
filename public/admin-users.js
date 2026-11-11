@@ -4,7 +4,15 @@ document.addEventListener('DOMContentLoaded',()=>{
 const BASE='https://klpvidxhzofbwstvvxib.supabase.co',KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn', $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const state={profiles:[],private:[],defs:[],roles:[],rank:[],ready:false};
-const status=(s,bad=false)=>{if(!$('manage-user-status'))return;$('manage-user-status').textContent=s;$('manage-user-status').style.color=bad?'#ffaba6':'#bdebb7'};
+const status=(s,bad=false)=>{const node=$('manage-user-status');if(node){node.textContent=s;node.style.color=bad?'#ffaba6':'#bdebb7'}};
+function notice(message,bad=false){
+ let node=$('cmim-user-save-toast');
+ if(!node){node=document.createElement('div');node.id='cmim-user-save-toast';node.setAttribute('role','status');node.setAttribute('aria-live','polite');document.body.appendChild(node);}
+ Object.assign(node.style,{position:'fixed',right:'24px',bottom:'24px',zIndex:'99999',maxWidth:'min(440px,calc(100vw - 32px))',padding:'16px 20px',borderRadius:'12px',border:'1px solid '+(bad?'#e47c75':'#71b885'),background:bad?'#401d23':'#173c2a',color:'#fff',boxShadow:'0 12px 32px #0008',fontWeight:'700',transition:'opacity .25s,transform .25s',opacity:'1',transform:'translateY(0)'});
+ node.textContent=(bad?'✕ ':'✓ ')+message;
+ clearTimeout(notice.timer);notice.timer=setTimeout(()=>{node.style.opacity='0';node.style.transform='translateY(12px)';},5600);
+}
+function saving(button,on){if(!button)return;if(on){button.dataset.originalLabel=button.textContent;button.disabled=true;button.textContent='◌ SALVANDO...';button.setAttribute('aria-busy','true')}else{button.disabled=false;button.textContent=button.dataset.originalLabel||'SALVAR ALTERAÇÕES';button.removeAttribute('aria-busy')}};
 const getSession=()=>{try{return JSON.parse(sessionStorage.getItem('cmim_session')||'null')}catch{return null}};
 async function req(path,options={}){
  const session=getSession();if(!session?.access_token)throw Error('Entre com sua conta ADM para gerenciar usuários.');
@@ -26,7 +34,7 @@ async function fetchData(){
    req('/rest/v1/cmim_user_roles?select=user_id,role_slug,assigned_at&limit=3000'),
    req('/rest/v1/cmim_rank?id=eq.1&select=data')
   ]);
-  Object.assign(state,{profiles,private:priv,defs,roles,rank:rankRows?.[0]?.data?.players||[],ready:true});render();status(profiles.length+' usuários cadastrados, '+defs.length+' cargos.');
+  Object.assign(state,{profiles,private:priv,defs,roles,rank:rankRows?.[0]?.data?.players||[],ready:true});render();if(selectedRegisteredId&&profiles.some(p=>p.id===selectedRegisteredId))openRegistered(selectedRegisteredId);status(profiles.length+' usuários cadastrados, '+defs.length+' cargos.');
  }catch(e){status('Erro ao carregar usuários: '+e.message,true)}
 }
 let selectedRegisteredId=null;
@@ -75,7 +83,7 @@ function openRegistered(id){
  $('registered-edit-bio').value=p.bio||'';
  $('registered-edit-rank').innerHTML='<option value="">Sem vínculo ao Ranking</option>'+state.rank.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.nick||r.name||r.id)+'</option>').join('');
  $('registered-edit-rank').value=p.rank_player_id||'';
- $('registered-tier-feedback').textContent='';
+ $('registered-tier-feedback').textContent='Dados atuais carregados do cadastro. Edite e clique em salvar.';
  $('registered-tier-form').scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 function render(){
@@ -93,12 +101,12 @@ function render(){
 }
 function showUser(){
  const u=state.profiles.find(p=>p.id===$('manage-user-select').value);
- if(!u)return;
+ if(!u){const v=$('manage-rank-verification');if(v)v.textContent='Selecione um usuário para carregar os dados atuais.';return;}
  $('manage-user-name').value=state.private.find(p=>p.id===u.id)?.real_name||'';
  $('manage-user-phone').value=state.private.find(p=>p.id===u.id)?.phone_e164||'';
  $('manage-user-nick').value=u.nick;$('manage-user-tag').value=u.tag;
  $('manage-user-lane').value=u.lane||'MID';
- $('manage-user-secondary').value=u.secondary_lane||'SUP';
+ $('manage-user-secondary').value=u.secondary_lane||((u.lane==='SUP')?'MID':'SUP');
  $('manage-user-rank').value=u.rank_player_id||'';
  const verified=$('manage-rank-verification');
  if(verified)verified.textContent=u.rank_verified_at?'✓ Vínculo verificado pelo ADM em '+new Date(u.rank_verified_at).toLocaleDateString('pt-BR'):'◷ Sem vínculo verificado ao Ranking.';
@@ -125,7 +133,7 @@ $('registered-tier-form')?.addEventListener('submit',async event=>{
   if(!/^[1-9][0-9][0-9]{8,9}$/.test(digits)){$('registered-tier-feedback').textContent='Telefone inválido: informe DDD e 10 ou 11 dígitos.';return}
   phone='+55'+digits;
  }
- const btn=event.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;
+ const btn=event.currentTarget.querySelector('button[type="submit"]');saving(btn,true);
  $('registered-tier-feedback').textContent='Salvando cadastro...';
  try{
   await req('/rest/v1/rpc/cmim_admin_update_player',{method:'POST',body:{
@@ -141,12 +149,13 @@ $('registered-tier-form')?.addEventListener('submit',async event=>{
   await fetchData();
   $('registered-tier-form').hidden=false;
   openRegistered(current.id);
-  $('registered-tier-feedback').textContent='✓ Alterações salvas. Pré-tier original preservado.';
+  $('registered-tier-feedback').textContent='✓ Alterações salvas com sucesso. Pré-tier original preservado.';
+  notice('Cadastro atualizado e confirmado pelo servidor.');
   status('Cadastro de '+$('registered-edit-nick').value.trim()+' atualizado com sucesso.');
  }catch(error){
   $('registered-tier-feedback').textContent='Não foi possível salvar: '+error.message;
-  status('Falha ao atualizar jogador: '+error.message,true);
- }finally{btn.disabled=false}
+  status('Falha ao atualizar jogador: '+error.message,true);notice('Não foi possível salvar: '+error.message,true);
+ }finally{saving(btn,false)}
 });
 document.querySelector('[data-admin-tab="players"]')?.addEventListener('click',fetchData);
 $('manage-user-select')?.addEventListener('change',showUser);
@@ -157,7 +166,7 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
  if(!id||!state.profiles.some(p=>p.id===id))return status('Selecione um usuário válido.',true);
  const lane=$('manage-user-lane').value,secondary_lane=$('manage-user-secondary').value;
  if(lane===secondary_lane)return status('As duas lanes precisam ser diferentes.',true);
- btn.disabled=true;
+ saving(btn,true);
  try{
   const currentRank=state.profiles.find(p=>p.id===id);
   const phoneE164=(()=>{
@@ -178,8 +187,9 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
      p_user:id,p_rank_player_id:$('manage-user-rank').value||null,p_tier:currentRank?.tier||null
    }});
   }
-  status('✓ Usuário atualizado com sucesso.');await fetchData();$('manage-user-select').value=id;showUser();
- }catch(err){status('Falha: '+err.message,true)}finally{btn.disabled=false}
+  await fetchData();$('manage-user-select').value=id;showUser();
+  status('✓ Usuário atualizado com sucesso.');notice('Usuário atualizado e confirmado pelo servidor.');
+ }catch(err){status('Falha: '+err.message,true);notice('Falha ao salvar usuário: '+err.message,true)}finally{saving(btn,false)}
 });
 $('manage-role-create')?.addEventListener('submit',async e=>{
  e.preventDefault();const form=e.currentTarget,fd=new FormData(form),btn=form.querySelector('button');btn.disabled=true;
