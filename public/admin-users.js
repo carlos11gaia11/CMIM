@@ -12,6 +12,13 @@ function notice(message,bad=false){
  node.textContent=(bad?'✕ ':'✓ ')+message;
  clearTimeout(notice.timer);notice.timer=setTimeout(()=>{node.style.opacity='0';node.style.transform='translateY(12px)';},5600);
 }
+function explainInvalid(event,feedbackId){
+ const input=event.target;
+ const label=input.closest('label')?.firstChild?.textContent?.trim()||'Campo obrigatório';
+ const message='Verifique "'+label+'": '+(input.validationMessage||'valor não aceito')+'.';
+ const feedback=$(feedbackId);if(feedback){feedback.textContent=message;feedback.style.color='#ffaba6';}
+ notice(message,true);
+}
 function saving(button,on){if(!button)return;if(on){button.dataset.originalLabel=button.textContent;button.disabled=true;button.textContent='◌ SALVANDO...';button.setAttribute('aria-busy','true')}else{button.disabled=false;button.textContent=button.dataset.originalLabel||'SALVAR ALTERAÇÕES';button.removeAttribute('aria-busy')}};
 const getSession=()=>{try{return JSON.parse(sessionStorage.getItem('cmim_session')||'null')}catch{return null}};
 async function req(path,options={}){
@@ -22,7 +29,7 @@ async function req(path,options={}){
  if(!r.ok)throw Error(data.message||data.error||data.details||r.status+' Supabase');
  return data;
 }
-async function fetchData(){
+async function fetchData({throwOnError=false}={}){
  if($('admin-management-view')?.hidden)return;
  status('Buscando contas e cargos autorizados...');
  try{
@@ -35,7 +42,7 @@ async function fetchData(){
    req('/rest/v1/cmim_rank?id=eq.1&select=data')
   ]);
   Object.assign(state,{profiles,private:priv,defs,roles,rank:rankRows?.[0]?.data?.players||[],ready:true});render();if(selectedRegisteredId&&profiles.some(p=>p.id===selectedRegisteredId))openRegistered(selectedRegisteredId);status(profiles.length+' usuários cadastrados, '+defs.length+' cargos.');
- }catch(e){status('Erro ao carregar usuários: '+e.message,true)}
+ }catch(e){status('Erro ao carregar usuários: '+e.message,true);if(throwOnError)throw e}
 }
 let selectedRegisteredId=null;
 function displayRegistered(){
@@ -116,6 +123,8 @@ function renderAssigned(){
  const list=state.roles.filter(r=>r.user_id===selected);
  $('manage-role-list').innerHTML=list.length?list.map(r=>'<span class="cmim-badge" style="display:inline-block;margin:4px">'+esc(state.defs.find(d=>d.slug===r.role_slug)?.label||r.role_slug)+'</span>').join(''):'<span style="color:#b7cdb5">Nenhum cargo extra atribuído.</span>';
 }
+$('registered-tier-form')?.addEventListener('invalid',event=>explainInvalid(event,'registered-tier-feedback'),true);
+$('manage-user-form')?.addEventListener('invalid',event=>explainInvalid(event,'manage-user-status'),true);
 $('registered-players-search')?.addEventListener('input',displayRegistered);
 ['registered-filter-tier','registered-filter-lane','registered-filter-elo','registered-filter-rank'].forEach(id=>$(id)?.addEventListener('change',displayRegistered));
 $('registered-players-refresh')?.addEventListener('click',fetchData);
@@ -134,6 +143,10 @@ $('registered-tier-form')?.addEventListener('submit',async event=>{
   phone='+55'+digits;
  }
  const btn=event.currentTarget.querySelector('button[type="submit"]');saving(btn,true);
+ const expected={nick:$('registered-edit-nick').value.trim(),tag:$('registered-edit-tag').value.trim().toUpperCase(),
+  lane,secondary_lane:secondary,current_elo:$('registered-edit-elo').value||null,tier:tier||null,
+  rank_player_id:$('registered-edit-rank').value||null};
+ $('registered-tier-feedback').style.color='#c5f5c4';
  $('registered-tier-feedback').textContent='Salvando cadastro...';
  try{
   await req('/rest/v1/rpc/cmim_admin_update_player',{method:'POST',body:{
@@ -146,14 +159,18 @@ $('registered-tier-form')?.addEventListener('submit',async event=>{
   if((current.rank_player_id||null)!==newRank){
    await req('/rest/v1/rpc/cmim_admin_profile_set',{method:'POST',body:{p_user:current.id,p_rank_player_id:newRank,p_tier:tier||null}});
   }
-  await fetchData();
+  await fetchData({throwOnError:true});
+  const saved=state.profiles.find(p=>p.id===current.id);
+  if(!saved||Object.entries(expected).some(([key,value])=>(saved[key]??null)!==value))
+   throw Error('O servidor não confirmou todos os dados alterados. Atualize o cadastro e confira o resultado.');
   $('registered-tier-form').hidden=false;
   openRegistered(current.id);
   $('registered-tier-feedback').textContent='✓ Alterações salvas com sucesso. Pré-tier original preservado.';
   notice('Cadastro atualizado e confirmado pelo servidor.');
   status('Cadastro de '+$('registered-edit-nick').value.trim()+' atualizado com sucesso.');
  }catch(error){
-  $('registered-tier-feedback').textContent='Não foi possível salvar: '+error.message;
+  $('registered-tier-feedback').style.color='#ffaba6';
+  $('registered-tier-feedback').textContent='Não foi possível confirmar o salvamento: '+error.message;
   status('Falha ao atualizar jogador: '+error.message,true);notice('Não foi possível salvar: '+error.message,true);
  }finally{saving(btn,false)}
 });
@@ -169,6 +186,8 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
  saving(btn,true);
  try{
   const currentRank=state.profiles.find(p=>p.id===id);
+  const expected={nick:$('manage-user-nick').value.trim(),tag:$('manage-user-tag').value.trim().toUpperCase(),
+   lane,secondary_lane,rank_player_id:$('manage-user-rank').value||null};
   const phoneE164=(()=>{
     let digits=$('manage-user-phone').value.replace(/[^0-9]/g,'');
     if(!digits)return null;
@@ -187,7 +206,11 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
      p_user:id,p_rank_player_id:$('manage-user-rank').value||null,p_tier:currentRank?.tier||null
    }});
   }
-  await fetchData();$('manage-user-select').value=id;showUser();
+  await fetchData({throwOnError:true});
+  const saved=state.profiles.find(p=>p.id===id);
+  if(!saved||Object.entries(expected).some(([key,value])=>(saved[key]??null)!==value))
+    throw Error('O servidor não confirmou todos os dados alterados. Reabra o cadastro para conferir.');
+  $('manage-user-select').value=id;showUser();
   status('✓ Usuário atualizado com sucesso.');notice('Usuário atualizado e confirmado pelo servidor.');
  }catch(err){status('Falha: '+err.message,true);notice('Falha ao salvar usuário: '+err.message,true)}finally{saving(btn,false)}
 });
