@@ -83,3 +83,20 @@ dialog{width:min(880px,calc(100% - 24px))}
 #dialogFramework:empty{display:none}
 @media(max-width:1040px){.resource-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.diagnostic-options{grid-template-columns:1fr}}
 @media(max-width:680px){.academy-overview{grid-template-columns:repeat(2,minmax(0,1fr));margin:0 0 25px}.overview-stat{min-height:90px}.overview-stat span{font-size:32px}.study-plan,.resource-grid,.lesson-media-grid{grid-template-columns:1fr}.week-head{min-height:auto}.training-toolbar .select-label{width:100%}.diagnostic-panel{padding:20px}.diagnostic-question{font-size:16px}.diagnostic-options button{min-height:75px}.lesson-toolrow .action{width:100%}.media-item img{width:83px;height:62px}.resource-card img,.resource-icon{height:170px}.academy-disclaimer{font-size:10px}}
+
+
+/* CMIM Academy · transparência da curadoria audiovisual */
+.curation-note{display:flex;align-items:flex-start;gap:15px;margin:18px 0;padding:17px 20px;background:#282a1b;border:1px solid #8b7b3b;border-radius:11px;color:#d9e2c8}
+.curation-note strong{flex:none;color:#ffe06a;font-size:11px;letter-spacing:1.2px}
+.curation-note span{font-size:13px;line-height:1.6}
+.curation-note a{color:#ffe879;text-decoration:underline}
+.resource-tools{display:flex;gap:13px;flex-wrap:wrap;margin:10px 0 15px}
+.resource-tools label{display:flex;flex-direction:column;gap:6px;flex:1;min-width:220px;font-size:10px;font-weight:900;letter-spacing:1.2px;color:#c3d4be}
+.resource-tools input,.resource-tools select{min-height:43px}
+.resource-count{margin:13px 0;color:#d2dfc9;font-size:11px;letter-spacing:1.1px;font-weight:900}
+.resource-status{align-self:flex-start;display:inline-block;border-radius:5px;background:#28452c;color:#c9f4c6;border:1px solid #4f8956;padding:5px 8px;font-size:10px;font-weight:900;letter-spacing:.45px}
+.resource-status.search{background:#26394b;border-color:#55728e;color:#d5e8ff}
+.resource-status.archived{background:#50302b;border-color:#a46b55;color:#ffc8b4}
+.resource-archived{border-color:#765047;background:linear-gradient(160deg,#29211e,#1b1513)}
+.resource-archived .resource-cta{color:#ffb99c}
+@media(max-width:680px){.curation-note{flex-direction:column;gap:7px}.resource-tools label{min-width:100%}}
