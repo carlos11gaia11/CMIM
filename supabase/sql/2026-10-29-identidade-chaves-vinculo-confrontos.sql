@@ -130,16 +130,25 @@ begin
  elsif c.structure='copa' then
   if last=0 then
    pow2:=power(2,floor(log(2,n)))::int;playins:=n-pow2;free:=n-2*playins;match_no:=0;
-   for i in 1..free loop
-    match_no:=match_no+1;
-    insert into public.cmim_competition_matches(competition_id,round_number,match_number,team_a_id,team_b_id,winner_id,status,approved_by,approved_at)
-    values(c.id,1,match_no,ids[i],null,ids[i],'approved',auth.uid(),now());created:=created+1;
-   end loop;
-   for i in 1..playins loop
-    match_no:=match_no+1;
-    insert into public.cmim_competition_matches(competition_id,round_number,match_number,team_a_id,team_b_id)
-    values(c.id,1,match_no,ids[free+i],ids[n+1-i]);created:=created+1;
-   end loop;
+   if playins=0 then
+    -- Para 2,4,8,16... equipes, gerar duelos na primeira fase (sem folgas artificiais).
+    for i in 1..(n/2) loop
+     match_no:=match_no+1;
+     insert into public.cmim_competition_matches(competition_id,round_number,match_number,team_a_id,team_b_id)
+     values(c.id,1,match_no,ids[i],ids[n+1-i]);created:=created+1;
+    end loop;
+   else
+    for i in 1..free loop
+     match_no:=match_no+1;
+     insert into public.cmim_competition_matches(competition_id,round_number,match_number,team_a_id,team_b_id,winner_id,status,approved_by,approved_at)
+     values(c.id,1,match_no,ids[i],null,ids[i],'approved',auth.uid(),now());created:=created+1;
+    end loop;
+    for i in 1..playins loop
+     match_no:=match_no+1;
+     insert into public.cmim_competition_matches(competition_id,round_number,match_number,team_a_id,team_b_id)
+     values(c.id,1,match_no,ids[free+i],ids[n+1-i]);created:=created+1;
+    end loop;
+   end if;
   else
    select array_agg(winner_id order by match_number) into arr from public.cmim_competition_matches
    where competition_id=c.id and round_number=last and status='approved';
