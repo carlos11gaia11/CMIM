@@ -40,24 +40,28 @@
  function standings(comp){
   const registered=data.entries.filter(e=>e.competition_id===comp.id&&e.status==='approved');
   const teamIds=[...new Set(registered.map(e=>e.team_id))];
-  const rows=teamIds.map(id=>({id,team:data.squads.find(t=>t.id===id),w:0,l:0,p:0,mapW:0,mapL:0,played:0}));
+  const rows=teamIds.map(id=>({id,team:data.squads.find(t=>t.id===id),w:0,l:0,p:0,mapW:0,mapL:0,played:0,byes:0,buchholz:0}));
   const approved=data.matches.filter(m=>m.competition_id===comp.id&&m.status==='approved');
   for(const m of approved){
     const aa=rows.find(x=>x.id===m.team_a_id),bb=rows.find(x=>x.id===m.team_b_id);
-    if(!bb){if(aa&&m.winner_id===aa.id){aa.p+=3;aa.w++}continue}
+    if(!bb){if(aa&&m.winner_id===aa.id){aa.p+=3;aa.byes++}continue}
     if(!aa)continue;
     aa.played++;bb.played++;aa.mapW+=Number(m.score_a||0);aa.mapL+=Number(m.score_b||0);
     bb.mapW+=Number(m.score_b||0);bb.mapL+=Number(m.score_a||0);
     if(m.winner_id===aa.id){aa.w++;aa.p+=3;bb.l++}
     else if(m.winner_id===bb.id){bb.w++;bb.p+=3;aa.l++}
   }
-  return rows.sort((a,b)=>b.p-a.p||b.w-a.w||(b.mapW-b.mapL)-(a.mapW-a.mapL)||(a.team?.name||'').localeCompare(b.team?.name||'','pt-BR'));
+  for(const m of approved.filter(x=>x.team_b_id)){
+    const aa=rows.find(x=>x.id===m.team_a_id),bb=rows.find(x=>x.id===m.team_b_id);
+    if(aa&&bb){aa.buchholz+=bb.p;bb.buchholz+=aa.p}
+  }
+  return rows.sort((a,b)=>b.p-a.p||b.buchholz-a.buchholz||(b.mapW-b.mapL)-(a.mapW-a.mapL)||b.w-a.w||(a.team?.name||'').localeCompare(b.team?.name||'','pt-BR'));
  }
  function standingsMarkup(comp){
   const rows=standings(comp);
   if(!rows.length)return empty('Ainda não existem equipes homologadas nesta competição.');
-  return '<div class="cmim-detail-table-wrap"><table class="cmim-detail-table"><thead><tr><th>#</th><th>EQUIPE</th><th>J</th><th>V</th><th>D</th><th>MAPAS</th><th>PTS</th></tr></thead><tbody>'+
-    rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+teamLink(r.team)+'</td><td>'+r.played+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td>'+r.mapW+':'+r.mapL+'</td><td><strong>'+r.p+'</strong></td></tr>').join('')+
+  return '<div class="cmim-detail-table-wrap"><table class="cmim-detail-table"><thead><tr><th>#</th><th>EQUIPE</th><th>J</th><th>V</th><th>D</th><th>MAPAS</th><th>PTS</th><th>BUCHHOLZ</th><th>FOLGAS</th></tr></thead><tbody>'+
+    rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+teamLink(r.team)+'</td><td>'+r.played+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td>'+r.mapW+':'+r.mapL+'</td><td><strong>'+r.p+'</strong></td><td>'+r.buchholz+'</td><td>'+r.byes+'</td></tr>').join('')+
     '</tbody></table></div>';
  }
  function setHero({title,eyebrow,description,logo,league,labels=[],cta=[]}){
