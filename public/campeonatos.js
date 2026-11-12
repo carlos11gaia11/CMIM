@@ -23,7 +23,9 @@ const formatDate=x=>x?new Date(x).toLocaleDateString('pt-BR',{day:'2-digit',mont
 const readable=id=>esc(team(id)?.name||'A definir');
 const safeTeamId=id=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||''));
 const teamLink=id=>safeTeamId(id)&&team(id)?'<a href="./equipe.html?id='+encodeURIComponent(id)+'">'+readable(id)+'</a>':readable(id);
-const dateTime=x=>{if(!x)return 'Horário a definir';const d=new Date(x);return Number.isNaN(+d)?'Horário a definir':d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+const dateTime=x=>{if(!x)return 'Horário a definir';const d=new Date(x);return Number.isNaN(+d)?'Horário a definir':d.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+' (Brasília)'};
+const timeInput=iso=>{if(!iso)return '';const d=new Date(iso);if(Number.isNaN(+d))return '';const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);const get=x=>parts.find(p=>p.type===x)?.value||'';return get('year')+'-'+get('month')+'-'+get('day')+'T'+get('hour')+':'+get('minute')};
+const toISO=local=>{if(!local)return null;const date=new Date(local+':00-03:00');if(Number.isNaN(+date))throw Error('Data ou horário inválido.');return date.toISOString()};
 const own=()=>state.squads.filter(t=>t.owner_id===state.me?.id);
 const membersFor=id=>state.members.filter(x=>x.team_id===id);
 async function read(){
@@ -230,13 +232,17 @@ function renderAdminManage(){
  (entries.length?entries.map(e=>'<div class="cmim-match">'+readable(e.team_id)+' · '+esc(label(e.status))+
  '<div class="cmim-actions">'+(e.status==='pending'?'<button class="cmim-button" data-entry="'+e.id+'" data-entry-status="approved">✓ Aprovar time</button><button class="cmim-button ghost" data-entry="'+e.id+'" data-entry-status="rejected">Rejeitar</button>':'')+'</div></div>').join(''):'<p class="cmim-muted">Sem inscrições.</p>')+
  '<div class="cmim-actions" style="margin-top:21px"><button id="generate-round" class="cmim-button">⚔ GERAR '+(comp.structure==='liga'?'TABELA DA LIGA':'PRÓXIMA RODADA')+'</button><span class="cmim-muted">Rodada atual: '+currentRound+'</span></div>'+
+  '<div class="cmim-form-row" style="margin-top:12px"><label class="cmim-field">DATA/HORA PARA A PRÓXIMA RODADA (OPCIONAL)<input id="next-round-start" type="datetime-local" value="'+(currentRound===0?timeInput(comp.starts_at):'')+'"></label></div>'+
+  '<p class="cmim-muted">Partidas geradas entram na agenda. A data informada vale para a rodada, mas pode ser ajustada por jogo.</p>'+
+  (currentRound?'<div class="cmim-form-row"><label class="cmim-field">REAGENDAR RODADA<select id="bulk-round-number">'+[...new Set(games.map(g=>g.round_number))].sort((a,b)=>a-b).map(round=>'<option value="'+round+'">Rodada '+round+'</option>').join('')+'</select></label><label class="cmim-field">NOVO DIA E HORÁRIO<input id="bulk-round-start" type="datetime-local"></label><button type="button" id="bulk-round-save" class="cmim-button ghost">SALVAR HORÁRIO DA RODADA</button></div>':'')+
  '<h3 style="color:#ffe08d">CONFRONTOS</h3>'+
  (games.length?games.map(g=>'<form class="cmim-match" data-match-edit="'+g.id+'"><b>Rodada '+g.round_number+' · Jogo '+g.match_number+'</b>'+
  '<p>'+readable(g.team_a_id)+' × '+(g.team_b_id?readable(g.team_b_id):'FOLGA')+'</p>'+
+  (g.team_b_id?'<div class="cmim-form-row"><label class="cmim-field">DATA E HORA (BRASÍLIA)<input type="datetime-local" name="scheduled_at" value="'+timeInput(g.scheduled_at)+'"></label><button type="button" class="cmim-button ghost" data-save-schedule="'+g.id+'">SALVAR DIA/HORA</button></div>':'')+
  '<div class="cmim-form-row"><label class="cmim-field">PLACAR A<input name="score_a" type="number" min="0" max="5" value="'+g.score_a+'"></label><label class="cmim-field">PLACAR B<input name="score_b" type="number" min="0" max="5" value="'+g.score_b+'"></label>'+
  '<label class="cmim-field">STATUS<select name="status">'+['scheduled','live','pending','approved'].map(x=>'<option value="'+x+'" '+(g.status===x?'selected':'')+'>'+esc(label(x))+'</option>').join('')+'</select></label>'+
  '</div>'+
- '<div class="cmim-actions"><button class="cmim-button ghost">SALVAR RESULTADO</button>'+
+ '<div class="cmim-actions">'+(g.status==='approved'?'<span class="cmim-badge">✓ RESULTADO HOMOLOGADO (BLOQUEADO)</span>':'<button class="cmim-button ghost">SALVAR RESULTADO</button>')+
  (g.team_b_id&&g.status!=='approved'?(!g.room_id?
   '<button type="button" class="cmim-button" data-launch-match="'+g.id+'">🎮 CRIAR SELEÇÃO MD'+comp.series_games+'</button>':
   '<button type="button" class="cmim-button" data-sync-match="'+g.id+'">✓ SINCRONIZAR JOGO HOMOLOGADO</button><a class="cmim-button ghost" href="./admin.html?tab=matches">APROVAR NO ADM ↗</a>'):
@@ -250,6 +256,27 @@ function renderAdminManage(){
   try{await a.call('/rest/v1/cmim_competition_entries?id=eq.'+b.dataset.entry,{method:'PATCH',secure:true,body:{status:b.dataset.entryStatus}});await read()}catch(e){status(safeErr(e),true)}
  });
  $('generate-round').onclick=()=>generateRound(comp);
+ $('bulk-round-save')?.addEventListener('click',async event=>{
+  const round=Number($('bulk-round-number')?.value),value=$('bulk-round-start')?.value;
+  if(!round||!value)return status('Informe a rodada, dia e horário.',true);
+  if(!confirm('Reagendar todos os confrontos da rodada '+round+' para '+value+' (Brasília)?'))return;
+  const button=event.currentTarget;button.disabled=true;
+  try{
+   await a.call('/rest/v1/cmim_competition_matches?competition_id=eq.'+comp.id+'&round_number=eq.'+round+'&team_b_id=not.is.null',{
+    method:'PATCH',secure:true,body:{scheduled_at:toISO(value),updated_at:new Date().toISOString()}
+   });await read();status('✓ Rodada reagendada; a agenda foi sincronizada.');
+  }catch(e){status('Não foi possível reagendar: '+safeErr(e),true)}finally{button.disabled=false}
+ });
+ box.querySelectorAll('[data-save-schedule]').forEach(button=>button.onclick=async()=>{
+  const match=games.find(g=>g.id===button.dataset.saveSchedule);if(!match)return;
+  const form=button.closest('[data-match-edit]'),value=form.querySelector('[name=scheduled_at]')?.value;
+  button.disabled=true;
+  try{await a.call('/rest/v1/cmim_competition_matches?id=eq.'+match.id,{
+    method:'PATCH',secure:true,body:{scheduled_at:toISO(value),updated_at:new Date().toISOString()}
+   });await read();status('✓ Dia/horário salvo e agenda sincronizada.')}
+  catch(e){status('Falha ao agendar: '+safeErr(e),true)}
+  finally{button.disabled=false}
+ });
  box.querySelectorAll('[data-launch-match]').forEach(b=>b.onclick=()=>launchTournamentMatch(b.dataset.launchMatch,comp));
  box.querySelectorAll('[data-sync-match]').forEach(b=>b.onclick=()=>syncTournamentMatch(b.dataset.syncMatch));
  box.querySelectorAll('[data-match-edit]').forEach(form=>form.onsubmit=async e=>{
@@ -320,9 +347,18 @@ async function generateRound(comp){
  if(!confirm('Gerar confrontos de '+comp.title+'? O servidor impedirá rodadas duplicadas, revanche indevida e folgas repetidas.'))return;
  const button=$('generate-round');if(button)button.disabled=true;
  try{
+  const requestedStart=$('next-round-start')?.value||'';
+  const requestedISO=toISO(requestedStart);
   const result=await a.call('/rest/v1/rpc/cmim_competition_generate_round',{
    method:'POST',secure:true,body:{p_competition:comp.id}});
-  await read();status('✓ '+result.matchesCreated+' confronto(s) gerados na rodada '+result.round+'.'+(result.byeTeam?' Uma folga foi atribuída.':''));
+  if(requestedISO){
+   try{
+    await a.call('/rest/v1/cmim_competition_matches?competition_id=eq.'+comp.id+'&round_number=eq.'+Number(result.round)+'&team_b_id=not.is.null',{
+      method:'PATCH',secure:true,body:{scheduled_at:requestedISO,updated_at:new Date().toISOString()}
+    });
+   }catch(scheduleError){await read();throw Error('Confrontos criados, mas sem o horário solicitado: '+safeErr(scheduleError))}
+  }
+  await read();status('✓ '+result.matchesCreated+' confronto(s) gerados na rodada '+result.round+'. Partidas adicionadas à agenda.'+(result.byeTeam?' Uma folga foi atribuída.':''));
  }catch(error){status('Erro no emparelhamento: '+safeErr(error),true)}
  finally{if(button)button.disabled=false}
 }
