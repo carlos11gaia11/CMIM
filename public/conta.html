@@ -10,7 +10,7 @@
 <p class="cmim-info">O Riot ID é composto de <strong>Nick#TAG</strong> (ex.: Gaia#BR1). Use seu nick correto para que o CMIM consiga relacionar suas partidas e estatísticas. Nome real e e-mail não aparecem publicamente.</p>
 <form id="signup-form"><div class="cmim-form-row">
 <label class="cmim-field">SEU NOME<input name="real_name" maxlength="90" minlength="2" autocomplete="name" placeholder="Nome real" required></label>
-<label class="cmim-field">NICK + #TAG<input name="riot_id" maxlength="39" placeholder="Gaia#BR1" pattern=".{2,32}#[A-Za-z0-9]{3,6}" title="Exemplo Gaia#BR1" required></label>
+<label class="cmim-field">NICK + #TAG<input name="riot_id" maxlength="39" placeholder="Gaia#BR1" pattern="[^#]{2,32}#[^\s#]{3,6}" title="Exemplo Gaia#BR1 ou さくら#JP1" required></label>
 <label class="cmim-field">LANE PRIMÁRIA<select name="lane" required><option value="">Selecione a lane</option><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
 <label class="cmim-field">LANE SECUNDÁRIA<select name="secondary_lane" required><option value="">Selecione a lane</option><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
 <label class="cmim-field">ELO ATUAL NO LEAGUE OF LEGENDS<select name="current_elo" required>
