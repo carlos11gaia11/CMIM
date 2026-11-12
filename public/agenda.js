@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!iso)return '';
   const d=new Date(iso);
   if(Number.isNaN(d.getTime()))return '';
-  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false,hourCycle:'h23'}).formatToParts(d);
   const item=k=>parts.find(p=>p.type===k)?.value||'';
   return item('year')+'-'+item('month')+'-'+item('day')+'T'+item('hour')+':'+item('minute');
  };
