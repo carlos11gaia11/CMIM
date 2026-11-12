@@ -36,7 +36,7 @@
  return '+55'+digits;
 }
 async function signUp(values){
-  const nickTag=String(values.riot_id||'').trim().match(/^(.{2,32})#([A-Za-z0-9]{3,6})$/);
+  const nickTag=String(values.riot_id||'').trim().match(/^([^#]{2,32})#([^\s#]{3,6})$/u);
   if(!nickTag)throw Error('Use um nick com # e tag de 3 a 6 caracteres. Ex.: Gaia#BR1.');
   if(!LANES.includes(values.lane)||!LANES.includes(values.secondary_lane)||values.lane===values.secondary_lane)
    throw Error('Escolha duas lanes diferentes.');
