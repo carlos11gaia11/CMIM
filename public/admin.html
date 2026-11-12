@@ -107,9 +107,10 @@
             <section class="admin-card" id="admin-registered-players-section">
               <header class="card-header"><div><span class="card-step">01</span><div><h3>Todos os usuários cadastrados</h3>
                 <p>Inclui jogadores novos, mesmo sem temporada ou vínculo com o Ranking. Pré-tier vem do elo informado; o tier atual pode ser ajustado pelo Conselho.</p></div></div>
-                <button type="button" id="registered-players-refresh" class="admin-main-button">↻ ATUALIZAR</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="registered-players-refresh" class="admin-main-button">↻ ATUALIZAR</button><button type="button" id="registered-riot-sync" class="admin-main-button">↻ CONSULTAR E ATUALIZAR RIOT</button></div>
               </header>
               <div class="card-body">
+                <p id="registered-riot-sync-status" class="field-help" role="status" aria-live="polite">A sincronização consulta a Solo/Duo da Riot no servidor BR1 e preserva o pré-tier original.</p>
                 <label for="registered-players-search">BUSCAR NICK OU RIOT ID<input id="registered-players-search" type="search" placeholder="Ex.: Gaia#BR1"></label>
                 <div class="registered-player-filters">
                   <label>FILTRAR POR TIER<select id="registered-filter-tier"><option value="">Todos os tiers</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option value="NONE">Sem tier</option></select></label>
@@ -125,7 +126,7 @@
                     <label>NOME REAL (PRIVADO)<input id="registered-edit-name" maxlength="90" placeholder="Nome real não informado"></label>
                     <label>TELEFONE (PRIVADO)<input id="registered-edit-phone" type="tel" maxlength="20" placeholder="(11) 99999-9999"></label>
                     <label>NICK<input id="registered-edit-nick" minlength="2" maxlength="32" required></label>
-                    <label>TAG RIOT<input id="registered-edit-tag" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
+                    <label>TAG RIOT<input id="registered-edit-tag" maxlength="6" pattern="[^\s#]{3,6}" required></label>
                     <label>LANE PRIMÁRIA<select id="registered-edit-lane" required><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
                     <label>LANE SECUNDÁRIA<select id="registered-edit-secondary" required><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
                     <label>ELO ATUAL<select id="registered-edit-elo">
