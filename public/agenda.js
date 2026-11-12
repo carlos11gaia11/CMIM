@@ -47,14 +47,14 @@ document.addEventListener('DOMContentLoaded',()=>{
  }
  function render(){
   const search=$('agenda-search').value.trim().toLocaleLowerCase('pt-BR');
-  const category=$('agenda-category').value,scope=$('agenda-scope').value,now=Date.now();
+  const category=$('agenda-category').value,scope=$('agenda-scope').value;
   const options=[...new Set(state.events.map(e=>e.type))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   $('agenda-category').innerHTML='<option value="">Todas as categorias</option>'+options.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
   $('agenda-category').value=options.includes(category)?category:'';
   const visible=state.events.filter(e=>{
    if($('agenda-category').value&&e.type!==$('agenda-category').value)return false;
    if(search&&!(e.title+' '+e.type+' '+e.description+' '+(e.location||'')).toLocaleLowerCase('pt-BR').includes(search))return false;
-   const completed=e.status==='completed'||e.status==='closed'||(e.starts_at&&Date.parse(e.starts_at)<now);
+   const completed=e.status==='completed'||e.status==='closed';
    if(scope==='upcoming'&&completed)return false;
    if(scope==='finished'&&!completed)return false;
    return true;
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    const title=comp?(teamA||'A definir')+' × '+(teamB||'A definir'):e.title;
    const desc=competition?(competition.title+' · Rodada '+comp.round_number+' · Jogo '+comp.match_number):e.description;
    const statusName={scheduled:'Agendado',open:'Em andamento',closed:'Encerrado',completed:'Concluído'}[e.status]||e.status;
-   const link=competition&&safeUuid(competition.id)?'<a href="./ligas.html#chaveamentos">Ver campeonato</a>':'';
+   const link=competition&&safeUuid(competition.id)?'<a href="./ligas.html?campeonato='+encodeURIComponent(competition.id)+'#chaveamentos">Ver chave e classificação</a>':'';
    return '<article class="event"><div><div class="meta"><span class="pill">'+esc(e.type)+'</span><span>'+esc(statusName)+'</span></div>'+
     '<h3>'+esc(title)+'</h3><div class="when">'+esc(fmtDate(e.starts_at))+'</div>'+
     (e.ends_at?'<p>Até '+esc(fmtDate(e.ends_at))+'</p>':'')+
