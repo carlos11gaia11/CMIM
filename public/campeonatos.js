@@ -194,7 +194,7 @@ function renderOverview(){
    '<div class="cmim-bracket" role="region" aria-label="Confrontos por rodada">'+rounds.map(round=>
     '<section class="cmim-bracket-round" aria-label="Rodada '+round+'"><h4><span>RODADA</span> '+round+'</h4>'+
     list.filter(m=>m.round_number===round).map(m=>
-      '<article class="cmim-bracket-match"><span class="cmim-bracket-status">'+esc(m.team_b_id?label(m.status):'FOLGA')+'</span>'+
+      '<article class="cmim-bracket-match"><span class="cmim-bracket-status">'+esc(m.team_b_id?label(m.status)+' · '+dateTime(m.scheduled_at):'FOLGA')+'</span>'+
       '<div class="cmim-bracket-team"><b>'+teamLink(m.team_a_id)+'</b><strong>'+(m.status==='approved'?Number(m.score_a):'—')+'</strong></div>'+
       '<div class="cmim-bracket-team"><b>'+(m.team_b_id?teamLink(m.team_b_id):'FOLGA · AVANÇA')+'</b><strong>'+(m.team_b_id&&m.status==='approved'?Number(m.score_b):'—')+'</strong></div>'+
       (m.room_id?'<a class="cmim-match-link" href="./selecao.html?room='+encodeURIComponent(m.room_id)+'">▶ Assistir seleção</a>':'')+
