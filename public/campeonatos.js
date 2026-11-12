@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
 const a=window.CMIMAuth,$=id=>document.getElementById(id),esc=a.esc;
 const txt=x=>String(x??'');
 const initialLeague=new URLSearchParams(location.search).get('liga');
-const state={me:null,admin:false,comps:[],entries:[],squads:[],members:[],profiles:[],matches:[],invites:[],selected:null,league:['open','academy','major'].includes(initialLeague)?initialLeague:'all'};
+const initialCompetition=new URLSearchParams(location.search).get('campeonato');
+const state={me:null,admin:false,comps:[],entries:[],squads:[],members:[],profiles:[],matches:[],invites:[],selected:/^[a-f0-9-]{36}$/i.test(initialCompetition||'')?initialCompetition:null,league:['open','academy','major'].includes(initialLeague)?initialLeague:'all'};
 const safeErr=e=>txt(e?.message||e);
 const status=(message,bad=false)=>{
  const node=$('champ-status');node.textContent=message;node.className='cmim-status'+(bad?' error':'');
