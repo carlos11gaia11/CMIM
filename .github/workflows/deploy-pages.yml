@@ -39,6 +39,12 @@ jobs:
       - name: Testar draft
         run: npm test
 
+      - name: Verificar sintaxe dos scripts da agenda e torneios
+        run: |
+          node --check public/agenda.js
+          node --check public/campeonatos.js
+          node --check public/cmim-competitive-details.js
+
       - name: Compilar CMIM
         run: npm run build
         env:
