@@ -25,7 +25,7 @@ const readable=id=>esc(team(id)?.name||'A definir');
 const safeTeamId=id=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||''));
 const teamLink=id=>safeTeamId(id)&&team(id)?'<a href="./equipe.html?id='+encodeURIComponent(id)+'">'+readable(id)+'</a>':readable(id);
 const dateTime=x=>{if(!x)return 'Horário a definir';const d=new Date(x);return Number.isNaN(+d)?'Horário a definir':d.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+' (Brasília)'};
-const timeInput=iso=>{if(!iso)return '';const d=new Date(iso);if(Number.isNaN(+d))return '';const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);const get=x=>parts.find(p=>p.type===x)?.value||'';return get('year')+'-'+get('month')+'-'+get('day')+'T'+get('hour')+':'+get('minute')};
+const timeInput=iso=>{if(!iso)return '';const d=new Date(iso);if(Number.isNaN(+d))return '';const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false,hourCycle:'h23'}).formatToParts(d);const get=x=>parts.find(p=>p.type===x)?.value||'';return get('year')+'-'+get('month')+'-'+get('day')+'T'+get('hour')+':'+get('minute')};
 const toISO=local=>{if(!local)return null;const date=new Date(local+':00-03:00');if(Number.isNaN(+date))throw Error('Data ou horário inválido.');return date.toISOString()};
 const own=()=>state.squads.filter(t=>t.owner_id===state.me?.id);
 const membersFor=id=>state.members.filter(x=>x.team_id===id);
@@ -376,7 +376,7 @@ $('admin-comp-create').onsubmit=async e=>{
  try{
   await a.call('/rest/v1/cmim_competitions',{method:'POST',secure:true,body:{
    title:txt(f.get('title')).trim(),description:txt(f.get('description')).trim(),structure:f.get('structure'),league_tier:txt(f.get('league_tier')).toLowerCase(),
-   series_games:Number(f.get('series_games')),format:'MD'+f.get('series_games'),starts_at:new Date(f.get('starts_at')).toISOString(),
+   series_games:Number(f.get('series_games')),format:'MD'+f.get('series_games'),starts_at:toISO(f.get('starts_at')),
    max_teams:Number(f.get('max_teams')),swiss_rounds:Number(f.get('swiss_rounds')||5),status:f.get('status')
   }});
   e.currentTarget.reset();status('✓ Campeonato criado.');await read();
