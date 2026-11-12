@@ -128,6 +128,34 @@ $('manage-user-form')?.addEventListener('invalid',event=>explainInvalid(event,'m
 $('registered-players-search')?.addEventListener('input',displayRegistered);
 ['registered-filter-tier','registered-filter-lane','registered-filter-elo','registered-filter-rank'].forEach(id=>$(id)?.addEventListener('change',displayRegistered));
 $('registered-players-refresh')?.addEventListener('click',fetchData);
+$('registered-riot-sync')?.addEventListener('click', async event => {
+ const button = event.currentTarget;
+ const feedback = $('registered-riot-sync-status');
+ if (!confirm('Consultar a API oficial da Riot e atualizar o elo e o tier atual dos perfis encontrados? O pré-tier será mantido e jogadores sem Solo/Duo não serão alterados.')) return;
+ const session = getSession();
+ if (!session?.access_token) { status('Entre com a conta ADM primeiro.',true); return; }
+ saving(button,true);
+ if (feedback) feedback.textContent='Consultando Riot IDs e elos Solo/Duo...';
+ try {
+  const response=await fetch(BASE+'/functions/v1/cmim-riot-tiers',{
+   method:'POST', cache:'no-store',
+   headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
+   body:JSON.stringify({apply:true})
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw Error(data.error||data.message||'Riot/Supabase: HTTP '+response.status);
+  await fetchData({throwOnError:true});
+  const missing=Array.isArray(data.notFound)?data.notFound:[];
+  const unranked=Array.isArray(data.noSolo)?data.noSolo:[];
+  if(feedback) feedback.textContent='Riot: '+(data.rankedSolo||0)+' com Solo/Duo encontrado(s), '+(data.changed||0)+' tier(s) atualizado(s). '
+   +missing.length+' Riot ID(s) não localizados, '+unranked.length+' sem Solo/Duo no BR1.'
+   +(missing.length?' IDs não encontrados: '+missing.join(', ')+'.':'');
+  notice('Sincronização Riot concluída. '+(data.changed||0)+' perfil(is) atualizado(s).');
+ }catch(error){
+  if(feedback)feedback.textContent='Sincronização não concluída: '+error.message;
+  notice('Falha na sincronização Riot: '+error.message,true);
+ }finally{saving(button,false)}
+});
 $('registered-tier-form')?.addEventListener('submit',async event=>{
  event.preventDefault();
  const current=state.profiles.find(p=>p.id===selectedRegisteredId);
