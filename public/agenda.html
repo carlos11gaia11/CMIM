@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0d0c">
+<meta name="description" content="Agenda pública de eventos e partidas oficiais da Comunidade Mais Insalubre do Mundo.">
+<title>Agenda de eventos e partidas | CMIM</title>
+<link rel="icon" href="./assets/branding/cmim-main.webp" type="image/webp">
+<link rel="stylesheet" href="./cmim-auth.css"><link rel="stylesheet" href="./cmim-modern.css">
+<script defer src="./cmim-auth.js"></script><script defer src="./agenda.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#0b0d0c;--panel:#171d18;--line:#394739;--muted:#b0c1b2;--yellow:#ffe03b}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;color:#f3f5eb;background:var(--bg);font:15px/1.55 system-ui,Arial,sans-serif}
+a{color:inherit}header{border-bottom:1px solid #344236;background:#121712}header>div{max-width:1150px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:20px 22px}
+header strong{font-size:23px;letter-spacing:.07em;color:var(--yellow)}nav{display:flex;gap:16px;flex-wrap:wrap}nav a{text-decoration:none;font-weight:700;font-size:13px}
+main{max-width:1150px;margin:0 auto;padding:38px 20px 80px}h1{font-size:clamp(36px,7vw,66px);line-height:1.05;margin:12px 0}h1 span{color:var(--yellow)}
+h2{font-size:24px;margin:0 0 15px}.intro{color:var(--muted);max-width:760px}.eyebrow{color:var(--yellow);font-weight:800;letter-spacing:.15em;font-size:11px}
+.panel{border:1px solid var(--line);background:var(--panel);border-radius:13px;padding:23px;margin-top:24px}
+.filters,.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.filters>label{flex:1 1 220px}
+label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:750;color:#d6dfd2}
+input,select,textarea,button{font:inherit}input,select,textarea{width:100%;background:#0e1511;color:#fff;border:1px solid #536052;border-radius:6px;padding:11px 12px}
+textarea{resize:vertical;min-height:90px}input:focus,select:focus,textarea:focus{outline:2px solid var(--yellow);outline-offset:2px}
+button{cursor:pointer;background:var(--yellow);color:#131609;border:0;border-radius:6px;padding:11px 17px;font-weight:800}
+button.secondary{background:#29372c;color:#f5f7ee;border:1px solid #526350}
+button:disabled{opacity:.55;cursor:wait}.event-grid{display:grid;gap:14px;margin-top:16px}
+.event{border:1px solid #405041;background:#141a15;border-radius:10px;padding:18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px}
+.event h3{font-size:19px;margin:7px 0}.event p{color:var(--muted);margin:6px 0}.event .meta{display:flex;flex-wrap:wrap;gap:8px;color:#c5d1c2;font-size:13px}
+.event .pill{color:var(--yellow);border:1px solid #726d32;background:#35331b;border-radius:20px;font-size:11px;font-weight:800;padding:4px 9px}
+.event .when{font-size:14px;color:#eff0e6;font-weight:800}.event aside{display:flex;align-items:start;flex-direction:column;gap:8px;min-width:120px}
+.event a{color:var(--yellow)}.event button{font-size:12px}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.wide{grid-column:1/-1}.hint{font-size:12px;color:var(--muted)}
+#agenda-feedback,#agenda-admin-feedback{min-height:22px;overflow-wrap:anywhere}
+#agenda-admin-form[hidden],#agenda-admin[hidden]{display:none!important}
+@media(max-width:690px){.event{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.wide{grid-column:auto}header>div{align-items:start;flex-direction:column}nav{gap:12px}}
+</style>
+</head>
+<body data-no-auth-badge="1">
+<header><div><a href="./" style="text-decoration:none"><strong>CMIM<span style="color:#fff">.</span></strong> · AGENDA</a><nav aria-label="Navegação"><a href="./">Portal</a><a href="./ligas.html">Torneios e ligas</a><a href="./ranking.html">Ranking</a><a href="./perfil.html">Perfil</a></nav></div></header>
+<main>
+<span class="eyebrow">EVENTOS DA COMUNIDADE · HORÁRIO DE BRASÍLIA (UTC−03)</span>
+<h1>AGENDA <span>CMIM.</span></h1>
+<p class="intro">Campeonatos, partidas, treinos, encontros e eventos especiais em um só lugar. Quando uma partida é criada no circuito, ela aparece aqui automaticamente. O ADM pode alterar a programação.</p>
+<section class="panel" aria-labelledby="agenda-title">
+<h2 id="agenda-title">Programação</h2>
+<div class="filters">
+<label>Buscar evento ou time<input type="search" id="agenda-search" placeholder="Digite um título, time ou competição"></label>
+<label>Categoria<select id="agenda-category"><option value="">Todas as categorias</option></select></label>
+<label>Exibir<select id="agenda-scope"><option value="upcoming">Próximos / a definir</option><option value="all">Todos</option><option value="finished">Concluídos / anteriores</option></select></label>
+<button class="secondary" type="button" id="agenda-refresh">↻ Atualizar</button>
+</div>
+<p id="agenda-feedback" class="hint" role="status" aria-live="polite">Carregando agenda…</p>
+<div id="agenda-events" class="event-grid" aria-live="polite"></div>
+</section>
+<section id="agenda-admin" class="panel" aria-labelledby="agenda-admin-title" hidden>
+<span class="eyebrow">ACESSO EXCLUSIVO DO ADMINISTRADOR</span><h2 id="agenda-admin-title">Criar e editar eventos</h2>
+<p class="hint">Cadastre eventos de qualquer categoria, não apenas torneios CMIM. Para partidas oficiais, o horário é alterado diretamente no confronto e a agenda sincroniza sozinha.</p>
+<form id="agenda-admin-form">
+<input type="hidden" id="agenda-edit-id"><input type="hidden" id="agenda-match-id">
+<div class="fields">
+<label class="wide">Nome do evento<input id="agenda-title-input" maxlength="140" minlength="3" required placeholder="Ex.: Treino de LoL, reunião, transmissão..."></label>
+<label>Tipo de evento<input id="agenda-type-input" list="agenda-type-options" maxlength="45" required placeholder="Ex.: Treino"><datalist id="agenda-type-options"><option value="Treino"></option><option value="Comunidade"></option><option value="Reunião"></option><option value="Workshop"></option><option value="Transmissão"></option><option value="Torneio"></option><option value="Inhouse"></option><option value="Outro"></option></datalist></label>
+<label>Status<select id="agenda-status-input"><option value="scheduled">Agendado</option><option value="open">Em andamento</option><option value="closed">Encerrado</option><option value="completed">Concluído</option></select></label>
+<label>Data e hora de início<input type="datetime-local" id="agenda-start-input" required></label>
+<label>Data e hora de término (opcional)<input type="datetime-local" id="agenda-end-input"></label>
+<label class="wide">Local / canal (opcional)<input id="agenda-location-input" maxlength="180" placeholder="Ex.: Discord CMIM"></label>
+<label class="wide">Descrição<textarea id="agenda-description-input" maxlength="1500" placeholder="Informações, participantes e regras"></textarea></label>
+</div>
+<p id="agenda-admin-feedback" class="hint" role="status" aria-live="polite"></p>
+<div class="actions"><button id="agenda-submit" type="submit">＋ Salvar evento</button><button type="button" id="agenda-cancel" class="secondary">Cancelar edição</button><button type="button" id="agenda-delete" class="secondary" hidden>Excluir evento</button></div>
+</form>
+</section>
+</main>
+</body></html>
