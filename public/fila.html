@@ -32,14 +32,14 @@
   <div class="hero-copy">
     <div class="eyebrow"><span class="live-dot"></span> CMIM / IN HOUSE COMPETITIVE</div>
     <h1 id="pageTitle">SUA LANE.<br><em>SUA VEZ.</em></h1>
-    <p>O WhatsApp organiza a lista. Aqui você garante sua vaga: escolha uma das cinco lanes, entre na sala no horário marcado e confirme sua presença. Com dez jogadores, o draft começa automaticamente.</p>
+    <p>Escolha uma sala In-House ou um torneio de quatro times. Selecione sua lane e confirme presença no horário marcado. Quando todos confirmarem, o draft começa automaticamente.</p>
     <div class="hero-steps"><span><b>01</b> ESCOLHER LANE</span><i></i><span><b>02</b> CONFIRMAR</span><i></i><span><b>03</b> DRAFT</span></div>
   </div>
-  <div class="hero-visual" aria-label="Dez vagas distribuídas em cinco lanes">
-    <div class="hero-visual-top"><span>FORMAÇÃO OFICIAL</span><span class="hero-label">5v5</span></div>
-    <div class="hero-numbers"><strong>10</strong><div><b>JOGADORES</b><span>05 LANES · 02 VAGAS POR LANE</span></div></div>
+  <div class="hero-visual" aria-label="Vagas distribuídas nas cinco lanes conforme a modalidade">
+    <div class="hero-visual-top"><span>FORMAÇÃO OFICIAL</span><span id="heroFormat" class="hero-label">IN-HOUSE · 2 TIMES</span></div>
+    <div class="hero-numbers"><strong id="heroPlayerCount">10</strong><div><b>JOGADORES</b><span>05 LANES · <span id="heroLaneCapacity">02 VAGAS POR LANE</span></span></div></div>
     <div class="hero-lanes" aria-hidden="true"><span>TOP</span><span>JG</span><span>MID</span><span>ADC</span><span>SUP</span></div>
-    <p>Vagas controladas em tempo real. A terceira inscrição na mesma lane é bloqueada.</p>
+    <p id="heroRule">Vagas controladas em tempo real. A terceira inscrição na mesma lane é bloqueada.</p>
   </div>
  </section>
  <p id="message" role="status" aria-live="polite" class="notice" hidden></p>
@@ -87,7 +87,7 @@
       <div id="queueSummary" class="room-note">Aguardando inscrições.</div>
     </section>
     <section class="panel lane-section" aria-labelledby="lanesHeading">
-      <div class="section-heading lined"><div><span class="kicker">DISTRIBUIÇÃO DA FILA</span><h2 id="lanesHeading">Vagas por lane</h2></div><small class="subtext">02 por posição · 10 no total</small></div>
+      <div class="section-heading lined"><div><span class="kicker">DISTRIBUIÇÃO DA FILA</span><h2 id="lanesHeading">Vagas por lane</h2></div><small class="subtext" id="capacitySubtitle">02 vagas por posição · 10 participantes</small></div>
       <div id="laneBoard" class="lane-board"></div>
     </section>
     <section class="panel participants-section" aria-labelledby="playersHeading">
@@ -99,8 +99,8 @@
       <p id="turnLabel" class="draft-turn">Aguardando definição dos capitães.</p>
       <div id="teams" class="teams"></div>
       <h3 class="draft-subtitle">Disponíveis para escolha</h3>
-      <div id="available" class="available"></div>
-      <p class="subtext draft-footer">Cada capitão realiza quatro escolhas, alternando A–B, com 60 segundos por escolha. Ao terminar, os dois times ficam visíveis nesta sala.</p>
+      <div id="available" class="available"></div><div id="pickHistory" class="pick-history" hidden></div>
+      <p class="subtext draft-footer">No In-House: escolhas A–B. No torneio de 4 times: snake A–B–C–D–D–C–B–A, com uma lane de cada por equipe. Cada escolha tem 60 segundos.</p>
       <a id="nextStage" class="btn primary next-stage" href="./selecao.html" hidden>Abrir seleção de campeões ↗</a><p id="nextStageNote" class="subtext" hidden>Próxima etapa opcional: a seleção de campeões é uma ferramenta separada; os times ainda não são transferidos automaticamente.</p>
     </section>
     <details class="panel report-panel">

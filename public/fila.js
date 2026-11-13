@@ -1,7 +1,10 @@
-/* CMIM — fila online, limite de duas vagas por lane controlado no PostgreSQL. */
+/* CMIM — fila 2 ou 4 equipes, capacidade e picks controlados pelo PostgreSQL. */
 (() => {
   'use strict';
   const LANES = ['TOP','JG','MID','ADC','SUP'];
+  const FOUR_ORDER=['A','B','C','D','D','C','B','A'];
+  const teamCount=r=>r?.team_count===4?4:2;
+  const totalPlayers=r=>teamCount(r)*5;
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"\'":'&#39;'}[c]));
   const state = {me:null,rooms:[],room:null,roomId:null,entries:[],picks:[],busy:false,loading:false,laneRoom:null,laneDirty:false};
@@ -26,7 +29,7 @@
   function activeEntries(){return state.entries.filter(e=>['queued','confirmed'].includes(e.status));}
   function mine(){return state.entries.find(e=>e.user_id===state.me?.id);}
   function membersFor(lane){return activeEntries().filter(e=>e.lane===lane);}
-  function laneAvailable(lane){return membersFor(lane).filter(e=>e.user_id!==state.me?.id).length<2;}
+  function laneAvailable(lane){return membersFor(lane).filter(e=>e.user_id!==state.me?.id).length<teamCount(state.room);}
 
   async function load(){
     if(state.loading)return;
@@ -67,7 +70,7 @@
       if(!LANES.includes(option.value))continue;
       const taken=membersFor(option.value).length;
       const current=own?.lane===option.value && ['queued','confirmed'].includes(own?.status);
-      option.textContent=option.value+' · '+taken+'/2 vagas';
+      option.textContent=option.value+' · '+taken+'/'+teamCount(r)+' vagas';
       option.disabled=!current&&!laneAvailable(option.value);
     }
     if(select.selectedOptions[0]?.disabled)select.value='';
@@ -77,33 +80,40 @@
     const r=state.room, status=roomStatus(r), entries=activeEntries();
     const confirmed=entries.filter(e=>e.status==='confirmed'), own=mine();
     const rooms=$('rooms');
-    rooms.innerHTML=state.rooms.length?state.rooms.map(x=>`<button type="button" data-room="${x.id}" class="${x.id===r?.id?'active':''}" aria-pressed="${x.id===r?.id}"><strong>${esc(x.title)}</strong><small>${fmt(x.opens_at)} · ${esc(statusLabel[roomStatus(x)]||roomStatus(x))}</small></button>`).join(''):'<p class="subtext">Ainda não há salas agendadas. Volte no horário divulgado no WhatsApp.</p>';
+    rooms.innerHTML=state.rooms.length?state.rooms.map(x=>`<button type="button" data-room="${x.id}" class="${x.id===r?.id?'active':''}" aria-pressed="${x.id===r?.id}"><strong>${esc(x.title)}</strong><small>${fmt(x.opens_at)} · ${x.team_count===4?'TORNEIO / 4 TIMES':'NORMAL / 2 TIMES'} · ${esc(statusLabel[roomStatus(x)]||roomStatus(x))}</small></button>`).join(''):'<p class="subtext">Ainda não há salas agendadas. Volte no horário divulgado no WhatsApp.</p>';
     $('roomTitle').textContent=r?.title||'Nenhuma sala disponível';
+    const target=totalPlayers(r),limit=teamCount(r);
+    $('heroPlayerCount').textContent=String(target);
+    $('heroLaneCapacity').textContent=String(limit).padStart(2,'0')+' VAGAS POR LANE';
+    $('heroFormat').textContent=limit===4?'TORNEIO · 4 TIMES':'IN-HOUSE · 2 TIMES';
+    $('capacitySubtitle').textContent=limit===4?'04 vagas por posição · 20 participantes':'02 vagas por posição · 10 participantes';
+    $('heroRule').textContent=limit===4?'O torneio reúne vinte jogadores, quatro em cada lane, para formar quatro equipes completas.':'Vagas controladas em tempo real. A terceira inscrição na mesma lane é bloqueada.';
     $('roomTime').textContent=r?'Abre '+fmt(r.opens_at)+' · Check-in até '+fmt(r.closes_at):'Acompanhe os horários divulgados pela administração.';
     const statusNode=$('roomStatus');
     statusNode.className='status-chip '+status;
     statusNode.textContent=statusLabel[status]||'AGUARDANDO';
-    $('confirmedCount').innerHTML=confirmed.length+'<span>/10</span>';
-    $('confirmedBar').style.width=(confirmed.length*10)+'%';
+    $('confirmedCount').innerHTML=confirmed.length+'<span>/'+target+'</span>';
+    $('confirmedBar').style.width=(confirmed.length/target*100)+'%';
+    $('confirmedTrack').setAttribute('aria-valuemax',String(target));
     $('confirmedTrack').setAttribute('aria-valuenow',String(confirmed.length));
-    $('queueSummary').textContent=r?.status==='finished'?'Draft concluído. Equipes prontas!':status==='drafting'?'Os dez jogadores confirmaram. Capitães definidos e draft em andamento.':status==='paused'?'Draft pausado pela administração. Aguarde a retomada.':status==='closed'?'Check-in encerrado. O ADM pode ajustar presenças antes do draft.':r ? entries.length+'/10 vagas ocupadas · '+confirmed.length+'/10 confirmados. As vagas são distribuídas em duas por lane.' : 'Selecione uma sala para acompanhar a fila.';
+    $('queueSummary').textContent=r?.status==='finished'?'Draft concluído. '+limit+' equipes de cinco jogadores estão formadas!':status==='drafting'?'Todos os '+target+' jogadores confirmaram. O draft está em andamento.':status==='paused'?'Draft pausado pela administração. Aguarde a retomada.':status==='closed'?'Check-in encerrado. O ADM pode ajustar presenças antes do draft.':r?entries.length+'/'+target+' vagas ocupadas · '+confirmed.length+'/'+target+' confirmados. Limite de '+limit+' jogadores por lane.':'Selecione uma sala para acompanhar a fila.';
     $('laneBoard').innerHTML=LANES.map(lane=>{
       const players=membersFor(lane), num=players.length, done=players.filter(p=>p.status==='confirmed').length;
-      return `<div class="lane-card ${num===2?'full':''} ${done===2?'confirmed':''}" aria-label="${lane}: ${num} de 2 vagas ocupadas"><b>${lane}</b><div class="lane-counter">${num}<span>/2</span></div><div class="capacity">${players.map(()=>'<i></i>').join('')}</div><small>${num===2?'ESGOTADA':num===1?'1 VAGA LIVRE':'2 VAGAS LIVRES'}</small></div>`;
+      return `<div class="lane-card ${num===limit?'full':''} ${done===limit?'confirmed':''}" aria-label="${lane}: ${num} de ${limit} vagas ocupadas"><b>${lane}</b><div class="lane-counter">${num}<span>/${limit}</span></div><div class="capacity">${players.map(()=>'<i style="width:'+(100/limit)+'%"></i>').join('')}</div><small>${num===limit?'ESGOTADA':(limit-num)+' '+(limit-num===1?'VAGA LIVRE':'VAGAS LIVRES')}</small></div>`;
     }).join('');
     $('participants').innerHTML=LANES.map(lane=>{
       const players=membersFor(lane), cells=[...players];
-      while(cells.length<2)cells.push(null);
-      return `<section class="lane-roster" aria-label="Participantes ${lane}"><h3>${lane}<span>${players.length}/2</span></h3>${cells.map((p,i)=>p
+      while(cells.length<limit)cells.push(null);
+      return `<section class="lane-roster" aria-label="Participantes ${lane}"><h3>${lane}<span>${players.length}/${limit}</span></h3>${cells.map((p,i)=>p
         ?`<div class="player-slot"><span class="player-icon">${lane[0]}</span><span class="player-meta"><strong title="${esc(p.nick)}">${esc(p.nick)} ${p.user_id===state.me?.id?'(você)':''}</strong><small><span class="tiny-dot ${p.status==='confirmed'?'active':'idle'}"></span>${p.status==='confirmed'?'Presença confirmada':'Aguardando confirmação'}</small></span><span class="player-tier">${esc(p.tier||'B')}</span></div>`
-        :`<div class="player-slot empty"><span class="player-icon">+</span><span class="player-meta"><strong>Vaga disponível</strong><small>Posição ${i+1} de 2</small></span></div>`).join('')}</section>`;
+        :`<div class="player-slot empty"><span class="player-icon">+</span><span class="player-meta"><strong>Vaga disponível</strong><small>Posição ${i+1} de ${limit}</small></span></div>`).join('')}</section>`;
     }).join('');
     laneOptions();
     let slot = own&&['queued','confirmed'].includes(own.status)?entries.findIndex(e=>e.user_id===own.user_id)+1:0;
     $('myStatus').textContent=!r?'Selecione uma sala':own?.status==='confirmed'? 'Sua presença está confirmada na '+own.lane+'!':own?.status==='queued'?'Você está na fila como '+own.lane+'. Confirme sua presença.':own?.status==='removed'?'Sua inscrição foi removida pelo ADM.':own?.status==='left'?'Você saiu da sala. Pode entrar novamente se houver vaga.':'Escolha sua lane para entrar nesta sala.';
     const hasLane=LANES.includes($('laneChoice').value)&&laneAvailable($('laneChoice').value);
     $('join').disabled=!canJoin(r)||!hasLane||!!own&&own.status!=='left';
-    $('confirm').disabled=!canJoin(r)||own?.status!=='queued'||slot>10;
+    $('confirm').disabled=!canJoin(r)||own?.status!=='queued'||slot>target;
     $('leave').disabled=!r||!own||!['queued','confirmed'].includes(own.status)||!['scheduled','open','closed'].includes(r.status);
     $('saveLane').disabled=!canJoin(r)||!hasLane||!own||!['queued','confirmed'].includes(own.status)||own.lane===$('laneChoice').value;
     $('reportForm').querySelector('button[type="submit"]').disabled=!own||!['queued','confirmed'].includes(own.status);
@@ -115,16 +125,35 @@
     $('nextStage').hidden=r?.status!=='finished';
     $('nextStageNote').hidden=r?.status!=='finished';
     if(!active)return;
-    const turn=r.pick_number%2===1?'A':'B',captainId=turn==='A'?r.captain_a:r.captain_b;
-    const captain=state.entries.find(e=>e.user_id===captainId);
+    const four=r.team_count===4, teams=four?['A','B','C','D']:['A','B'];
+    const totalPicks=four?16:8;
+    const turn=four?FOUR_ORDER[(r.turn_index||0)%8]:(r.pick_number%2===1?'A':'B');
+    const captains={A:r.captain_a,B:r.captain_b,C:r.captain_c,D:r.captain_d};
+    const captainId=captains[turn],captain=state.entries.find(e=>e.user_id===captainId);
     const name=captain?.nick||'Capitão '+turn;
-    $('turnLabel').textContent=r.status==='finished'?'Draft finalizado. Dois times com cinco jogadores estão prontos. O próximo passo é organizar a seleção de campeões.':r.status==='paused'?'Draft pausado. O ADM poderá retomar as escolhas.':`Escolha ${r.pick_number}/8 · Capitão ${name} (Equipe ${turn})${captainId===state.me?.id?' — SUA VEZ':''}`;
-    $('teams').innerHTML=['A','B'].map(side=>{
+    const manualPicks=four?state.picks.filter(p=>!p.automatic).length:(r.pick_number-1);
+    $('turnLabel').textContent=r.status==='finished'?
+      'Draft concluído: '+teams.length+' times com cinco jogadores cada, respeitando uma posição por time no torneio.':
+      r.status==='paused'?'Draft pausado. O ADM poderá retomar as escolhas.':
+      'Escolha '+(manualPicks+1)+' · '+(four?'SNAKE A–B–C–D–D–C–B–A':'ALTERNADO A–B')+
+      ' · Capitão '+name+' (Equipe '+turn+')'+(captainId===state.me?.id?' — SUA VEZ':'')+
+      ' · '+state.picks.length+'/'+totalPicks+' jogadores escolhidos';
+    $('teams').classList.toggle('four',four);
+    $('teams').innerHTML=teams.map(side=>{
       const players=state.entries.filter(e=>e.side===side);
-      return `<div class="team ${side==='B'?'red':''}"><h3>Equipe ${side} · ${players.length}/5</h3>${players.map(p=>`<div class="row"><span>${esc(p.nick)} ${p.is_captain?'(capitão)':''} <small>${esc(p.lane||'')}</small></span><b>${esc(p.tier||'B')}</b></div>`).join('')||'<p class="subtext">Aguardando escolhas.</p>'}</div>`;
+      return `<div class="team ${side==='B'?'red':''}"><h3>Equipe ${side} · ${players.length}/5</h3>${LANES.map(lane=>{
+        const p=players.find(e=>e.lane===lane);
+        return `<div class="row"><span><b>${lane}</b> · ${p?esc(p.nick):'Aguardando...'} ${p?.is_captain?'★':''}</span><b>${p?esc(p.tier||'B'):'—'}</b></div>`;
+      }).join('')}</div>`;
     }).join('');
     const canPick=r.status==='drafting'&&captainId===state.me?.id&&Date.now()<Date.parse(r.pick_deadline||0);
-    $('available').innerHTML=state.entries.filter(e=>e.status==='confirmed'&&!e.side).map(p=>`<div class="player"><strong>${esc(p.nick)} <span class="tier">${esc(p.tier||'B')}</span></strong><small>${esc(p.lane||'Lane indefinida')}</small>${canPick?`<button type="button" class="pick-btn" data-pick="${p.user_id}">Escolher jogador</button>`:''}</div>`).join('')||'<p class="subtext">Todos os jogadores foram escolhidos.</p>';
+    const teamLanes=new Set(state.entries.filter(p=>p.side===turn).map(p=>p.lane));
+    const available=state.entries.filter(e=>e.status==='confirmed'&&!e.side)
+      .filter(e=>!four||(e.lane!==r.captain_lane&&!teamLanes.has(e.lane)));
+    $('available').innerHTML=available.map(p=>`<div class="player"><strong>${esc(p.nick)} <span class="tier">${esc(p.tier||'B')}</span></strong><small>${esc(p.lane||'Lane indefinida')}</small>${canPick?`<button type="button" class="pick-btn" data-pick="${p.user_id}">Escolher jogador</button>`:''}</div>`).join('')||'<p class="subtext">Nenhum jogador disponível para esta equipe.</p>';
+    $('pickHistory').hidden=!four;
+    $('pickHistory').innerHTML=four?'<b>Histórico do Snake Draft</b><div class="history-items">'+
+      state.picks.map(p=>`<span>${p.pick_number}. ${esc(p.side)} · ${esc(p.nick)} ${p.automatic?'⚡ AUTO':''}</span>`).join('')+'</div>':'';
     updateClock();
   }
   function updateClock(){
@@ -178,7 +207,7 @@
   }));
   $('available').addEventListener('click',e=>{
     const button=e.target.closest('[data-pick]');if(!button)return;
-    act(()=>api('cmim_q_pick',{p_room:state.room.id,p_player:button.dataset.pick}));
+    act(()=>api(state.room.team_count===4?'cmim_q_pick_tournament':'cmim_q_pick',{p_room:state.room.id,p_player:button.dataset.pick}));
   });
   $('reportForm').addEventListener('submit',e=>{
     e.preventDefault();

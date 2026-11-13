@@ -165,3 +165,49 @@ seria um requisito adicional ao limite da fila.
 Verificado: simulação SQL em subtransação com dois inscritos TOP, terceira
 inscrição rejeitada e nova inscrição permitida após liberar uma vaga; nenhuma
 sala ou inscrição fictícia foi mantida. Ranking preservado.
+
+## Torneio de quatro times na fila (13/11/2026)
+
+A central de filas agora oferece duas modalidades no formulário do ADM
+(`admin-fila.html`):
+
+| Modalidade | Participantes | Por lane | Times | Ordem |
+| --- | ---: | ---: | ---: | --- |
+| In-House normal | 10 | 2 | A e B | A–B alternado |
+| Torneio de 4 times | 20 | 4 | A, B, C e D | Snake A–B–C–D–D–C–B–A (repetido) |
+
+No torneio, o ADM escolhe a **lane dos quatro capitães** (padrão MID), assim
+como no draft manual de 4 times. Assim que 20 jogadores confirmam presença,
+os 4 representantes dessa lane são selecionados como capitães e ordenados
+por tier S/A/B/C/D e desempate determinístico. A formação via `fila.html`
+respeita uma pessoa de cada lane em cada time; as últimas vagas
+inevitáveis de uma lane são atribuídas automaticamente (AUTO), como no
+mecanismo `autoAssign` do draft manual.
+
+O banco mantém o limite de inscrições sob lock da sala: quatro
+participantes em cada posição no torneio; dois no in-house convencional.
+O draft usa 60 segundos por escolha (configurável no painel ADM). As
+operações de escolha, undo, troca de capitães e abertura do torneio são
+validadas no PostgreSQL. O ADM pode reordenar os quatro capitães antes do
+primeiro pick. A lógica de desfazer também reverte escolhas AUTO
+consequentes à última escolha manual.
+
+Arquivos de banco:
+- `supabase/sql/2026-11-13-fila-torneio-quatro-times.sql`: extensão das
+  tabelas e fluxo 4 times, com compatibilidade do modo 2 times;
+- `supabase/sql/2026-11-13-fila-torneio-trocar-capitaes.sql`: ajuste de
+  permissões e troca dos quatro capitães já alocados.
+
+A migração e os ajustes adicionais foram aplicados ao Supabase principal
+`klpvidxhzofbwstvvxib`. A simulação de integração com 20 check-ins,
+quatro capitães e 16 atribuições foi executada dentro de subtransação
+revertida; nenhuma sala simbólica foi persistida.
+
+**Escopo:** este recurso faz o *draft/formação* de quatro equipes, tal
+como o modo de quatro times da ferramenta manual. Não cria nem gerencia
+automaticamente chaveamento de semifinais/final; esses confrontos podem
+ser organizados por outra funcionalidade do portal.
+
+O painel contém também um laboratório local de 20 jogadores simbólicos,
+sem escrita no Supabase. A tabela `cmim_rank`, contas e histórico não são
+modificados.
