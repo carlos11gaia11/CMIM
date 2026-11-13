@@ -1,0 +1,28 @@
+name: Validar fila e draft automatico
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'public/fila.*'
+      - 'public/admin-fila.*'
+      - 'public/admin.html'
+      - 'index.html'
+      - 'lib/queue-contract.test.mjs'
+      - 'supabase/sql/2026-11-13-fila*'
+      - '.github/workflows/test-fila.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: node --check public/fila.js
+      - run: node --check public/admin-fila.js
+      - run: npm run build
+        env:
+          BASE_PATH: /CMIM/
