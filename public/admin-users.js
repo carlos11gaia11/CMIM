@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 const BASE='https://klpvidxhzofbwstvvxib.supabase.co',KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn', $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const state={profiles:[],private:[],defs:[],roles:[],rank:[],ready:false};
+const normalizeTag=value=>String(value??'').trim().replace(/^#/,'').trim().toUpperCase();
 const rankCollator=new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true,ignorePunctuation:true});
 const rankText=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
 const rankLabel=r=>String(r.nick||r.name||r.id||'Jogador sem nick');
@@ -202,14 +203,14 @@ $('registered-tier-form')?.addEventListener('submit',async event=>{
   phone='+55'+digits;
  }
  const btn=event.currentTarget.querySelector('button[type="submit"]');saving(btn,true);
- const expected={nick:$('registered-edit-nick').value.trim(),tag:$('registered-edit-tag').value.trim().toUpperCase(),
+ const expected={nick:$('registered-edit-nick').value.trim(),tag:normalizeTag($('registered-edit-tag').value),
   lane,secondary_lane:secondary,current_elo:$('registered-edit-elo').value||null,tier:tier||null,
   rank_player_id:$('registered-edit-rank').value||null};
  $('registered-tier-feedback').style.color='#c5f5c4';
  $('registered-tier-feedback').textContent='Salvando cadastro...';
  try{
   await req('/rest/v1/rpc/cmim_admin_update_player',{method:'POST',body:{
-   p_user:current.id,p_nick:$('registered-edit-nick').value.trim(),p_tag:$('registered-edit-tag').value.trim().toUpperCase(),
+   p_user:current.id,p_nick:$('registered-edit-nick').value.trim(),p_tag:normalizeTag($('registered-edit-tag').value),
    p_lane:lane,p_secondary_lane:secondary,p_current_elo:$('registered-edit-elo').value,p_tier:tier||null,
    p_bio:$('registered-edit-bio').value.trim(),p_avatar_url:$('registered-edit-avatar').value.trim()||null,
    p_real_name:$('registered-edit-name').value.trim(),p_phone_e164:phone
@@ -256,7 +257,7 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
  saving(btn,true);
  try{
   const currentRank=state.profiles.find(p=>p.id===id);
-  const expected={nick:$('manage-user-nick').value.trim(),tag:$('manage-user-tag').value.trim().toUpperCase(),
+  const expected={nick:$('manage-user-nick').value.trim(),tag:normalizeTag($('manage-user-tag').value),
    lane,secondary_lane,rank_player_id:$('manage-user-rank').value||null};
   const phoneE164=(()=>{
     let digits=$('manage-user-phone').value.replace(/[^0-9]/g,'');
@@ -266,7 +267,7 @@ $('manage-user-form')?.addEventListener('submit',async e=>{
     return '+55'+digits;
   })();
   await req('/rest/v1/rpc/cmim_admin_update_player',{method:'POST',body:{
-   p_user:id,p_nick:$('manage-user-nick').value.trim(),p_tag:$('manage-user-tag').value.trim().toUpperCase(),
+   p_user:id,p_nick:$('manage-user-nick').value.trim(),p_tag:normalizeTag($('manage-user-tag').value),
    p_lane:lane,p_secondary_lane:secondary_lane,p_current_elo:currentRank?.current_elo||null,p_tier:currentRank?.tier||null,
    p_bio:currentRank?.bio||'',p_avatar_url:currentRank?.avatar_url||null,
    p_real_name:$('manage-user-name').value.trim(),p_phone_e164:phoneE164
