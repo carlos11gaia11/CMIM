@@ -1,0 +1,40 @@
+/* Painel administrativo de filas CMIM */
+(()=>{'use strict';const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&amp;','>':'&gt;','"':'&quot;'}[c]));
+const api=(name,args)=>CMIMAuth.call('/rest/v1/rpc/'+name,{method:'POST',body:args,secure:true}),list=q=>CMIMAuth.call('/rest/v1/'+q,{secure:true});
+const S={user:null,rooms:[],room:null,entries:[],reports:[],profiles:[],audit:[],settings:[],busy:false};
+const dt=x=>x?new Date(x).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}):'—';
+const inputDate=x=>x?new Date(Date.parse(x)-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):'';
+const utc=x=>{let d=new Date(x);if(!x||Number.isNaN(d.getTime()))throw Error('Informe data e hora válidas');return d.toISOString()};
+const msg=(s,bad=false)=>{let e=$('msg');e.textContent=s;e.hidden=false;e.className='notice'+(bad?' error':'')};
+async function action(fn){if(S.busy)return;S.busy=true;try{await fn();await refresh()}catch(e){msg(e.message||String(e),true)}finally{S.busy=false}}
+async function refresh(){[S.rooms,S.settings,S.profiles,S.reports,S.audit]=await Promise.all([
+list('cmim_queue_rooms?select=*&order=opens_at.desc&limit=50'),list('cmim_queue_settings?select=*'),
+list('cmim_profiles?select=id,nick,tag,tier,initial_tier&order=nick.asc&limit=500'),
+list('cmim_queue_reports?select=*&order=created_at.desc&limit=100'),
+list('cmim_queue_audit?select=*&order=created_at.desc&limit=30')
+]);S.room=S.rooms.find(x=>x.id===S.room?.id)||S.rooms[0]||null;
+S.entries=S.room?await list('cmim_queue_entries?select=*&room_id=eq.'+encodeURIComponent(S.room.id)+'&order=joined_at.asc'):[];
+render()}
+function render(){const r=S.room;$('rooms').innerHTML=S.rooms.map(x=>`<button data-room="${x.id}" style="text-align:left;border-color:${r?.id===x.id?'#f2d73a':'#354034'}"><b>${esc(x.title)}</b><br><small>${dt(x.opens_at)} · ${esc(x.status)}</small></button>`).join('')||'Nenhuma sala agendada.';
+$('roomTitle').textContent=r?.title||'Selecione uma sala';$('roomStatus').textContent=r?`Estado: ${r.status} · Abre ${dt(r.opens_at)} · Fecha ${dt(r.closes_at)} · Escolha ${r.pick_number}/8`:'';
+$('editRoom').hidden=!r;$('editTitle').value=r?.title||'';$('editOpen').value=inputDate(r?.opens_at);$('editClose').value=inputDate(r?.closes_at);
+$('seconds').value=S.settings[0]?.pick_seconds||60;
+$('roomActions').innerHTML=r?['close','reopen','pause','resume','undo','cancel'].map(a=>`<button data-action="${a}">${{close:'Fechar fila',reopen:'Reabrir fila',pause:'Pausar draft',resume:'Retomar draft',undo:'Desfazer última escolha',cancel:'Cancelar sala'}[a]}</button>`).join(''):'';
+$('entries').innerHTML=S.entries.map(e=>`<tr><td><b>${esc(e.nick)}</b><br><small>${esc(e.lane||'—')} ${e.is_captain?'· CAPITÃO '+esc(e.side):''}</small></td><td>${esc(e.tier)}</td><td>${esc(e.status)}</td><td><div class="actions"><button data-user="${e.user_id}" data-status="confirmed">Confirmar</button><button data-user="${e.user_id}" data-status="queued">Fila</button><button data-user="${e.user_id}" data-status="removed">Remover</button></div></td></tr>`).join('')||'<tr><td colspan="4">Sem participantes.</td></tr>';
+$('captainForm').hidden=!r||!['drafting','paused'].includes(r.status)||r.pick_number!==1;
+$('captainPlayer').innerHTML=S.entries.filter(e=>e.status==='confirmed'&&!e.side).map(e=>`<option value="${e.user_id}">${esc(e.nick)} · ${esc(e.tier)}</option>`).join('');
+$('tierPlayer').innerHTML=S.profiles.map(p=>`<option value="${p.id}">${esc(p.nick)}#${esc(p.tag)} · ${esc(p.tier||p.initial_tier||'Sem tier')}</option>`).join('');
+$('reports').innerHTML=S.reports.filter(x=>x.room_id===r?.id).map(x=>`<div class="card"><div class="row"><b>${esc(x.reported_nick)}</b><span class="pill">${esc(x.status)}</span></div><small>Reportado por ${esc(x.reporter_nick)} · ${dt(x.created_at)}</small><p>${esc(x.details||'Sem observação')}</p><div class="actions"><button data-report="${x.id}" data-decision="confirmed">Confirmar atraso</button><button data-report="${x.id}" data-decision="dismissed">Descartar</button><button data-report="${x.id}" data-decision="pending">Pendente</button></div></div>`).join('')||'Nenhum reporte desta sala.';
+$('audit').innerHTML=S.audit.filter(x=>!r||x.room_id===r.id).slice(0,20).map(x=>`<p><small>${dt(x.created_at)}</small> · ${esc(x.action)}</p>`).join('')||'Sem movimentações registradas.';}
+async function init(){try{S.user=await CMIMAuth.user();if(S.user?.app_metadata?.cmim_admin!==true){$('access').hidden=false;return;}$('main').hidden=false;await refresh();}catch(e){msg(e.message||String(e),true)}}
+$('createForm').addEventListener('submit',e=>{e.preventDefault();action(async()=>{await api('cmim_q_admin_create',{p_title:$('title').value,p_opens:utc($('opens').value),p_closes:utc($('closes').value)});$('createForm').reset();msg('Sala agendada com sucesso.')})});
+$('settingsForm').addEventListener('submit',e=>{e.preventDefault();action(async()=>{await api('cmim_q_admin_settings',{p_pick_seconds:Number($('seconds').value)});msg('Configuração salva.')})});
+$('rooms').addEventListener('click',e=>{let b=e.target.closest('[data-room]');if(!b)return;S.room=S.rooms.find(r=>r.id===b.dataset.room);action(async()=>{})});
+$('editRoom').addEventListener('submit',e=>{e.preventDefault();if(!S.room)return;action(async()=>{await api('cmim_q_admin_room',{p_room:S.room.id,p_action:'edit',p_title:$('editTitle').value,p_opens:utc($('editOpen').value),p_closes:utc($('editClose').value)});msg('Sala atualizada.')})});
+$('roomActions').addEventListener('click',e=>{let b=e.target.closest('[data-action]');if(!b||!S.room)return;const a=b.dataset.action;if(['undo','cancel'].includes(a)&&!confirm('Confirma a ação '+a+'?'))return;action(async()=>{await api('cmim_q_admin_room',{p_room:S.room.id,p_action:a});msg('Ação aplicada: '+a)})});
+$('entries').addEventListener('click',e=>{let b=e.target.closest('[data-user]');if(!b||!S.room)return;action(()=>api('cmim_q_admin_entry',{p_room:S.room.id,p_user:b.dataset.user,p_status:b.dataset.status}))});
+$('captainForm').addEventListener('submit',e=>{e.preventDefault();if(!S.room)return;action(()=>api('cmim_q_admin_captain',{p_room:S.room.id,p_side:$('captainSide').value,p_player:$('captainPlayer').value}))});
+$('tierForm').addEventListener('submit',e=>{e.preventDefault();action(async()=>{await api('cmim_q_admin_tier',{p_user:$('tierPlayer').value,p_tier:$('tierValue').value});msg('Tier atualizado no perfil CMIM.')})});
+$('reports').addEventListener('click',e=>{let b=e.target.closest('[data-report]');if(!b)return;action(()=>api('cmim_q_admin_report',{p_report:b.dataset.report,p_status:b.dataset.decision,p_note:''}))});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();setInterval(()=>{if(S.user?.app_metadata?.cmim_admin===true&&!S.busy)refresh().catch(()=>{})},15000);
+})();
