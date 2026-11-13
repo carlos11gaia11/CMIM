@@ -153,8 +153,7 @@ begin
  values(p_room,auth.uid(),'entry_'||p_status,jsonb_build_object('user',p_user));
  if p_status='confirmed' then perform cmim_internal.try_start(p_room); end if;
 end;
-$function$
-
+$function$;
 
 create or replace function public.cmim_q_admin_create_tournament(
  p_title text,p_opens timestamptz,p_closes timestamptz,p_captain_lane text default 'MID')
