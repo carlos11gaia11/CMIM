@@ -112,6 +112,8 @@
   function renderDraft(){
     const r=state.room, active=['drafting','paused','finished'].includes(r?.status);
     $('draftArea').hidden=!active;
+    $('nextStage').hidden=r?.status!=='finished';
+    $('nextStageNote').hidden=r?.status!=='finished';
     if(!active)return;
     const turn=r.pick_number%2===1?'A':'B',captainId=turn==='A'?r.captain_a:r.captain_b;
     const captain=state.entries.find(e=>e.user_id===captainId);
