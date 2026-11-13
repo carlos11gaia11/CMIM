@@ -15,3 +15,16 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
 .next-stage{margin-top:19px;width:max-content;max-width:100%;display:flex}
+
+
+/* Draft de quatro equipes e histórico do snake */
+.teams.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+.teams.four .team:nth-child(3){border-color:#a39443;background:#2c291b}
+.teams.four .team:nth-child(4){border-color:#7964ab;background:#241e30}
+.teams.four .team .row{align-items:center;font-size:11px}
+.teams.four .team .row b{font-weight:800}
+.pick-history{margin-top:17px;padding:14px;border:1px solid #45583f;border-radius:10px;background:#111b13}
+.pick-history>b{display:block;margin-bottom:8px;color:#f2d53e;font:900 17px "Barlow Condensed"}
+.history-items{display:flex;flex-wrap:wrap;gap:6px}
+.history-items span{font-size:10px;background:#283527;border:1px solid #3b4c36;border-radius:5px;padding:5px 8px;color:#d9e8d5}
+@media(max-width:600px){.teams.four{grid-template-columns:1fr}}
