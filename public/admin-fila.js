@@ -38,9 +38,9 @@ $('deleteRoom').addEventListener('click',()=>{
  const roomId=S.room.id,roomTitle=S.room.title;
  const format=S.room.team_count===4?'torneio com 4 times':'fila normal com 2 times';
  const typed=window.prompt(
-   'EXCLUSÃO PERMANENTE — '+roomTitle+' ('+format+').\\n'+
-   'Todos os participantes, picks, reportes e movimentações desta sala serão excluídos.\\n'+
-   'O ranking e as contas não serão afetados.\\n\\n'+
+   'EXCLUSÃO PERMANENTE — '+roomTitle+' ('+format+').\n'+
+   'Todos os participantes, picks, reportes e movimentações desta sala serão excluídos.\n'+
+   'O ranking e as contas não serão afetados.\n\n'+
    'Digite EXATAMENTE o nome da fila para continuar:',''
  );
  if(typed===null)return;
