@@ -17,7 +17,7 @@ S.entries=S.room?await list('cmim_queue_entries?select=*&room_id=eq.'+encodeURIC
 render()}
 function render(){const r=S.room;$('rooms').innerHTML=S.rooms.map(x=>`<button data-room="${x.id}" style="text-align:left;border-color:${r?.id===x.id?'#f2d73a':'#354034'}"><b>${esc(x.title)}</b><br><small>${dt(x.opens_at)} · ${esc(x.status)} · ${x.team_count===4?"TORNEIO 4 TIMES":"IN-HOUSE 2 TIMES"}</small></button>`).join('')||'Nenhuma sala agendada.';
 $('roomTitle').textContent=r?.title||'Selecione uma sala';$('roomStatus').textContent=r?`Estado: ${r.status} · ${r.team_count===4?'TORNEIO / 4 TIMES / 20 JOGADORES':'NORMAL / 2 TIMES / 10 JOGADORES'} · Abre ${dt(r.opens_at)} · Fecha ${dt(r.closes_at)} · Escolhas ${Math.min(r.pick_number-1,r.team_count===4?16:8)}/${r.team_count===4?16:8}`:'';
-$('editRoom').hidden=!r;$('editTitle').value=r?.title||'';$('editOpen').value=inputDate(r?.opens_at);$('editClose').value=inputDate(r?.closes_at);$('captainLaneEditWrap').hidden=!r||r.team_count!==4;$('captainLaneEdit').value=r?.captain_lane||'MID';$('queueRule').textContent=r?.team_count===4?'Torneio: quatro times de cinco, 20 confirmados, quatro por lane e capitães na lane '+r.captain_lane+'. Draft snake ABCDDCBA.':'In-House: dois times de cinco, 10 confirmados e dois por lane. Draft alternado A/B.';
+$('deleteRoomZone').hidden=!r;$('editRoom').hidden=!r;$('editTitle').value=r?.title||'';$('editOpen').value=inputDate(r?.opens_at);$('editClose').value=inputDate(r?.closes_at);$('captainLaneEditWrap').hidden=!r||r.team_count!==4;$('captainLaneEdit').value=r?.captain_lane||'MID';$('queueRule').textContent=r?.team_count===4?'Torneio: quatro times de cinco, 20 confirmados, quatro por lane e capitães na lane '+r.captain_lane+'. Draft snake ABCDDCBA.':'In-House: dois times de cinco, 10 confirmados e dois por lane. Draft alternado A/B.';
 $('seconds').value=S.settings[0]?.pick_seconds||60;
 $('roomActions').innerHTML=r?['close','reopen','pause','resume','undo','cancel'].map(a=>`<button data-action="${a}">${{close:'Fechar fila',reopen:'Reabrir fila',pause:'Pausar draft',resume:'Retomar draft',undo:'Desfazer última escolha',cancel:'Cancelar sala'}[a]}</button>`).join(''):'';
 $('entries').innerHTML=S.entries.map(e=>`<tr><td><b>${esc(e.nick)}</b><br><small>${esc(e.lane||'—')} ${e.is_captain?'· CAPITÃO '+esc(e.side):''}</small></td><td>${esc(e.tier||"B")}</td><td>${esc(e.status)}</td><td><div class="actions"><select data-lane-user="${e.user_id}" aria-label="Lane de ${esc(e.nick)}">${["TOP","JG","MID","ADC","SUP"].map(l=>`<option value="${l}" ${e.lane===l?"selected":""}>${l}</option>`).join("")}</select><button data-lane-save="${e.user_id}">Salvar lane</button><button data-user="${e.user_id}" data-status="confirmed">Confirmar</button><button data-user="${e.user_id}" data-status="queued">Fila</button><button data-user="${e.user_id}" data-status="removed">Remover</button></div></td></tr>`).join('')||'<tr><td colspan="4">Sem participantes.</td></tr>';
@@ -33,6 +33,25 @@ $('settingsForm').addEventListener('submit',e=>{e.preventDefault();action(async(
 $('rooms').addEventListener('click',e=>{let b=e.target.closest('[data-room]');if(!b)return;S.room=S.rooms.find(r=>r.id===b.dataset.room);action(async()=>{})});
 $('editRoom').addEventListener('submit',e=>{e.preventDefault();if(!S.room)return;action(async()=>{await api('cmim_q_admin_room',{p_room:S.room.id,p_action:'edit',p_title:$('editTitle').value,p_opens:utc($('editOpen').value),p_closes:utc($('editClose').value)});if(S.room.team_count===4&&$('captainLaneEdit').value!==S.room.captain_lane){await api('cmim_q_admin_tournament_lane',{p_room:S.room.id,p_lane:$('captainLaneEdit').value});}msg('Sala atualizada.')})});
 $('roomActions').addEventListener('click',e=>{let b=e.target.closest('[data-action]');if(!b||!S.room)return;const a=b.dataset.action;if(['undo','cancel'].includes(a)&&!confirm('Confirma a ação '+a+'?'))return;action(async()=>{if(a==='undo'&&S.room.team_count===4){await api('cmim_q_admin_undo_tournament',{p_room:S.room.id});}else{await api('cmim_q_admin_room',{p_room:S.room.id,p_action:a});}msg('Ação aplicada: '+a)})});
+$('deleteRoom').addEventListener('click',()=>{
+ if(S.busy||!S.room)return;
+ const roomId=S.room.id,roomTitle=S.room.title;
+ const format=S.room.team_count===4?'torneio com 4 times':'fila normal com 2 times';
+ const typed=window.prompt(
+   'EXCLUSÃO PERMANENTE — '+roomTitle+' ('+format+').\\n'+
+   'Todos os participantes, picks, reportes e movimentações desta sala serão excluídos.\\n'+
+   'O ranking e as contas não serão afetados.\\n\\n'+
+   'Digite EXATAMENTE o nome da fila para continuar:',''
+ );
+ if(typed===null)return;
+ if(typed!==roomTitle){msg('Exclusão cancelada: o nome informado não corresponde à fila selecionada.',true);return;}
+ if(!window.confirm('Última confirmação: excluir DEFINITIVAMENTE a fila "'+roomTitle+'" e todos os dados vinculados a ela?'))return;
+ action(async()=>{
+   await api('cmim_q_admin_delete_room',{p_room:roomId,p_expected_title:roomTitle});
+   S.room=null;
+   msg('Fila "'+roomTitle+'" excluída. Ranking, perfis e contas preservados.');
+ });
+});
 $('entries').addEventListener('click',e=>{let b=e.target.closest('[data-user]');if(!b||!S.room)return;action(()=>api('cmim_q_admin_entry',{p_room:S.room.id,p_user:b.dataset.user,p_status:b.dataset.status}))});
 $('entries').addEventListener('click',e=>{const b=e.target.closest('[data-lane-save]');if(!b||!S.room)return;const select=b.closest('tr')?.querySelector('[data-lane-user]');if(!select)return;action(async()=>{await api('cmim_q_admin_set_lane',{p_room:S.room.id,p_user:b.dataset.laneSave,p_lane:select.value});msg('Lane atualizada somente nesta sala.');});});
 $('captainForm').addEventListener('submit',e=>{e.preventDefault();if(!S.room)return;action(()=>api(S.room.team_count===4?'cmim_q_admin_captain_tournament':'cmim_q_admin_captain',{p_room:S.room.id,p_side:$('captainSide').value,p_player:$('captainPlayer').value}))});
