@@ -131,8 +131,7 @@ begin
  perform cmim_internal.try_start(p_room);
  return 'confirmed';
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION public.cmim_q_admin_entry(p_room uuid, p_user uuid, p_status text)
  RETURNS void
