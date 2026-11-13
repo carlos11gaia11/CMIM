@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./admin-ui.css">
   <title>CMIM | Administração</title>
-  <script defer src="./portal-admin.js"></script><script defer src="./admin-users.js?v=20261111-2"></script><script defer src="./admin-manual-games.js"></script>
+  <script defer src="./portal-admin.js"></script><script defer src="./admin-users.js?v=20261113-rank-az"></script><script defer src="./admin-manual-games.js"></script>
 <link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head>
 <body data-no-auth-badge="1" class="admin-page">
   <div class="admin-layout">
@@ -134,7 +134,11 @@
                     </select></label>
                     <label>PRÉ-TIER ORIGINAL<input id="registered-tier-initial" readonly></label>
                     <label>TIER CMIM ATUAL<select id="registered-tier-current"><option value="">Não definido</option><option value="S">S</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select></label>
-                    <label>VINCULAR AO RANKING<select id="registered-edit-rank"><option value="">Sem vínculo ao Ranking</option></select></label>
+                    <label>VINCULAR AO RANKING
+ <input id="registered-rank-search" type="search" placeholder="Buscar nick no Ranking (A–Z)..." autocomplete="off" aria-label="Buscar nick para vincular ao Ranking">
+ <select id="registered-edit-rank" aria-describedby="registered-rank-count"><option value="">Sem vínculo ao Ranking</option></select>
+ <span id="registered-rank-count" class="field-help" role="status" aria-live="polite">Carregando jogadores do ranking...</span>
+ </label>
                     <label class="registered-wide-field">URL DA FOTO DE PERFIL (HTTPS)<input id="registered-edit-avatar" type="url" placeholder="https://..."></label>
                     <label class="registered-wide-field">BIOGRAFIA<textarea id="registered-edit-bio" rows="3" maxlength="500" placeholder="Informações públicas do perfil"></textarea></label>
                   </div>
@@ -182,7 +186,11 @@
               <label>NICK<input id="manage-user-nick" minlength="2" maxlength="32" required></label>
               <label>TAG RIOT<input id="manage-user-tag" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
               <label>LANE PRIMÁRIA<select id="manage-user-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
-              <label>LANE SECUNDÁRIA<select id="manage-user-secondary"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label><label>VINCULAR AO JOGADOR DO RANKING<select id="manage-user-rank"><option value="">Ainda não vinculado</option></select><span id="manage-rank-verification" class="field-help" role="status">◷ Aguardando seleção</span><span class="field-help">Permite que o perfil exiba a temporada e a posição oficial. Vincule somente após confirmar a identidade do jogador.</span></label>
+              <label>LANE SECUNDÁRIA<select id="manage-user-secondary"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label><label>VINCULAR AO JOGADOR DO RANKING
+ <input id="manage-rank-search" type="search" placeholder="Buscar nick no Ranking (A–Z)..." autocomplete="off" aria-label="Buscar nick histórico para vincular a esta conta">
+ <select id="manage-user-rank" aria-describedby="manage-rank-count"><option value="">Sem vínculo ao Ranking</option></select>
+ <span id="manage-rank-count" class="field-help" role="status" aria-live="polite">Carregando jogadores do ranking...</span>
+ <span id="manage-rank-verification" class="field-help" role="status">◷ Aguardando seleção</span><span class="field-help">Permite que o perfil exiba a temporada e a posição oficial. Vincule somente após confirmar a identidade do jogador.</span></label>
              </div>
              <button class="admin-main-button" type="submit">✓ SALVAR DADOS DO USUÁRIO</button>
             </form></div>
