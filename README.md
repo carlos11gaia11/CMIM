@@ -141,3 +141,27 @@ o ranking seguem independentes.
 Segurança: o frontend nunca recebe chaves secretas. A escolha de lane, as
 permissões administrativas e o draft real são verificados no backend. O
 laboratório não substitui o teste ponta a ponta com dez contas reais.
+
+## Atualização visual da fila e limite de lanes (13/11/2026)
+
+A rota `fila.html` tem layout responsivo CMIM, cartões de vagas e participantes
+agrupados por lane, barra de confirmações 0–10 e draft exibido na própria página.
+
+**Regra:** duas vagas ativas por lane, por sala: 2 TOP, 2 JG, 2 MID, 2 ADC e 2 SUP.
+Entradas `queued` ou `confirmed` ocupam vagas. Saída ou remoção liberam a posição.
+A terceira inscrição em uma lane é recusada no PostgreSQL sob bloqueio da linha
+da sala, inclusive em operações administrativas. Veja
+`supabase/sql/2026-11-13-fila-limite-duas-vagas-lane.sql`.
+
+**O que acontece com dez confirmados:** `cmim_q_confirm` chama
+`cmim_internal.try_start`, que define dois capitães pelos tiers (S→A→B→C→D),
+inicia uma sequência de oito escolhas A–B–A–B e um relógio de 60 s por escolha.
+`cmim_q_pick` marca a sala como `finished` após a oitava escolha.
+O site mostra as equipes completas e um link para abrir a seleção de campeões,
+mas **não transfere os elencos automaticamente para a ferramenta de picks e bans**.
+A seleção manual dos oito jogadores não obriga um de cada lane por equipe; esse
+seria um requisito adicional ao limite da fila.
+
+Verificado: simulação SQL em subtransação com dois inscritos TOP, terceira
+inscrição rejeitada e nova inscrição permitida após liberar uma vaga; nenhuma
+sala ou inscrição fictícia foi mantida. Ranking preservado.
