@@ -19,6 +19,8 @@ alter table public.cmim_queue_rooms drop constraint if exists cmim_queue_rooms_p
 alter table public.cmim_queue_rooms add constraint cmim_queue_rooms_pick_number_check check (pick_number between 1 and 17);
 alter table public.cmim_queue_entries drop constraint if exists cmim_queue_entries_side_check;
 alter table public.cmim_queue_entries add constraint cmim_queue_entries_side_check check (side in ('A','B','C','D'));
+alter table public.cmim_queue_picks drop constraint if exists cmim_queue_picks_pick_number_check;
+alter table public.cmim_queue_picks add constraint cmim_queue_picks_pick_number_check check (pick_number between 1 and 16);
 alter table public.cmim_queue_picks drop constraint if exists cmim_queue_picks_side_check;
 alter table public.cmim_queue_picks add constraint cmim_queue_picks_side_check check (side in ('A','B','C','D'));
 
