@@ -1,7 +1,119 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10130d"><title>CMIM | Fila In-House</title><link rel="icon" href="./assets/branding/cmim-main.webp" type="image/webp"><link rel="stylesheet" href="./cmim-modern.css"><style>
-:root{color-scheme:dark;--bg:#0b0e0b;--panel:#181e17;--border:#354034;--gold:#f2d73a;--text:#edf0e9;--muted:#adb8a5}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 75% 0%,#7c6e211b,transparent 38%),var(--bg);color:var(--text);font:15px Barlow,system-ui,sans-serif}a{color:var(--gold)}header{border-bottom:1px solid var(--border);padding:16px 22px;background:#111510ee}header>div{display:flex;justify-content:space-between;gap:12px;align-items:center;max-width:1180px;margin:auto}header nav{display:flex;gap:18px;flex-wrap:wrap}main{max-width:1180px;margin:34px auto;padding:0 16px 60px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:340px 1fr;gap:18px}.card{background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:20px;margin-bottom:16px}.card h2,.card h3{margin:0 0 12px}button,input,select,textarea{font:inherit}button{border:1px solid #636e54;background:#263022;color:var(--text);border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}button:hover{border-color:var(--gold)}button:disabled{opacity:.45;cursor:not-allowed}.primary{color:#171a08;background:var(--gold);border-color:var(--gold)}.danger{color:#ffb3a9}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.stack{display:grid;gap:10px}.rooms button{width:100%;text-align:left;margin:4px 0}.rooms .active{border-color:var(--gold);background:#3e3c19}.badge{border:1px solid #5e694d;border-radius:999px;padding:4px 9px;font-size:12px;white-space:nowrap}input,select,textarea{background:#0e120d;color:#fff;border:1px solid var(--border);border-radius:8px;padding:11px;width:100%}textarea{min-height:80px;resize:vertical}label{display:grid;gap:6px}.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}.player{border:1px solid #3a4638;background:#111810;padding:11px;border-radius:10px}.player .tier{float:right;color:var(--gold);font-weight:900}.player small{color:var(--muted);display:block}.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px}.team{border:1px solid #44534a;border-radius:10px;padding:14px}.team.red{border-color:#8b4848}.notice{padding:12px;border-radius:8px;background:#252e1b;margin:12px 0}.error{background:#462723;color:#ffd7d2}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden,[hidden]{display:none!important}.clock{color:var(--gold);font-size:22px;font-weight:850}.pick-btn{padding:7px 10px;margin-top:6px}.mini{font-size:12px}.hero{margin-bottom:24px}.hero h1{font-size:clamp(28px,4vw,46px);margin:0}.hero p{max-width:720px}@media(max-width:850px){.grid{grid-template-columns:1fr}.teams{grid-template-columns:1fr}header>div{align-items:flex-start;flex-direction:column}}
-</style><script defer src="./cmim-auth.js"></script><script defer src="./fila.js"></script></head><body>
-<header><div><strong>CMIM · IN HOUSE</strong><nav><a href="./">Portal</a><a href="./draft.html?jogar=1">Entrar em sala pronta</a><a href="./ranking.html">Ranking</a><a href="./conta.html">Minha conta</a><a href="./admin-fila.html" id="adminLink" hidden>Painel ADM</a></nav></div></header>
-<main><section class="hero"><h1>Fila e confirmação <span style="color:var(--gold)">CMIM</span></h1><p class="muted">A lista nasce no WhatsApp. No horário marcado, entre na fila pelo site, confirme sua presença e acompanhe a formação automática do draft. Esta área é independente do draft manual.</p></section>
-<p id="message" role="status" class="notice" hidden></p><div id="signin" class="card" hidden><h2>Entre na sua conta CMIM</h2><p>Você precisa estar logado para participar da sala e confirmar presença.</p><a href="./conta.html">Entrar ou cadastrar conta →</a></div>
-<div class="grid" id="mainGrid" hidden><aside><div class="card"><h2>Salas agendadas</h2><div id="rooms" class="rooms stack"></div></div><div class="card"><h3>Minha inscrição</h3><p id="myStatus" class="muted">Escolha uma sala.</p><label for="laneChoice">Sua lane nesta sala (escolha livre)<select id="laneChoice" required><option value="">Selecione sua lane</option><option value="TOP">TOP</option><option value="JG">JG</option><option value="MID">MID</option><option value="ADC">ADC</option><option value="SUP">SUP</option></select></label><p class="muted mini">A lane é específica da fila e não altera a lane principal do seu perfil. Sem tier cadastrado? Você participa como Tier B.</p><div class="actions"><button id="join" class="primary">Entrar na fila</button><button id="saveLane" type="button">Atualizar lane</button><button id="confirm">Confirmar presença</button><button id="leave">Sair da fila</button></div></div></aside><section><div class="card"><div class="row"><div><h2 id="roomTitle">Sala</h2><p class="muted" id="roomTime"></p></div><span class="badge" id="roomStatus"></span></div><div id="queueSummary" class="notice"></div><h3>Participantes</h3><div id="participants" class="players"></div></div><div id="draftArea" class="card" hidden><div class="row"><h2>Draft automático · A/B</h2><div id="clock" class="clock"></div></div><p id="turnLabel" class="muted"></p><div id="teams" class="teams"></div><h3>Jogadores disponíveis</h3><div id="available" class="players"></div></div><div class="card"><h3>Reportar atraso</h3><p class="muted">Envie o nick de quem está atrasado. A administração analisa o registro antes de qualquer decisão.</p><form id="reportForm" class="stack"><label>Nick reportado<input id="reportNick" placeholder="Nick#BR1" minlength="2" maxlength="80" required></label><label>Observação<textarea id="reportDetails" maxlength="500" placeholder="Opcional: contexto do atraso"></textarea></label><div><button class="primary" type="submit">Enviar reporte ao ADM</button></div></form></div></section></div></main></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b100e">
+  <meta name="description" content="CMIM In-House: encontre sua sala, escolha sua lane, confirme presença e participe do draft automático.">
+  <title>CMIM | Fila In-House</title>
+  <link rel="icon" href="./assets/branding/cmim-main.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./fila.css">
+  <script defer src="./cmim-auth.js"></script>
+  <script defer src="./fila.js"></script>
+</head>
+<body data-no-auth-badge="1">
+<header class="site-head">
+ <div class="shell head-inner">
+  <a href="./" class="brand" aria-label="CMIM — página inicial"><img src="./assets/branding/cmim-main.webp" alt=""><span>CMIM<span class="brand-dot">.</span><small>IN-HOUSE ARENA</small></span></a>
+  <nav class="head-links" aria-label="Navegação">
+    <a class="head-active" href="./fila.html" aria-current="page">Fila In-House</a>
+    <a href="./draft.html?jogar=1">Entrar em sala pronta</a>
+    <a href="./ranking.html">Ranking</a>
+    <a href="./conta.html">Minha conta</a>
+    <a href="./admin-fila.html" id="adminLink" hidden>ADM de filas</a>
+  </nav>
+ </div>
+</header>
+<main class="shell">
+ <section class="hero" aria-labelledby="pageTitle">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="live-dot"></span> CMIM / IN HOUSE COMPETITIVE</div>
+    <h1 id="pageTitle">SUA LANE.<br><em>SUA VEZ.</em></h1>
+    <p>O WhatsApp organiza a lista. Aqui você garante sua vaga: escolha uma das cinco lanes, entre na sala no horário marcado e confirme sua presença. Com dez jogadores, o draft começa automaticamente.</p>
+    <div class="hero-steps"><span><b>01</b> ESCOLHER LANE</span><i></i><span><b>02</b> CONFIRMAR</span><i></i><span><b>03</b> DRAFT</span></div>
+  </div>
+  <div class="hero-visual" aria-label="Dez vagas distribuídas em cinco lanes">
+    <div class="hero-visual-top"><span>FORMAÇÃO OFICIAL</span><span class="hero-label">5v5</span></div>
+    <div class="hero-numbers"><strong>10</strong><div><b>JOGADORES</b><span>05 LANES · 02 VAGAS POR LANE</span></div></div>
+    <div class="hero-lanes" aria-hidden="true"><span>TOP</span><span>JG</span><span>MID</span><span>ADC</span><span>SUP</span></div>
+    <p>Vagas controladas em tempo real. A terceira inscrição na mesma lane é bloqueada.</p>
+  </div>
+ </section>
+ <p id="message" role="status" aria-live="polite" class="notice" hidden></p>
+ <div id="signin" class="auth-gate" hidden>
+   <div class="auth-icon" aria-hidden="true">↗</div>
+   <div><h2>Entre com sua conta CMIM</h2><p>Para entrar na fila, escolher uma lane e confirmar sua presença, faça login ou cadastre seu nick.</p></div>
+   <a href="./conta.html" class="btn primary">Entrar / cadastrar <span aria-hidden="true">↗</span></a>
+ </div>
+ <div id="mainGrid" class="dashboard" hidden>
+   <aside class="sidebar">
+    <section class="panel" aria-labelledby="roomsHeading">
+      <div class="section-heading"><div><span class="kicker">AGENDA</span><h2 id="roomsHeading">Salas disponíveis</h2></div><span class="muted-icon">◷</span></div>
+      <div class="rooms" id="rooms" aria-label="Selecione uma sala"></div>
+    </section>
+    <section class="panel signup" aria-labelledby="signupHeading">
+      <div class="section-heading"><div><span class="kicker">CHECK-IN</span><h2 id="signupHeading">Minha inscrição</h2></div><span class="muted-icon">◎</span></div>
+      <p id="myStatus" class="subtext">Selecione uma sala para participar.</p>
+      <label class="field-label" for="laneChoice">ESCOLHA SUA LANE</label>
+      <select id="laneChoice" required aria-describedby="laneHint">
+        <option value="">Selecione sua lane</option>
+        <option value="TOP">TOP</option>
+        <option value="JG">JG</option>
+        <option value="MID">MID</option>
+        <option value="ADC">ADC</option>
+        <option value="SUP">SUP</option>
+      </select>
+      <p id="laneHint" class="field-help">Escolha livre para esta sala. Sua lane do perfil não muda. Sem tier cadastrado? Você participa como Tier B.</p>
+      <div class="signup-buttons">
+        <button id="join" class="btn primary" type="button">Entrar na fila ↗</button>
+        <button id="confirm" class="btn outline" type="button">✓ Confirmar presença</button>
+        <button id="saveLane" class="btn ghost" type="button">Atualizar minha lane</button>
+        <button id="leave" class="btn text-danger" type="button">Sair da fila</button>
+      </div>
+    </section>
+    <div class="helper"><span>?</span><p><strong>Como funciona?</strong> São apenas duas vagas por lane. Uma vez confirmados os dez participantes, o sistema escolhe dois capitães pelos tiers e inicia as escolhas alternadas.</p></div>
+   </aside>
+   <div class="content">
+    <section class="room-overview panel" aria-labelledby="roomTitle">
+      <div class="room-topline"><span class="kicker">SALA SELECIONADA</span><span id="roomStatus" class="status-chip">AGUARDANDO</span></div>
+      <div class="room-overview-grid">
+       <div><h2 id="roomTitle">Selecione uma sala</h2><p id="roomTime" class="subtext">A programação aparece aqui.</p></div>
+       <div class="count-box"><strong id="confirmedCount">0<span>/10</span></strong><small>CONFIRMADOS</small></div>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="Presenças confirmadas" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="confirmedTrack"><div id="confirmedBar"></div></div>
+      <div id="queueSummary" class="room-note">Aguardando inscrições.</div>
+    </section>
+    <section class="panel lane-section" aria-labelledby="lanesHeading">
+      <div class="section-heading lined"><div><span class="kicker">DISTRIBUIÇÃO DA FILA</span><h2 id="lanesHeading">Vagas por lane</h2></div><small class="subtext">02 por posição · 10 no total</small></div>
+      <div id="laneBoard" class="lane-board"></div>
+    </section>
+    <section class="panel participants-section" aria-labelledby="playersHeading">
+      <div class="section-heading lined"><div><span class="kicker">CONFIRMAÇÃO EM TEMPO REAL</span><h2 id="playersHeading">Jogadores da sala</h2></div><span class="legend"><span class="tiny-dot active"></span> Confirmado <span class="tiny-dot idle"></span> Pendente</span></div>
+      <div id="participants" class="participants"></div>
+    </section>
+    <section id="draftArea" class="panel draft-panel" hidden aria-labelledby="draftHeading">
+      <div class="section-heading lined"><div><span class="kicker">COMEÇOU A PARTIDA</span><h2 id="draftHeading">Draft de jogadores</h2></div><div id="clock" class="draft-clock">60s</div></div>
+      <p id="turnLabel" class="draft-turn">Aguardando definição dos capitães.</p>
+      <div id="teams" class="teams"></div>
+      <h3 class="draft-subtitle">Disponíveis para escolha</h3>
+      <div id="available" class="available"></div>
+      <p class="subtext draft-footer">Cada capitão realiza quatro escolhas, alternando A–B, com 60 segundos por escolha. Ao terminar, os dois times ficam visíveis nesta sala.</p>
+      <a id="nextStage" class="btn primary next-stage" href="./selecao.html" hidden>Abrir seleção de campeões ↗</a><p id="nextStageNote" class="subtext" hidden>Próxima etapa opcional: a seleção de campeões é uma ferramenta separada; os times ainda não são transferidos automaticamente.</p>
+    </section>
+    <details class="panel report-panel">
+      <summary><div><span class="kicker">MODERAÇÃO / FAIR PLAY</span><h2>Reportar atraso</h2><p class="subtext">Informe um nick para análise reservada pela administração.</p></div><span class="summary-arrow">⌄</span></summary>
+      <form id="reportForm" class="report-form">
+        <label for="reportNick">Nick do jogador<input id="reportNick" placeholder="Ex.: Jogador#BR1" minlength="2" maxlength="80" required></label>
+        <label for="reportDetails">O que aconteceu? (opcional)<textarea id="reportDetails" rows="3" maxlength="500" placeholder="Conte o contexto do atraso, sem expor informações pessoais."></textarea></label>
+        <button type="submit" class="btn primary">Enviar reporte ao ADM</button>
+        <p class="subtext">Reportar não gera punição automática. O ADM analisa o registro.</p>
+      </form>
+    </details>
+   </div>
+ </div>
+</main>
+<footer class="footer shell"><span>CMIM © 2026 · COMUNIDADE MAIS INSALUBRE DO MUNDO</span><a href="./regulamento.html">REGULAMENTO ↗</a></footer>
+</body></html>
