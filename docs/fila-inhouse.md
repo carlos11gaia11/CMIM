@@ -6,15 +6,15 @@ Módulo criado para o repositório `carlos11gaia11/CMIM` (React/Vite + GitHub Pa
 
 O site atualmente usa `https://klpvidxhzofbwstvvxib.supabase.co` (conferido em `public/cmim-auth.js` no GitHub). Nesse banco existem **65 jogadores no ranking, 23 eventos de ranking, 35 usuários e 35 perfis** na verificação efetuada. O projeto `jboiydywjcgemzbsqwhz` informado anteriormente está vazio (0 usuários e nenhuma tabela pública). **Não execute este SQL no projeto vazio esperando que ele modifique o site já publicado.**
 
-Antes de instalar, execute `sql/00-verificar-protecao-ranking.sql` no SQL Editor do Supabase **klpvidxhzofbwstvvxib**, e registre o resultado. Faça backup do banco pelo painel do Supabase. Depois execute `sql/2026-11-13-fila-site.sql` no SQL Editor **do mesmo projeto**. O SQL só cria tabelas e funções novas `cmim_queue_*` / `cmim_q_*` e um schema interno `cmim_internal`. Não faz `DROP`, não altera `cmim_rank` e não remove usuários ou senhas.
+**Instalado:** a migração `supabase/sql/2026-11-13-fila-site.sql` já foi aplicada no Supabase `klpvidxhzofbwstvvxib` em 13/11/2026. Não é necessário executá-la outra vez nesse projeto. Foram criadas 6 tabelas e 12 RPCs. Antes/depois: 65 jogadores, 23 eventos, 35 contas e 35 perfis; a assinatura MD5 do JSON de ranking permaneceu `56034f322a6e3586d1e10c9e8cb55dce` (versão 138). O SQL não altera `cmim_rank` nem remove usuários. Se for reproduzir num projeto NOVO, revise o arquivo e faça backup antes.
 
 ## Integrar ao site atual
 
-1. Baixe e extraia o repositório `carlos11gaia11/CMIM` (branch atual) numa pasta local.
-2. Copie os arquivos `public/fila.html`, `public/fila.js`, `public/admin-fila.html`, `public/admin-fila.js` deste pacote para a pasta `public/` do repositório.
-3. Copie `scripts/integrar-no-site.mjs` para `scripts/` no repositório. Execute na raiz do repositório: `node scripts/integrar-no-site.mjs .` . O script acrescenta um link **Fila In-House** na navegação e um link **Fila e Draft Automático** no painel ADM.
-4. Rode `npm install`, `npm test`, `npm run build` e publique via workflow GitHub Pages do próprio repositório. A página será `/CMIM/fila.html`; o painel será `/CMIM/admin-fila.html`.
-5. Entre no site com uma conta cujo `app_metadata.cmim_admin` seja `true` (a mesma permissão já usada pelo painel). Agende uma sala, configure o tempo de pick (padrão 60s), teste com dez contas de jogadores antes de usar oficialmente.
+1. A nova aba e o atalho administrativo estão implementados na branch `feature/inhouse-fila-confirmacao` do repositório `carlos11gaia11/CMIM`.
+2. Os arquivos novos estão em `public/fila.html`, `public/fila.js`, `public/admin-fila.html`, `public/admin-fila.js`.
+3. Execute `npm ci`, `npm test` e `npm run build`; o workflow de Pull Request verifica o código antes de publicar. O deploy GitHub Pages só acontece após merge na branch `main`.
+4. As URLs previstas após o deploy são `/CMIM/fila.html` e `/CMIM/admin-fila.html`.
+5. Entre com conta cujo `app_metadata.cmim_admin` seja `true`, agende uma sala e faça o teste completo com dez contas antes de usar oficialmente.
 
 ## Fluxo
 
