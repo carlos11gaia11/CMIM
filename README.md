@@ -211,3 +211,31 @@ ser organizados por outra funcionalidade do portal.
 O painel contém também um laboratório local de 20 jogadores simbólicos,
 sem escrita no Supabase. A tabela `cmim_rank`, contas e histórico não são
 modificados.
+
+
+## Exclusão administrativa de uma fila
+
+Na página `admin-fila.html`, após selecionar uma sala, o ADM encontra a
+**Zona de exclusão → Excluir fila permanentemente**. A exclusão funciona para
+filas normais de 10 participantes e torneios de 20 participantes, inclusive
+quando a sala já esteve em draft.
+
+Antes de apagar, o painel exige digitar exatamente o título da fila e
+confirmar uma segunda vez. O backend valida tanto a permissão ADM por
+`cmim_internal.is_admin()` quanto a igualdade do título atual da sala,
+sob bloqueio transacional.
+
+Ao excluir, são apagados a sala escolhida e seus participantes, picks e
+reportes (`ON DELETE CASCADE`), além de seus registros operacionais de
+auditoria. Permanece apenas um registro mínimo de exclusão
+(`room_deleted`, ator, título, formato e contagens), sem listar dados
+de participantes. **Ranking, resultados históricos, perfis e contas
+de autenticação não são alterados.**
+
+SQL: `supabase/sql/2026-11-13-admin-excluir-fila.sql`.
+
+O teste de integração com duas salas fictícias confirmou que a função
+rejeita a exclusão por não ADM e por título incorreto, exclui apenas a
+sala indicada, mantém o registro de auditoria e preserva o checksum do
+ranking. Todo o teste ocorreu em subtransação revertida: nenhuma sala
+fictícia permaneceu salva.
