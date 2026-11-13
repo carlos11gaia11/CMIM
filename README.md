@@ -122,7 +122,7 @@ o ranking seguem independentes.
   sala. A escolha vale apenas para essa sala e pode ser modificada enquanto
   a fila estiver aberta. A lane principal do perfil não é sobrescrita.
 - Quem não possui tier válido é considerado **Tier B somente na fila/draft**.
-  O tier armazenado no perfil e o registro histórico do ranking não mudam.
+  Perfis anteriormente sem tier recebem B por padrão (inclusive em novos cadastros); classificações S/A/B/C/D já registradas permanecem intactas, assim como todo o ranking histórico.
 - O administrador pode corrigir a lane de participantes pela tela
   `admin-fila.html`. A ação é validada no PostgreSQL pelo app_metadata
   `cmim_admin` e registrada em `cmim_queue_audit`.
@@ -133,7 +133,8 @@ o ranking seguem independentes.
   dados no Supabase, não cria contas e não afeta o ranking.
 - SQL do recurso em
   `supabase/sql/2026-11-13-fila-lanes-tier-b.sql` e
-  `supabase/sql/2026-11-13-fila-admin-lanes.sql`.
+  `supabase/sql/2026-11-13-fila-admin-lanes.sql` e
+  `supabase/sql/2026-11-13-tier-b-perfil-padrao.sql`.
   As migrações foram aplicadas ao projeto de produção
   `klpvidxhzofbwstvvxib`.
 
