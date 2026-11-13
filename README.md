@@ -111,3 +111,32 @@ Os arquivos possuem transparência nas áreas externas da marca, foram otimizado
 
 O portal mantém o in-house separado do circuito, mas agora apresenta portas de entrada para ambos logo após o hero. A área `ligas.html` reúne panorama do circuito, equipes homologadas, eventos, agenda de partidas e classificação, exibindo apenas os dados disponíveis no Supabase. O regulamento ganhou pesquisa local por termo. Nenhum placar, cronograma ou premiação é inventado.
 
+
+## In-House: fila com lane livre e laboratório ADM (13/11/2026)
+
+O botão **Jogar** abre `fila.html`. A ferramenta anterior, acessada por
+`draft.html?jogar=1`, chama-se **Entrar em sala pronta**. O draft manual e
+o ranking seguem independentes.
+
+- Cada participante autenticado seleciona TOP, JG, MID, ADC ou SUP ao entrar na
+  sala. A escolha vale apenas para essa sala e pode ser modificada enquanto
+  a fila estiver aberta. A lane principal do perfil não é sobrescrita.
+- Quem não possui tier válido é considerado **Tier B somente na fila/draft**.
+  O tier armazenado no perfil e o registro histórico do ranking não mudam.
+- O administrador pode corrigir a lane de participantes pela tela
+  `admin-fila.html`. A ação é validada no PostgreSQL pelo app_metadata
+  `cmim_admin` e registrada em `cmim_queue_audit`.
+- Dentro do painel ADM há um **Laboratório** com 10 usuários simbólicos:
+  confirmar individualmente ou em lote, visualizar escolha automática de
+  capitães, escolher oito jogadores alternadamente e usar relógio de 60s,
+  desfazer escolha e reiniciar. Toda a simulação é **100% local** e não grava
+  dados no Supabase, não cria contas e não afeta o ranking.
+- SQL do recurso em
+  `supabase/sql/2026-11-13-fila-lanes-tier-b.sql` e
+  `supabase/sql/2026-11-13-fila-admin-lanes.sql`.
+  As migrações foram aplicadas ao projeto de produção
+  `klpvidxhzofbwstvvxib`.
+
+Segurança: o frontend nunca recebe chaves secretas. A escolha de lane, as
+permissões administrativas e o draft real são verificados no backend. O
+laboratório não substitui o teste ponta a ponta com dez contas reais.
