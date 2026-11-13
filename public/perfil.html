@@ -20,10 +20,11 @@
 <label class="cmim-field">FOTO (PNG/JPG/WEBP ATÉ 2 MB)<input id="edit-avatar" type="file" accept="image/png,image/jpeg,image/webp"></label>
 </div><div class="cmim-actions"><button class="cmim-button">SALVAR ALTERAÇÕES</button><button id="cancel-edit" type="button" class="cmim-button ghost">Cancelar</button></div>
 <p id="edit-status" class="cmim-status" role="status"></p></form>
-<div class="cmim-stats"><div class="cmim-stat"><strong id="stat-games">—</strong><span>JOGOS APROVADOS</span></div><div class="cmim-stat"><strong id="stat-wins">—</strong><span>VITÓRIAS</span></div><div class="cmim-stat"><strong id="stat-wr">—</strong><span>WIN RATE</span></div><div class="cmim-stat"><strong id="stat-champs">—</strong><span>CAMPEÕES DIFERENTES</span></div></div>
-<div class="cmim-grid"><section class="cmim-card"><h2>MINHA EVOLUÇÃO</h2><p class="cmim-muted">Vitórias e derrotas nos últimos jogos homologados.</p><div id="profile-chart" class="cmim-progress" aria-label="Gráfico do histórico de resultados"></div></section>
+<div class="cmim-stats"><div class="cmim-stat"><strong id="stat-games">—</strong><span>JOGOS REGISTRADOS</span></div><div class="cmim-stat"><strong id="stat-wins">—</strong><span>VITÓRIAS</span></div><div class="cmim-stat"><strong id="stat-wr">—</strong><span>WIN RATE</span></div><div class="cmim-stat"><strong id="stat-champs">—</strong><span>CAMPEÕES IDENTIFICADOS</span></div></div>
+<p class="cmim-muted" id="profile-stats-source" style="margin:0 0 15px">Consultando resultados do ranking e partidas homologadas...</p>
+<div class="cmim-grid"><section class="cmim-card"><h2>MINHA EVOLUÇÃO</h2><p class="cmim-muted">Resultados por série histórica ou partida homologada. Em séries antigas, a ordem individual dos jogos não foi registrada.</p><div id="profile-chart" class="cmim-progress" aria-label="Gráfico do histórico de resultados"></div></section>
 <section class="cmim-card"><h2>CAMPEÕES MAIS JOGADOS</h2><div id="profile-champions" class="cmim-empty">Sem picks homologados ainda.</div></section></div>
-<section class="cmim-card" style="margin-top:18px"><h2>HISTÓRICO DE PARTIDAS</h2><div id="profile-game-history" class="cmim-table-wrap"></div><p class="cmim-muted">Partidas novas registradas com uma conta CMIM usam seu identificador de perfil. Dados antigos, ainda sem vínculo, são aproximados pelo nick. O ADM pode vincular sua conta ao jogador do ranking para confirmar sua classificação.</p></section>
+<section class="cmim-card" style="margin-top:18px"><h2>HISTÓRICO DE PARTIDAS</h2><div id="profile-game-history" class="cmim-table-wrap"></div><p class="cmim-muted">O histórico do ranking utiliza seu vínculo confirmado pelo ADM e mostra resultados consolidados por série. Jogos homologados do draft incluem picks; quando uma série já foi lançada no ranking, ela é contada uma única vez. A data do ranking é a data do registro, que pode diferir do dia da partida.</p></section>
 <section class="cmim-card" style="margin-top:18px"><h2>MINHAS TEMPORADAS</h2><div id="profile-seasons" class="cmim-empty">Buscando temporadas...</div></section>
 </div></main>
 <script>document.addEventListener('DOMContentLoaded',async()=>{
@@ -67,24 +68,114 @@
     $('edit-status').textContent='✓ Perfil salvo.';setTimeout(()=>location.reload(),800);
    }catch(err){$('edit-status').textContent=err.message;$('edit-status').classList.add('error')}finally{btn.disabled=false}
   };
-  const belongs=p=>p.profile_id?p.profile_id===who.id:norm(p.nick)===norm(profile.nick);
+
+  // Prioridade: identidade da conta e vinculo aprovado pelo ADM com o ranking.
+  // O ranking guarda as series historicas; o draft aprovado guarda os picks por partida.
+  const rank=rankRows?.[0]?.data||{};
+  const verifiedRankId=profile.rank_player_id&&profile.rank_verified_at?profile.rank_player_id:null;
+  const rankPlayer=verifiedRankId?(rank.players||[]).find(p=>p.id===verifiedRankId):null;
+  const linkedNick=rankPlayer?.nick||'';
+  const belongs=p=>{
+   const accountId=p.profile_id||p.profileId||p.account_id||p.accountId;
+   if(accountId)return accountId===who.id;
+   const nick=norm(p.nick||'');
+   return !!nick&&(nick===norm(profile.nick)||(verifiedRankId&&nick===norm(linkedNick)));
+  };
   const games=(reports||[]).filter(r=>Array.isArray(r.picks)&&r.picks.some(belongs));
   const enriched=games.map(g=>{
-   const picks=g.picks.filter(belongs);
-   const pick=picks[0],won=pick?.side===g.winner_side;
-   return {...g,pick,won}
+   const pick=g.picks.find(belongs),won=String(pick?.side||'').toLowerCase()===String(g.winner_side||'').toLowerCase();
+   return {...g,pick,won};
   });
-  const wins=enriched.filter(g=>g.won).length,played=enriched.length;
-  $('stat-games').textContent=played;$('stat-wins').textContent=wins;
-  $('stat-wr').textContent=played?Math.round(wins/played*100)+'%':'—';
-  $('stat-champs').textContent=new Set(enriched.map(g=>g.pick?.champion).filter(Boolean)).size;
-  const champ=new Map();enriched.forEach(g=>{const k=g.pick?.champion||'Desconhecido';const o=champ.get(k)||{played:0,wins:0};o.played++;if(g.won)o.wins++;champ.set(k,o)});
+  function cmimBuildStats(rank, playerId, approved) {
+  const events = Array.isArray(rank?.events) ? rank.events : [];
+  const seasons = Array.isArray(rank?.seasons) ? rank.seasons : [];
+  const seasonNames = new Map(seasons.map(s => [s.id, s.name]));
+  const roomPattern = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i;
+  const history = playerId ? events.flatMap(ev => {
+    const deltas = (Array.isArray(ev.deltas) ? ev.deltas : []).filter(d => d.playerId === playerId);
+    if (!deltas.length) return [];
+    const sum = k => deltas.reduce((n, d) => n + (Number(d[k]) || 0), 0);
+    const games = sum('games'), wins = sum('wins'), losses = sum('losses');
+    if (!games && !wins && !losses) return [];
+    const room = ev.type === 'md3' ? (String(ev.note || '').match(roomPattern)?.[0] || null) : null;
+    return [{
+      origin: 'ranking', id: ev.id, date: ev.at, season: seasonNames.get(ev.seasonId) || '—',
+      games, wins, losses, champion: null, room,
+      label: ev.type === 'md3' ? 'Série do ranking' : 'Ajuste no ranking',
+      note: ev.note || '', score: ev.score || ''
+    }];
+  }) : [];
+  const syncedRooms = new Set(history.map(e => e.room).filter(Boolean));
+  const newReports = approved.filter(g => !g.room_id || !syncedRooms.has(g.room_id));
+  const sum = (rows, field) => rows.reduce((n, r) => n + r[field], 0);
+  const rankGames = sum(history, 'games');
+  const rankWins = sum(history, 'wins');
+  const rankLosses = sum(history, 'losses');
+  const played = Math.max(0, rankGames + newReports.length);
+  const wins = Math.max(0, rankWins + newReports.filter(r => r.won).length);
+  const losses = Math.max(0, rankLosses + newReports.filter(r => !r.won).length);
+  const reportsHistory = approved.map(g => ({
+    origin: 'draft', id: [g.room_id, g.game].join(':'), date: g.confirmed_at,
+    season: g.season_name || seasonNames.get(g.season_id) || '—',
+    games: 1, wins: g.won ? 1 : 0, losses: g.won ? 0 : 1,
+    champion: g.pick?.champion || null, room: g.room_id || null,
+    label: 'Jogo ' + g.game, note: '', score: ''
+  }));
+  const roomsWithReports = new Set(approved.map(g => g.room_id).filter(Boolean));
+  const historyRows = [
+    ...history.filter(e => !e.room || !roomsWithReports.has(e.room)),
+    ...reportsHistory
+  ].sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
+  const championRows = approved.filter(g => g.pick?.champion && g.pick.champion !== 'Desconhecido');
+  return {
+    played, wins, losses, rankGames, rankWins, rankLosses, newReportGames: newReports.length,
+    historyRows, championRows, knownChampions: new Set(championRows.map(g => g.pick.champion)).size,
+    syncedRooms: syncedRooms.size
+  };
+}
+  const summary=cmimBuildStats(rank,verifiedRankId,enriched);
+  $('stat-games').textContent=summary.played;
+  $('stat-wins').textContent=summary.wins;
+  $('stat-wr').textContent=summary.played?Math.round(summary.wins/summary.played*100)+'%':'—';
+  $('stat-champs').textContent=summary.knownChampions||'—';
+  $('stat-champs').title='Campeões identificados apenas nos drafts homologados, não no histórico agregado do ranking.';
+  $('profile-stats-source').textContent=summary.rankGames+' jogo(s) registrados no ranking · '+
+   summary.newReportGames+' jogo(s) homologado(s) adicionais. Campeões são contabilizados somente onde há picks registrados.';
+  const champ=new Map();
+  summary.championRows.forEach(g=>{
+   const key=g.pick.champion,old=champ.get(key)||{played:0,wins:0};
+   old.played++;if(g.won)old.wins++;champ.set(key,old);
+  });
   $('profile-champions').className='';
-  $('profile-champions').innerHTML=champ.size?[...champ.entries()].sort((a,b)=>b[1].played-a[1].played).slice(0,8).map(([name,n])=>'<div style="display:flex;gap:9px;align-items:center;border-bottom:1px solid #51654e;padding:9px"><img width="45" height="45" style="border-radius:7px" alt="" loading="lazy" src="https://ddragon.leagueoflegends.com/cdn/img/champion/tiles/'+encodeURIComponent(name)+'_0.jpg"><b style="flex:1;color:#ffe49b">'+E(name)+'</b><span>'+n.played+' pick(s) · '+Math.round(n.wins/n.played*100)+'% WR</span></div>').join(''):empty('Ainda não há campeões homologados com seu nick.');
-  const chart=enriched.slice(0,15).reverse();
-  $('profile-chart').innerHTML=chart.length?chart.map((g,i)=>'<div style="height:'+(g.won?100:45)+'%;background:'+(g.won?'#dbbf58':'#a05c52')+'"><b>'+ (g.won?'V':'D')+'</b><span>'+String(i+1)+'</span></div>').join(''):empty('Sem jogos homologados para gerar o gráfico.');
-  $('profile-game-history').innerHTML=enriched.length?'<table class="cmim-table"><thead><tr><th>Data</th><th>Temporada</th><th>Campeão</th><th>Resultado</th><th>Partida</th></tr></thead><tbody>'+enriched.slice(0,50).map(g=>'<tr><td>'+new Date(g.confirmed_at).toLocaleDateString('pt-BR')+'</td><td>'+E(g.season_name||'—')+'</td><td>'+E(g.pick?.champion||'—')+'</td><td style="color:'+(g.won?'#a4edae':'#ffac9c')+'">'+(g.won?'VITÓRIA':'DERROTA')+'</td><td>Jogo '+g.game+'</td></tr>').join('')+'</tbody></table>':empty('Nenhuma partida aprovada foi associada ao seu nick.');
-  const rank=rankRows?.[0]?.data||{},seasons=(rank.seasons||[]).filter(x=>(x.roster||[]).includes(profile.rank_player_id));
+  $('profile-champions').innerHTML=champ.size?[...champ.entries()].sort((a,b)=>b[1].played-a[1].played).slice(0,8).map(([name,n])=>
+   '<div style="display:flex;gap:9px;align-items:center;border-bottom:1px solid #51654e;padding:9px">'+
+   '<img width="45" height="45" style="border-radius:7px" alt="" loading="lazy" src="https://ddragon.leagueoflegends.com/cdn/img/champion/tiles/'+encodeURIComponent(name)+'_0.jpg">'+
+   '<b style="flex:1;color:#ffe49b">'+E(name)+'</b><span>'+n.played+' pick(s) · '+Math.round(n.wins/n.played*100)+'% WR</span></div>').join(''):
+   empty('O histórico antigo não registra picks de campeões. Eles aparecerão após a homologação de drafts com picks.');
+  const chart=summary.historyRows.filter(g=>g.games>0).slice(0,15).reverse();
+  $('profile-chart').className='';
+  $('profile-chart').innerHTML=chart.length?chart.map(g=>{
+   const winPct=Math.max(0,Math.min(100,Math.round(100*Math.max(0,g.wins)/g.games)));
+   const lossPct=Math.max(0,Math.min(100-winPct,Math.round(100*Math.max(0,g.losses)/g.games)));
+   const label=g.origin==='ranking'?'Série histórica':g.label;
+   return '<div style="display:grid;grid-template-columns:minmax(90px,1fr) minmax(80px,2fr) auto;gap:12px;align-items:center;margin:11px 0">'+
+    '<div><b style="color:#ffe49b">'+E(label)+'</b><div class="cmim-muted" style="font-size:11px">'+
+    (g.date&&!isNaN(Date.parse(g.date))?new Date(g.date).toLocaleDateString('pt-BR'):'Sem data')+'</div></div>'+
+    '<div style="height:19px;border-radius:5px;overflow:hidden;display:flex;background:#334139">'+
+    '<span style="width:'+winPct+'%;background:#dfc85e"></span>'+
+    '<span style="width:'+lossPct+'%;background:#b36c62"></span></div>'+
+    '<strong style="white-space:nowrap;font-size:12px">'+g.wins+'V · '+g.losses+'D</strong></div>';
+  }).join(''):empty('Nenhum resultado de partidas foi registrado ou homologado ainda.');
+  $('profile-game-history').innerHTML=summary.historyRows.length?
+   '<table class="cmim-table"><thead><tr><th>Registro</th><th>Temporada</th><th>Origem</th><th>Campeão</th><th>Resultado</th><th>Detalhe</th></tr></thead><tbody>'+
+   summary.historyRows.slice(0,50).map(g=>
+    '<tr><td>'+(g.date&&!isNaN(Date.parse(g.date))?new Date(g.date).toLocaleDateString('pt-BR'):'—')+'</td>'+
+    '<td>'+E(g.season)+'</td><td>'+E(g.origin==='ranking'?'Ranking':'Draft homologado')+'</td>'+
+    '<td>'+E(g.champion||'—')+'</td>'+
+    '<td style="color:'+(g.wins>=g.losses?'#a4edae':'#ffac9c')+'">'+g.wins+'V · '+g.losses+'D</td>'+
+    '<td>'+E(g.label+(g.score?' · '+g.score:'')+(g.note?' · '+g.note:''))+'</td></tr>').join('')+
+   '</tbody></table>':empty('Nenhuma partida ou série foi associada à sua conta.');
+  const seasons=(rank.seasons||[]).filter(x=>(x.roster||[]).includes(verifiedRankId));
   $('profile-seasons').innerHTML=seasons.length?seasons.map(x=>'<div class="cmim-badge">'+E(x.name)+' · '+E(x.division||'Misto')+' · '+E(x.status||'')+'</div>').join(''):empty('Nenhuma temporada do Ranking foi vinculada ao seu usuário ainda.');
   $('profile-loading').hidden=true;$('profile-content').hidden=false;
  }catch(err){$('profile-loading').textContent='Não foi possível carregar seu perfil: '+err.message;}
