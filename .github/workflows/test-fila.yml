@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci --no-audit --no-fund
+      - run: npm install --no-audit --no-fund
       - run: npm test
       - run: node --check public/fila.js
       - run: node --check public/admin-fila.js
