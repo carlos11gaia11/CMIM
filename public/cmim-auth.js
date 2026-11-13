@@ -168,7 +168,7 @@ async function signUp(values){
   if(!document.body||document.getElementById('cmim-mobile-dock'))return;
   const links=[
    ['⌂','Portal','./'],
-   ['▶','Jogar','./draft.html?jogar=1'],
+   ['▶','Jogar','./fila.html'],
    ['♛','Ligas','./ligas.html'],
    ['◉','Perfil','./perfil.html'],
    ['▥','Ranking','./ranking.html']
