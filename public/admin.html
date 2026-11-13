@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./admin-ui.css">
   <title>CMIM | Administração</title>
-  <script defer src="./portal-admin.js"></script><script defer src="./admin-users.js?v=20261113-rank-az"></script><script defer src="./admin-manual-games.js"></script>
+  <script defer src="./portal-admin.js"></script><script defer src="./admin-users.js?v=20261113-tag-espacos"></script><script defer src="./admin-manual-games.js"></script>
 <link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head>
 <body data-no-auth-badge="1" class="admin-page">
   <div class="admin-layout">
@@ -126,7 +126,7 @@
                     <label>NOME REAL (PRIVADO)<input id="registered-edit-name" maxlength="90" placeholder="Nome real não informado"></label>
                     <label>TELEFONE (PRIVADO)<input id="registered-edit-phone" type="tel" maxlength="20" placeholder="(11) 99999-9999"></label>
                     <label>NICK<input id="registered-edit-nick" minlength="2" maxlength="32" required></label>
-                    <label>TAG RIOT<input id="registered-edit-tag" maxlength="6" pattern="[^\s#]{3,6}" required></label>
+                    <label>TAG RIOT<input id="registered-edit-tag" maxlength="7" pattern="#?[A-Za-z0-9](?:[A-Za-z0-9 ]{1,4})[A-Za-z0-9]" title="Ex.: L 9 ou #L 9. Espaços internos são aceitos pelo CMIM; o # inicial é opcional." required><span class="field-help">Aceita espaços internos no CMIM. Ex.: L 9 (não é validação da Riot).</span></label>
                     <label>LANE PRIMÁRIA<select id="registered-edit-lane" required><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
                     <label>LANE SECUNDÁRIA<select id="registered-edit-secondary" required><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
                     <label>ELO ATUAL<select id="registered-edit-elo">
@@ -184,7 +184,7 @@
               <label>NOME REAL (PRIVADO)<input id="manage-user-name" maxlength="90" placeholder="Nome real não informado"></label>
 <label>TELEFONE COM DDD (PRIVADO)<input id="manage-user-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="(11) 99999-9999"></label>
               <label>NICK<input id="manage-user-nick" minlength="2" maxlength="32" required></label>
-              <label>TAG RIOT<input id="manage-user-tag" maxlength="6" pattern="[A-Za-z0-9]{3,6}" required></label>
+              <label>TAG RIOT<input id="manage-user-tag" maxlength="7" pattern="#?[A-Za-z0-9](?:[A-Za-z0-9 ]{1,4})[A-Za-z0-9]" title="Ex.: L 9 ou #L 9. O # inicial será removido antes de salvar." required><span class="field-help">Espaços internos aceitos; pode colar com # (ex.: #L 9). O identificador é do CMIM.</span></label>
               <label>LANE PRIMÁRIA<select id="manage-user-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
               <label>LANE SECUNDÁRIA<select id="manage-user-secondary"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label><label>VINCULAR AO JOGADOR DO RANKING
  <input id="manage-rank-search" type="search" placeholder="Buscar nick no Ranking (A–Z)..." autocomplete="off" aria-label="Buscar nick histórico para vincular a esta conta">
