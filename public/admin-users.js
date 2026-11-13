@@ -4,6 +4,35 @@ document.addEventListener('DOMContentLoaded',()=>{
 const BASE='https://klpvidxhzofbwstvvxib.supabase.co',KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn', $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const state={profiles:[],private:[],defs:[],roles:[],rank:[],ready:false};
+const rankCollator=new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true,ignorePunctuation:true});
+const rankText=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
+const rankLabel=r=>String(r.nick||r.name||r.id||'Jogador sem nick');
+// Carrega todos os jogadores do histórico, mesmo os fora da temporada atual.
+function fillRankSelector(kind,selectedValue='',profileId=null){
+ const select=$(kind==='registered'?'registered-edit-rank':'manage-user-rank');
+ const search=$(kind==='registered'?'registered-rank-search':'manage-rank-search');
+ const counter=$(kind==='registered'?'registered-rank-count':'manage-rank-count');
+ if(!select)return;
+ const sorted=[...state.rank].sort((a,b)=>rankCollator.compare(rankLabel(a),rankLabel(b))||rankCollator.compare(String(a.id),String(b.id)));
+ const query=rankText(search?.value);
+ const matches=sorted.filter(p=>!query||rankText(rankLabel(p)).includes(query));
+ const selected=String(selectedValue||'');
+ const pinned=selected&&!matches.some(p=>p.id===selected)?sorted.find(p=>p.id===selected):null;
+ const shown=pinned?[pinned,...matches]:matches;
+ const linked=new Map(state.profiles.filter(p=>p.rank_player_id).map(p=>[p.rank_player_id,p]));
+ select.innerHTML='<option value="">Sem vínculo ao Ranking</option>'+shown.map(p=>{
+   const owner=linked.get(p.id),mine=owner?.id===profileId;
+   const label=rankLabel(p)+(owner?(mine?' · vínculo atual':' · já vinculado a '+owner.nick+'#'+owner.tag):'');
+   return '<option value="'+esc(p.id)+'"'+(owner&&!mine?' disabled':'')+'>'+esc(label)+'</option>';
+ }).join('');
+ select.value=selected;
+ if(select.value!==selected)select.value='';
+ if(counter){
+   const linkedCount=sorted.filter(p=>linked.has(p.id)).length;
+   counter.textContent=matches.length+' de '+sorted.length+' jogadores do ranking exibidos · '+linkedCount+' vinculados';
+   if(pinned)counter.textContent+=' · vínculo atual mantido fora da busca';
+ }
+}
 const status=(s,bad=false)=>{const node=$('manage-user-status');if(node){node.textContent=s;node.style.color=bad?'#ffaba6':'#bdebb7'}};
 function notice(message,bad=false){
  let node=$('cmim-user-save-toast');
@@ -41,7 +70,9 @@ async function fetchData({throwOnError=false}={}){
    req('/rest/v1/cmim_user_roles?select=user_id,role_slug,assigned_at&limit=3000'),
    req('/rest/v1/cmim_rank?id=eq.1&select=data')
   ]);
-  Object.assign(state,{profiles,private:priv,defs,roles,rank:rankRows?.[0]?.data?.players||[],ready:true});render();if(selectedRegisteredId&&profiles.some(p=>p.id===selectedRegisteredId))openRegistered(selectedRegisteredId);status(profiles.length+' usuários cadastrados, '+defs.length+' cargos.');
+  const allRankPlayers=rankRows?.[0]?.data?.players;
+  if(!Array.isArray(allRankPlayers))throw Error('Não foi possível carregar a lista completa de jogadores do Ranking oficial.');
+  Object.assign(state,{profiles,private:priv,defs,roles,rank:allRankPlayers,ready:true});render();if(selectedRegisteredId&&profiles.some(p=>p.id===selectedRegisteredId))openRegistered(selectedRegisteredId);status(profiles.length+' usuários cadastrados, '+defs.length+' cargos.');
  }catch(e){status('Erro ao carregar usuários: '+e.message,true);if(throwOnError)throw e}
 }
 let selectedRegisteredId=null;
@@ -88,8 +119,8 @@ function openRegistered(id){
  $('registered-tier-current').value=p.tier||'';
  $('registered-edit-avatar').value=p.avatar_url||'';
  $('registered-edit-bio').value=p.bio||'';
- $('registered-edit-rank').innerHTML='<option value="">Sem vínculo ao Ranking</option>'+state.rank.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.nick||r.name||r.id)+'</option>').join('');
- $('registered-edit-rank').value=p.rank_player_id||'';
+ $('registered-rank-search').value='';
+ fillRankSelector('registered',p.rank_player_id||'',p.id);
  $('registered-tier-feedback').textContent='Dados atuais carregados do cadastro. Edite e clique em salvar.';
  $('registered-tier-form').scrollIntoView({block:'nearest',behavior:'smooth'});
 }
@@ -99,8 +130,7 @@ function render(){
  const options='<option value="">Selecione um usuário...</option>'+users.map(p=>'<option value="'+p.id+'">'+(p.rank_verified_at?'✓ ':'◷ ')+esc(p.nick+'#'+p.tag)+'</option>').join('');
  $('manage-user-select').innerHTML=options;$('manage-role-user').innerHTML=options;
  if(users.some(x=>x.id===current))$('manage-user-select').value=current;
- $('manage-user-rank').innerHTML='<option value="">Sem vínculo ao Ranking</option>'+state.rank
-  .map(p=>'<option value="'+esc(p.id)+'">'+esc(p.nick)+'</option>').join('');
+ fillRankSelector('manage','',null);
  const currentRole=$('manage-role-select').value;
  $('manage-role-select').innerHTML='<option value="">Selecione o cargo...</option>'+state.defs.map(r=>'<option value="'+esc(r.slug)+'">'+esc(r.label)+'</option>').join('');
  if(state.defs.some(x=>x.slug===currentRole))$('manage-role-select').value=currentRole;
@@ -114,7 +144,8 @@ function showUser(){
  $('manage-user-nick').value=u.nick;$('manage-user-tag').value=u.tag;
  $('manage-user-lane').value=u.lane||'MID';
  $('manage-user-secondary').value=u.secondary_lane||((u.lane==='SUP')?'MID':'SUP');
- $('manage-user-rank').value=u.rank_player_id||'';
+ $('manage-rank-search').value='';
+ fillRankSelector('manage',u.rank_player_id||'',u.id);
  const verified=$('manage-rank-verification');
  if(verified)verified.textContent=u.rank_verified_at?'✓ Vínculo verificado pelo ADM em '+new Date(u.rank_verified_at).toLocaleDateString('pt-BR'):'◷ Sem vínculo verificado ao Ranking.';
 }
@@ -203,6 +234,17 @@ $('registered-tier-form')?.addEventListener('submit',async event=>{
  }finally{saving(btn,false)}
 });
 document.querySelector('[data-admin-tab="players"]')?.addEventListener('click',fetchData);
+$('registered-rank-search')?.addEventListener('input',()=>{
+  const p=state.profiles.find(x=>x.id===selectedRegisteredId);
+  fillRankSelector('registered',$('registered-edit-rank').value,p?.id||null);
+});
+$('manage-rank-search')?.addEventListener('input',()=>{
+  const p=state.profiles.find(x=>x.id===$('manage-user-select').value);
+  fillRankSelector('manage',$('manage-user-rank').value,p?.id||null);
+});
+for(const id of ['registered-rank-search','manage-rank-search']){
+ $(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')e.preventDefault()});
+}
 $('manage-user-select')?.addEventListener('change',showUser);
 $('manage-role-user')?.addEventListener('change',renderAssigned);
 $('users-refresh')?.addEventListener('click',fetchData);
