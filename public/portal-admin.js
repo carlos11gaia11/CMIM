@@ -8,7 +8,7 @@
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const state={session:null,admin:false,rank:null,version:null,metadata:[],news:[],reports:[],loading:false,reviewBusy:false};
   try{state.session=JSON.parse(sessionStorage.getItem(SESSION)||'null')}catch{}
-  const tierList=['S','A','B','C','D','E','F'];
+  const tierList=['S+','S','A+','A','B+','B','C','D','E','F'];
   const laneList=['TOP','JG','MID','ADC','SUP'];
 
   function flash(message,bad=false){
