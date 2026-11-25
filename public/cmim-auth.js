@@ -4,13 +4,14 @@
  const STORAGE='cmim_player_session',LANES=['TOP','JG','MID','ADC','SUP'];
  // Confirmations must return to the published CMIM site, never to Supabase's localhost default.
  const EMAIL_CONFIRM_REDIRECT='https://carlos11gaia11.github.io/CMIM/conta.html?confirmed=1';
- let session=null,loginInFlight=null,verifyInFlight=null,verifiedUser=null,authStatus='checking',generation=0;
+ let session=null,loginInFlight=null,verifyInFlight=null,verifiedUser=null,verifiedAt=0,authStatus='checking',generation=0;
  function readStored(){try{return JSON.parse(localStorage.getItem(STORAGE)||'null')}catch{return null}}
  session=readStored();
- if(!session){try{session=JSON.parse(sessionStorage.getItem('cmim_session')||'null')}catch{}}
+ if(!session){try{session=JSON.parse(sessionStorage.getItem('cmim_session')||'null');if(session?.access_token)localStorage.setItem(STORAGE,JSON.stringify(session))}catch{}}
+ try{sessionStorage.removeItem('cmim_session')}catch{}
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  function notify(){document.body?.setAttribute('data-auth-state',authStatus);document.dispatchEvent(new CustomEvent('cmim-auth-changed',{detail:{loggedIn:authStatus==='authenticated',status:authStatus}}));updateBadge()}
- function save(data){generation++;session=data||null;verifiedUser=null;authStatus=data?'checking':'guest';try{if(data)localStorage.setItem(STORAGE,JSON.stringify(data));else localStorage.removeItem(STORAGE);sessionStorage.removeItem('cmim_session')}catch{}notify()}
+ function save(data,{preserve=false}={}){generation++;session=data||null;if(!preserve||!data||!verifiedUser||data.user?.id!==verifiedUser.id){verifiedUser=null;verifiedAt=0;authStatus=data?'checking':'guest';}try{if(data)localStorage.setItem(STORAGE,JSON.stringify(data));else localStorage.removeItem(STORAGE);sessionStorage.removeItem('cmim_session')}catch{}notify()}
  async function call(path,{method='GET',body,secure=false,headers={}}={}){
   const active=secure?await current():null;
   if(secure&&!active?.access_token)throw Error('Sessão indisponível. Entre novamente ou tente reconectar.');
@@ -24,25 +25,49 @@
   if((session.expires_at||0)>Date.now()/1000+90)return session;
   if(loginInFlight)return loginInFlight;
   const original=session,epoch=generation;
-  loginInFlight=(async()=>{try{
-   const latest=readStored();if(latest?.access_token&&latest.refresh_token!==original.refresh_token&&(latest.expires_at||0)>Date.now()/1000+90){if(epoch===generation)save(latest);return session}
-   const fresh=await call('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:original.refresh_token}});if(epoch===generation)save(fresh);return session;
-  }catch(e){if(epoch===generation){const latest=readStored();if(latest?.refresh_token&&latest.refresh_token!==original.refresh_token){save(latest);return session}if([400,401,403].includes(e.status))save(null);else{authStatus='offline';notify()}}return null}finally{loginInFlight=null}})();
+  const renew=async()=>{
+   if(epoch!==generation)return session;
+   const latest=readStored();
+   if(latest?.access_token&&latest.refresh_token!==original.refresh_token){save(latest,{preserve:true});return (latest.expires_at||0)>Date.now()/1000+90?latest:null}
+   try{
+    const fresh=await call('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:original.refresh_token}});
+    if(epoch===generation)save(fresh,{preserve:true});return session;
+   }catch(e){
+    if(epoch===generation){
+     const latest=readStored();
+     if(latest?.refresh_token&&latest.refresh_token!==original.refresh_token){save(latest,{preserve:true});return (latest.expires_at||0)>Date.now()/1000+90?latest:null}
+     if([400,401,403].includes(e.status))save(null);else{authStatus='offline';notify()}
+    }
+    return null;
+   }
+  };
+  loginInFlight=(navigator.locks?.request?navigator.locks.request('cmim-auth-refresh',renew):renew()).finally(()=>{loginInFlight=null});
   return loginInFlight;
  }
- async function user(){
-  if(verifyInFlight)return verifyInFlight;
-  verifyInFlight=(async()=>{try{
-   const active=await current();if(!active){if(!session){authStatus='guest';notify()}return null}
-   const epoch=generation;
-   try{const who=await call('/auth/v1/user',{secure:true});if(epoch!==generation)return null;verifiedUser=who;authStatus='authenticated';notify();return who}
-   catch(e){if(epoch===generation){if([401,403].includes(e.status))save(null);else{authStatus='offline';notify()}}return null}
-  }finally{verifyInFlight=null}})();
-  return verifyInFlight;
+ async function user({force=false}={}){
+  if(!force&&authStatus==='authenticated'&&verifiedUser&&Date.now()-verifiedAt<30000&&(session?.expires_at||0)>Date.now()/1000+90)return verifiedUser;
+  if(verifyInFlight?.epoch===generation)return verifyInFlight.promise;
+  const slot={epoch:generation};
+  slot.promise=(async()=>{
+   const active=await current();
+   if(!active){if(!session){authStatus='guest';notify()}return null}
+   const epoch=generation;slot.epoch=epoch;
+   try{
+    const who=await call('/auth/v1/user',{secure:true});
+    if(epoch!==generation)return null;
+    if(!who?.id){save(null);return null}
+    verifiedUser=who;verifiedAt=Date.now();authStatus='authenticated';notify();return who;
+   }catch(e){
+    if(epoch===generation){if([401,403].includes(e.status))save(null);else{authStatus='offline';notify()}}
+    return null;
+   }
+  })().finally(()=>{if(verifyInFlight===slot)verifyInFlight=null});
+  verifyInFlight=slot;return slot.promise;
  }
  async function signIn(email,password){
   const data=await call('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});
-  save(data);await user();return data;
+  save(data);if(!await user({force:true}))throw Error(authStatus==='offline'?'Login recebido, mas não foi possível verificar a sessão. Tente reconectar.':'Não foi possível validar o login.');
+  return data;
  }
  function normalizePhone(value){
  let digits=String(value||'').replace(/[^0-9]/g,'');
@@ -66,9 +91,8 @@ async function signUp(values){
   return out;
  }
  async function logout(){
-  const token=(await current())?.access_token;
-  try{if(token)await call('/auth/v1/logout',{method:'POST',secure:true})}catch{}
-  save(null);try{sessionStorage.removeItem('cmim_session')}catch{}
+  const token=session?.access_token;save(null);
+  try{if(token)await fetch(BASE+'/auth/v1/logout',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+token}})}catch{}
  }
  function profileLink(){return './perfil.html'}
  async function squareImage(file){
@@ -107,7 +131,7 @@ async function signUp(values){
  // Page access is enforced using Supabase Auth, not merely the presence of a stored token.
  // Pages intentionally marked data-cmim-protected=1 are gated even when opened by direct URL.
  const PROTECTED_PAGES=new Set(['draft.html','ranking.html','selecao.html','inhouse.html','relatorios.html','pontuacao.html','perfil.html']);
- const RETURN_PAGES=new Set([...PROTECTED_PAGES,'ligas.html','campeonatos.html','equipes.html']);
+ const RETURN_PAGES=new Set([...PROTECTED_PAGES,'ligas.html','campeonatos.html','equipes.html','fila.html','agenda.html','admin.html','admin-fila.html']);
  function safeReturn(raw){
   if(!raw||typeof raw!=='string'||raw.length>1500)return null;
   try{
@@ -182,6 +206,7 @@ async function signUp(values){
  function badgeMarkup(){return '<div class="cmim-auth-bar" id="cmim-auth-badge"><a href="./conta.html" title="Conta CMIM">◌ Entrar / Cadastrar</a></div>'}
  function updateBadge(){
   const authenticated=authStatus==='authenticated';
+  document.querySelectorAll('.cmim-admin-link').forEach(el=>el.hidden=!(authenticated&&verifiedUser?.app_metadata?.cmim_admin===true));
   const name=verifiedUser?.user_metadata?.nick||'Meu perfil';
   // On the homepage login belongs in the prominent header CTA, not in the bottom corner.
   const header=document.getElementById('portal-auth-button');
@@ -200,14 +225,18 @@ async function signUp(values){
   if(session?.access_token)current().then(updateBadge);
  }
  function mountNavigation(){
-  const old=document.querySelector('header.site-header,header.cmim-topbar');
-  if(!old||old.dataset.cmimUnified==='1')return;
+  if(document.querySelector('.cmim-unified-nav')||document.body?.classList.contains('admin-page')||document.getElementById('root'))return;
   const here=location.pathname.split('/').pop()||'index.html';
+  const old=document.querySelector('body > header');if(!old)return;
   const nav=document.createElement('header');nav.className='cmim-unified-nav';nav.dataset.cmimUnified='1';
   const primary=[['Início','./','index.html'],['In-House','./inhouse.html','inhouse.html'],['Ligas','./ligas.html','ligas.html'],['Equipes','./equipes.html','equipes.html'],['Agenda','./agenda.html','agenda.html']];
-  const more=[['Entrar em sala pronta','./draft.html?jogar=1'],['Ranking','./ranking.html'],['Draft','./draft.html'],['Seleção de campeões','./selecao.html'],['Regulamento','./regulamento.html'],['Comp Maker','./comp-maker.html'],['Aulas','./aulas.html'],['CMIM News','./#news'],['Jogadores','./#jogadores'],['Comunidade','./#redes'],['Administração','./admin.html']];
-  nav.innerHTML='<div class="cmim-nav-inner"><a class="cmim-nav-brand" href="./"><img src="./assets/branding/cmim-main.webp?v=3" alt="" width="48" height="48"><span>CMIM<small>COMPETITIVE CIRCUIT</small></span></a><button type="button" class="cmim-nav-toggle" aria-expanded="false" aria-controls="cmim-nav-links" aria-label="Abrir menu">☰</button><nav id="cmim-nav-links" aria-label="Menu principal">'+primary.map(([name,href,page])=>'<a href="'+href+'"'+(here===page?' aria-current="page"':'')+'>'+name+'</a>').join('')+'<details class="cmim-nav-more"><summary>Mais <span aria-hidden="true">⌄</span></summary><div>'+more.map(([name,href])=>'<a href="'+href+'">'+name+'</a>').join('')+'</div></details><a class="cmim-nav-play" href="./fila.html">Jogar</a><a class="cmim-nav-account" id="portal-auth-button" href="./conta.html">Verificando…</a></nav></div>';
-  old.replaceWith(nav);
+  const more=[['Entrar em sala pronta','./draft.html?jogar=1'],['Ranking','./ranking.html'],['Relatórios','./relatorios.html'],['Pontuação','./pontuacao.html'],['Draft','./draft.html'],['Seleção de campeões','./selecao.html'],['Regulamento','./regulamento.html'],['Comp Maker','./comp-maker.html'],['Aulas','./aulas.html'],['CMIM News','./#news'],['Jogadores','./#jogadores'],['Comunidade','./#redes']];
+  nav.innerHTML='<div class="cmim-nav-inner"><a class="cmim-nav-brand" href="./"><img src="./assets/branding/cmim-main.webp?v=20261125-logo" alt="" width="48" height="48"><span>CMIM<small>COMPETITIVE CIRCUIT</small></span></a><button type="button" class="cmim-nav-toggle" aria-expanded="false" aria-controls="cmim-nav-links" aria-label="Abrir menu">☰</button><nav id="cmim-nav-links" aria-label="Menu principal">'+primary.map(([name,href,page])=>'<a href="'+href+'"'+(here===page?' aria-current="page"':'')+'>'+name+'</a>').join('')+'<details class="cmim-nav-more"><summary>Mais <span aria-hidden="true">⌄</span></summary><div>'+more.map(([name,href])=>'<a href="'+href+'">'+name+'</a>').join('')+'<a class="cmim-admin-link" href="./admin.html" hidden>Administração</a><a class="cmim-admin-link" id="adminLink" href="./admin-fila.html" hidden>Gestão de filas</a></div></details><a class="cmim-nav-play" href="./fila.html">Jogar</a><a class="cmim-nav-account" id="portal-auth-button" href="./conta.html">Verificando…</a></nav></div>';
+  if(['ranking.html','comp-maker.html','admin-fila.html'].includes(here)){old.before(nav);old.classList.add('cmim-local-header');}
+  else{
+   const localLinks=[...old.querySelectorAll('nav a[href^="#"]')];
+   if(['ligas.html','regulamento.html'].includes(here)&&localLinks.length){const local=document.createElement('nav');local.className='cmim-local-links';local.setAttribute('aria-label','Nesta página');localLinks.forEach(a=>local.append(a.cloneNode(true)));old.replaceWith(nav,local)}else old.replaceWith(nav);
+  }
   const toggle=nav.querySelector('.cmim-nav-toggle');toggle.onclick=()=>{const open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(open));nav.classList.toggle('is-open',open)};
   nav.addEventListener('keydown',e=>{if(e.key==='Escape'){nav.querySelector('details').open=false;nav.classList.remove('is-open');toggle.setAttribute('aria-expanded','false');toggle.focus()}});
   document.addEventListener('click',e=>{if(!nav.contains(e.target)){nav.querySelector('details').open=false;nav.classList.remove('is-open');toggle.setAttribute('aria-expanded','false')}});
@@ -218,14 +247,15 @@ async function signUp(values){
  function mountMobileDock(){mountNavigation()}
  window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,uploadTeamLogo,squareImage,esc,session:()=>session,authState:()=>({status:authStatus,user:verifiedUser}),save,requireLogin,gotoLogin,requestedDestination};
  function initialize(){
-  const css=document.createElement('link');css.rel='stylesheet';css.href='./cmim-unified.css?v=20261125';document.head.append(css);mountNavigation();
+  const css=document.createElement('link');css.rel='stylesheet';css.href='./cmim-unified.css?v=20261125-final';document.head.append(css);mountNavigation();
   document.documentElement.classList.remove('cmim-auth-pending');
   if(document.body?.dataset?.cmimProtected==='1'){
    mountMobileDock();
    void requireLogin().then(ok=>{if(ok){mountBadge();updateBadge()}});
   }else{mountBadge();mountMobileDock();updateBadge()}
   void user().then(updateBadge);
-  window.addEventListener('storage',e=>{if(e.key!==STORAGE)return;generation++;session=readStored();verifiedUser=null;authStatus=session?'checking':'guest';notify();void user().then(()=>{if(document.body?.dataset?.cmimProtected==='1')void requireLogin()})});
+  window.addEventListener('storage',e=>{if(e.key!==STORAGE)return;const before=verifiedUser?.id||session?.user?.id;const next=readStored();if(!next||before!==next.user?.id){location.reload();return}generation++;session=next;verifiedAt=0;authStatus='checking';notify();void user({force:true})});
+  window.addEventListener('online',()=>{if(authStatus==='offline'){if(document.body?.dataset?.cmimProtected==='1')void requireLogin();else void user({force:true})}});
   // Public portal: clicking a protected tool while logged out takes the visitor to login.
   if(document.body?.dataset?.cmimProtected!=='1'){
    document.addEventListener('click',event=>{
