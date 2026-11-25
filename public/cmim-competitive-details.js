@@ -115,11 +115,11 @@
   setHero({title:t.name,eyebrow:'CMIM COMPETITIVE CIRCUIT · PERFIL DE EQUIPE',description:t.motto||'Equipe do cenário competitivo do CMIM. Aqui você acompanha elenco, participação em ligas e resultados oficiais.',logo:safeImage(t.logo_url)||'./assets/branding/cmim-main.webp',labels:[t.short_name||'EQUIPE CMIM',members.length+' atletas no elenco'],cta:[{href:'./ligas.html#equipes-oficiais',label:'EXPLORAR OUTRAS EQUIPES →'},{href:'./ligas.html#eventos',label:'VER CAMPEONATOS'}]});
   $('detail-metrics').innerHTML=metric('PARTICIPAÇÕES',comps.length,'Inscrições homologadas')+metric('SÉRIES JOGADAS',finished.length,'Confrontos aprovados')+metric('VITÓRIAS',wins.length,'Séries vencidas')+metric('WIN RATE',finished.length?Math.round(100*wins.length/finished.length)+'%':'—',finished.length?mapWins+' mapas ganhos · '+mapLosses+' perdidos':'Aguardando resultados');
   const laneOrder=['TOP','JG','MID','ADC','SUP'];
-  const roster=members.slice().sort((a,b)=>laneOrder.indexOf(a.lane)-laneOrder.indexOf(b.lane));
+  const roster=members.slice().sort((a,b)=>Number(b.starter)-Number(a.starter)||laneOrder.indexOf(a.lane)-laneOrder.indexOf(b.lane));
   $('detail-roster').innerHTML=!ok.members||!ok.profiles?empty('Elenco temporariamente indisponível.',true):roster.length?roster.map(m=>{
     const p=data.profiles.find(p=>p.id===m.user_id);const avatar=safeImage(p?.avatar_url);
     return '<article class="cmim-detail-player">'+(avatar?'<img src="'+esc(avatar)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="avatar-placeholder">'+esc((p?.nick||'CM').slice(0,2).toUpperCase())+'</span>')+
-     '<span class="role">'+esc(m.lane||'LANE')+'</span><b>'+esc(p?p.nick+'#'+p.tag:'Jogador sem perfil público')+'</b><span>'+esc(p?.tier?'TIER '+p.tier:'Tier não divulgado')+'</span></article>';
+     '<span class="role">'+esc((m.lane||'LANE')+' · '+(m.starter?'TITULAR':'RESERVA'))+'</span><b>'+esc(p?p.nick+'#'+p.tag:'Jogador sem perfil público')+'</b><span>'+esc(p?.tier?'TIER '+p.tier:'Tier não divulgado')+'</span></article>';
    }).join(''):empty('Esta equipe ainda não possui atletas confirmados no banco de dados.');
   $('detail-events').innerHTML=!ok.entries?empty('Não foi possível consultar as inscrições.',true):comps.length?comps.map(c=>'<article class="cmim-detail-card"><small>'+esc(leagueName(c.league_tier))+'</small><h3>'+esc(c.title)+'</h3><p>'+esc(fmtStatus(c.status))+' · Início: '+esc(fmtDate(c.starts_at))+'</p><a class="card-link" href="'+linkEvent(c)+'">VER CHAVEAMENTO →</a></article>').join(''):empty('Ainda não há participações homologadas para esta equipe.');
   $('detail-schedule').innerHTML=!ok.matches?empty('Agenda indisponível.',true):next.length?next.slice(0,12).map(gameCard).join(''):empty('Esta equipe ainda não possui partidas agendadas.');
@@ -135,7 +135,7 @@
    squads:'cmim_squads?select=id,name,short_name,captain_lane,motto,logo_url,owner_id,created_at&limit=800',
    entries:'cmim_competition_entries?select=id,competition_id,team_id,status&limit=3000',
    matches:'cmim_competition_matches?select=id,competition_id,round_number,match_number,team_a_id,team_b_id,score_a,score_b,status,winner_id,scheduled_at,approved_at&limit=4000',
-   members:'cmim_squad_members?select=team_id,user_id,lane&limit=2500',
+   members:'cmim_squad_members?select=team_id,user_id,lane,starter&limit=2500',
    profiles:'cmim_profiles?select=id,nick,tag,lane,tier,avatar_url&limit=2500'
   };
   const keys=Object.keys(requests);
