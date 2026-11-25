@@ -56,9 +56,29 @@ async function signUp(values){
   save(null);try{sessionStorage.removeItem('cmim_session')}catch{}
  }
  function profileLink(){return './perfil.html'}
+ async function squareImage(file){
+  if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Escolha JPG, PNG ou WebP de até 10 MB.');
+  const url=URL.createObjectURL(file);
+  try{
+   const img=new Image();img.src=url;await img.decode();
+   const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
+   const ctx=canvas.getContext('2d'),side=Math.min(img.naturalWidth,img.naturalHeight);
+   ctx.drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,512,512);
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.9));
+   if(!blob)throw Error('Não foi possível processar a imagem.');
+   return new File([blob],'image.webp',{type:'image/webp'});
+  }finally{URL.revokeObjectURL(url)}
+ }
+ async function uploadTeamLogo(file){
+  const who=await user();if(!who)throw Error('Entre na sua conta.');
+  const image=await squareImage(file),path=who.id+'/'+crypto.randomUUID()+'.webp';
+  const res=await fetch(BASE+'/storage/v1/object/cmim-team-logos/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+(await current()).access_token,'Content-Type':image.type},body:image});
+  const info=await res.json().catch(()=>({}));if(!res.ok)throw Error(info.message||info.error||'Falha ao enviar logo.');
+  return BASE+'/storage/v1/object/public/cmim-team-logos/'+path;
+ }
  async function uploadAvatar(file){
   const who=await user();if(!who)throw Error('Entre na sua conta antes de enviar sua foto.');
-  if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024)throw Error('Escolha JPG, PNG ou WebP de até 2 MB.');
+  file=await squareImage(file);
   const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
   const path=who.id+'/avatar.'+ext;
   const res=await fetch(BASE+'/storage/v1/object/cmim-avatars/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+(await current()).access_token,
@@ -184,7 +204,7 @@ async function signUp(values){
   }).join('');
   document.body.append(nav);
  }
- window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,esc,session:()=>session,save,requireLogin,gotoLogin,requestedDestination};
+ window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,uploadTeamLogo,squareImage,esc,session:()=>session,save,requireLogin,gotoLogin,requestedDestination};
  function initialize(){
   document.documentElement.classList.remove('cmim-auth-pending');
   if(document.body?.dataset?.cmimProtected==='1'){
