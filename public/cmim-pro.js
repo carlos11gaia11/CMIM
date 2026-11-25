@@ -1,3 +1,4 @@
+window.CMIMPro={confirm(message){return new Promise(resolve=>{const dialog=document.createElement('dialog');dialog.className='pro-dialog';const title=document.createElement('h2');title.textContent='Confirmar operação';const p=document.createElement('p');p.textContent=String(message);const form=document.createElement('form');form.method='dialog';form.className='pro-dialog-actions';for(const [v,t] of [['no','Cancelar'],['yes','Confirmar']]){const b=document.createElement('button');b.value=v;b.textContent=t;form.append(b)}dialog.append(title,p,form);document.body.append(dialog);dialog.addEventListener('close',()=>{const yes=dialog.returnValue==='yes';dialog.remove();resolve(yes)},{once:true});dialog.showModal()})}};
 document.addEventListener('DOMContentLoaded',()=>{
  const $=id=>document.getElementById(id);
  const here=location.pathname.split('/').pop()||'index.html';

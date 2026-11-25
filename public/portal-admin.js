@@ -451,7 +451,7 @@
         const img=newsSafeUrl(n.image_url);
         return '<article class="news-card">'+(img?'<img src="'+esc(img)+'" alt="" loading="lazy">':'<div class="news-card-art">CMIM<span>NEWS</span></div>')+
           '<div class="news-card-content"><small>'+esc(n.category)+' · '+esc(date)+'</small><h3>'+esc(n.title)+'</h3><p>'+esc(n.excerpt)+'</p>'+
-          '<button type="button" data-read-news="'+i+'">LER REPORTAGEM →</button></div></article>';
+          '<a class="news-read-link" href="./noticia.html?id='+encodeURIComponent(n.id)+'">LER REPORTAGEM →</a></div></article>';
       }).join('');
       box.querySelectorAll('[data-read-news]').forEach(btn=>btn.addEventListener('click',()=>{
         const n=newsCache[Number(btn.dataset.readNews)];
