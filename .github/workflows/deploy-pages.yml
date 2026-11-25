@@ -13,6 +13,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -59,7 +60,24 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Aguardar o pacote de publicação
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_NAME: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+        shell: bash
+        run: |
+          for attempt in {1..15}; do
+            count=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq '[.artifacts[] | select(.name == env.ARTIFACT_NAME and .expired == false)] | length' || echo 0)
+            if [ "$count" = "1" ]; then exit 0; fi
+            sleep 3
+          done
+          echo 'O pacote de publicação não ficou disponível na API do GitHub.' >&2
+          exit 1
 
       - name: Publicar site
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
