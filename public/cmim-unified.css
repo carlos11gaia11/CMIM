@@ -1,0 +1,30 @@
+/* CMIM unified shell — black, graphite and signal yellow. */
+:root{--dark:#0c0c0e;--panel:#17171b;--panel2:#212126;--line:#35353c;--gold:#ffe134;--white:#f5f5f6;--muted:#b4b4bc;--cmim-void:#0b0b0d;--cmim-ink:#141418;--cmim-panel:#19191e;--cmim-edge:#34343b;--cmim-gold:#ffe134;--cmim-cream:#f5f5f6;--cmim-mist:#b4b4bc;--bg:#0c0c0e;--surface:#17171b;--yellow:#ffe134;--cream:#f5f5f6}
+body.cmim-account-page,body.cmim-homepage{background:#0c0c0e!important;background-image:radial-gradient(ellipse at 85% 0%,#ffe1340c,transparent 32%)!important;color:#f5f5f6}
+.cmim-unified-nav{position:sticky;top:0;z-index:900;isolation:isolate;background:#101013f5;color:#f4f4f5;border-bottom:1px solid #35353b;backdrop-filter:blur(16px);font:600 14px Barlow,system-ui,sans-serif}
+.cmim-nav-inner{max-width:1440px;margin:auto;padding:10px clamp(16px,3vw,42px);min-height:72px;display:flex;align-items:center;gap:28px}
+.cmim-nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none!important;color:#ffe134!important;flex-shrink:0}
+.cmim-nav-brand img{width:48px;height:48px;object-fit:contain;border-radius:8px}
+.cmim-nav-brand span{font:900 29px/1 'Barlow Condensed',system-ui,sans-serif;letter-spacing:.04em}
+.cmim-nav-brand small{display:block;color:#a5a5ad;font:700 9px/1.4 Barlow,system-ui,sans-serif;letter-spacing:.12em}
+#cmim-nav-links{display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;min-width:0}
+#cmim-nav-links a,.cmim-nav-more summary{color:#d0d0d5;text-decoration:none!important;padding:11px 13px;border-radius:7px;white-space:nowrap;font-weight:600;cursor:pointer}
+#cmim-nav-links a:hover,.cmim-nav-more summary:hover,#cmim-nav-links a[aria-current=page]{color:#ffe134;background:#ffe1340e}
+.cmim-nav-more{position:relative}.cmim-nav-more summary{list-style:none}.cmim-nav-more summary::-webkit-details-marker{display:none}
+.cmim-nav-more>div{position:absolute;right:0;top:calc(100% + 12px);min-width:220px;background:#19191d;border:1px solid #35353b;border-radius:10px;padding:6px;box-shadow:0 20px 40px #0009;display:grid;gap:2px}
+#cmim-nav-links .cmim-nav-play{background:#ffe134;color:#101012;font-weight:800;margin-left:10px}
+#cmim-nav-links .cmim-nav-account{border:1px solid #414148;max-width:210px;overflow:hidden;text-overflow:ellipsis}
+.cmim-nav-toggle{display:none;color:#ffe134;background:#1c1c21;border:1px solid #414148;border-radius:7px;padding:8px 13px;font-size:21px;line-height:1.2}
+.cmim-card,.cmim-cup,.cmim-detail-card,.cmim-match,.cmim-detail-match,.cmim-detail-player,.cmim-pulse-stat{background:#17171b!important;border-color:#35353c!important;box-shadow:none!important}
+.cmim-account-page input,.cmim-account-page select,.cmim-account-page textarea{background:#101014;color:#f5f5f6;border-color:#414148}
+.cmim-account-page .cmim-button:not(.ghost){background:#ffe134!important;color:#111!important;border-color:#ffe134!important}
+.cmim-account-page .cmim-button.ghost{background:#1d1d22!important;color:#f5f5f6!important;border-color:#44444a!important}
+.cmim-account-page .cmim-muted,.cmim-account-page .cmim-detail-empty{color:#b4b4bc}
+.cmim-account-page .cmim-shell{max-width:1320px}
+.cmim-account-page .cmim-hub-section{scroll-margin-top:90px}
+.cmim-account-page .cmim-bracket,.cmim-account-page .cmim-table-wrap{overflow-x:auto}
+.cmim-account-page .cmim-league-header{background:#151519!important;border-color:#35353c!important}
+.cmim-account-page .cmim-login-wall-panel{background:#17171b!important}
+.cmim-account-page .cmim-login-wall-logo{object-fit:contain}
+@media(max-width:1120px){.cmim-nav-inner{justify-content:space-between;flex-wrap:wrap;gap:10px}.cmim-nav-toggle{display:block}#cmim-nav-links{display:none;width:100%;flex:0 0 100%;align-items:stretch;flex-direction:column;padding:8px 0 14px;max-height:75vh;overflow-y:auto}.cmim-unified-nav.is-open #cmim-nav-links{display:flex}.cmim-nav-more>div{position:static;box-shadow:none;margin:3px 0}.cmim-nav-more summary{display:block}#cmim-nav-links .cmim-nav-play{margin-left:0}#cmim-nav-links .cmim-nav-account{max-width:none}.cmim-nav-brand img{width:42px;height:42px}}
+@media(prefers-reduced-motion:reduce){.cmim-unified-nav *{transition:none!important;animation:none!important}}
