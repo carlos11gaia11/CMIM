@@ -206,7 +206,11 @@ function hybridStandings(compId){
 }
 function hybridTables(comp){
  const {groups,complete}=hybridStandings(comp.id);
- if(!groups.some(g=>g.rows.length))return '<div class="cmim-empty">Os quatro grupos serão definidos no sorteio da primeira rodada.</div>';
+ if(!groups.some(g=>g.rows.length)){
+  const ids=comp.group_team_order;
+  if(!Array.isArray(ids)||ids.filter(Boolean).length!==16)return '<div class="cmim-empty">Os quatro grupos serão definidos pela organização antes da primeira rodada.</div>';
+  return '<h3 style="color:#ffe58c">GRUPOS DEFINIDOS</h3>'+['A','B','C','D'].map((g,i)=>'<div class="cmim-match"><b>GRUPO '+g+'</b><p>'+ids.slice(i*4,i*4+4).map(teamLink).join(' · ')+'</p></div>').join('');
+ }
  return '<h3 style="color:#ffe58c">CLASSIFICAÇÃO POR GRUPOS</h3><p class="cmim-muted">Vitória = 3 pontos. Desempate: confronto direto entre empatados. Os dois primeiros de cada grupo avançam.</p>'+
  groups.map(g=>'<h4>GRUPO '+g.group+'</h4><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Pontos</th><th>Situação</th></tr></thead><tbody>'+g.rows.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+teamLink(t.id)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.wins*3+'</td><td>'+(!complete?'Em disputa':t.unresolved?'Desempate pendente':i<2?'<span class="cmim-badge">✓ CLASSIFICADO</span>':'Eliminado')+'</td></tr>').join('')+'</tbody></table></div>').join('');
 }
@@ -254,6 +258,53 @@ $('create-squad').onsubmit=async e=>{
  }});e.currentTarget.reset();await read();status('✓ Time criado. Convide jogadores pelo formulário acima.')}
  catch(err){status('Não foi possível criar o time: '+safeErr(err),true)}finally{btn.disabled=false}
 };
+function groupEditor(comp,entries){
+ const approved=entries.filter(e=>e.status==='approved');
+ const saved=Array.isArray(comp.group_team_order)?comp.group_team_order:Array(16).fill(null);
+ const options='<option value="">Escolher equipe</option>'+approved.map(e=>'<option value="'+esc(e.team_id)+'">'+readable(e.team_id)+'</option>').join('');
+ return '<section class="cmim-cup" id="hybrid-group-editor" style="margin:18px 0"><h3 style="color:#ffe58c">MONTAGEM DOS GRUPOS</h3>'+
+ '<p class="cmim-muted">Monte manualmente durante a live ou sorteie automaticamente. Salve os grupos antes de gerar a primeira rodada. '+approved.length+'/16 equipes aprovadas.</p>'+
+ '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px">'+['A','B','C','D'].map((group,g)=>'<div class="cmim-match" style="display:block"><h4>GRUPO '+group+'</h4>'+Array.from({length:4},(_,i)=>'<label class="cmim-field">VAGA '+(i+1)+'<select data-group-slot="'+(g*4+i)+'">'+options+'</select></label>').join('')+'</div>').join('')+'</div>'+
+ '<p id="hybrid-group-count" class="cmim-muted"></p><div class="cmim-actions"><button type="button" class="cmim-button ghost" id="hybrid-draw" '+(approved.length!==16?'disabled':'')+'>SORTEIO AUTOMÁTICO</button><button type="button" class="cmim-button ghost" id="hybrid-clear">LIMPAR GRUPOS</button><button type="button" class="cmim-button" id="hybrid-save">SALVAR GRUPOS</button></div>'+
+ '<p class="cmim-muted">Os grupos salvos podem ser editados até a primeira rodada. Vagas vazias podem ser salvas durante o sorteio.</p></section>';
+}
+function bindGroupEditor(comp,entries){
+ const editor=$('hybrid-group-editor');if(!editor)return;
+ const slots=[...editor.querySelectorAll('[data-group-slot]')];
+ const approved=entries.filter(e=>e.status==='approved').map(e=>e.team_id);
+ const saved=Array.isArray(comp.group_team_order)?comp.group_team_order:Array(16).fill(null);
+ slots.forEach((select,i)=>select.value=approved.includes(saved[i])?saved[i]:'');
+ const values=()=>slots.map(el=>el.value||null);
+ const update=()=>{
+  const selected=values();
+  slots.forEach(select=>[...select.options].forEach(option=>option.disabled=!!option.value&&option.value!==select.value&&selected.includes(option.value)));
+  const count=selected.filter(Boolean).length;
+  const dirty=JSON.stringify(selected)!==JSON.stringify(saved);
+  $('hybrid-group-count').textContent=count+'/16 vagas preenchidas · '+(dirty?'Alterações não salvas':'Grupos salvos');
+  $('generate-round').disabled=count!==16||dirty||approved.length!==16;
+ };
+ slots.forEach(select=>select.addEventListener('change',update));
+ $('hybrid-draw').onclick=()=>{
+  if(approved.length!==16)return;
+  if(values().some(Boolean)&&!confirm('Substituir a montagem atual por um novo sorteio?'))return;
+  const shuffled=[...approved];
+  for(let i=shuffled.length-1;i>0;i--){
+   const n=i+1,limit=Math.floor(4294967296/n)*n,buffer=new Uint32Array(1);
+   do{crypto.getRandomValues(buffer)}while(buffer[0]>=limit);
+   const j=buffer[0]%n;[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+  }
+  slots.forEach((select,i)=>select.value=shuffled[i]);update();
+ };
+ $('hybrid-clear').onclick=()=>{if(confirm('Limpar todas as vagas? Salve para confirmar.')){slots.forEach(el=>el.value='');update()}};
+ $('hybrid-save').onclick=async()=>{
+  const selected=values(),filled=selected.filter(Boolean);
+  if(new Set(filled).size!==filled.length)return status('Equipe duplicada.',true);
+  const btn=$('hybrid-save');btn.disabled=true;
+  try{await a.call('/rest/v1/cmim_competitions?id=eq.'+comp.id,{method:'PATCH',secure:true,body:{group_team_order:selected},headers:{Prefer:'return=representation'}}).then(rows=>{if(!Array.isArray(rows)||rows.length!==1)throw Error('Não foi possível confirmar o salvamento.');});await read();status('✓ Grupos salvos: '+filled.length+'/16 vagas.')}
+  catch(e){status(safeErr(e),true)}finally{btn.disabled=false}
+ };
+ update();
+}
 function renderAdminManage(){
  if(!state.admin)return;
  const comp=competition($('admin-competition-select').value),box=$('admin-competition-body');
@@ -264,6 +315,7 @@ function renderAdminManage(){
  '<h3 style="color:#ffe08d">INSCRIÇÕES · '+entries.length+'</h3>'+
  (entries.length?entries.map(e=>'<div class="cmim-match">'+readable(e.team_id)+' · '+esc(label(e.status))+
  '<div class="cmim-actions">'+(e.status==='pending'?'<button class="cmim-button" data-entry="'+e.id+'" data-entry-status="approved">✓ Aprovar time</button><button class="cmim-button ghost" data-entry="'+e.id+'" data-entry-status="rejected">Rejeitar</button>':'')+'</div></div>').join(''):'<p class="cmim-muted">Sem inscrições.</p>')+
+ (hybrid(comp)&&currentRound===0?groupEditor(comp,entries):'')+
  '<div class="cmim-actions" style="margin-top:21px"><button id="generate-round" class="cmim-button">⚔ GERAR '+(comp.structure==='liga'?'TABELA DA LIGA':'PRÓXIMA RODADA')+'</button><span class="cmim-muted">Rodada atual: '+currentRound+'</span></div>'+
   '<div class="cmim-form-row" style="margin-top:12px"><label class="cmim-field">DATA/HORA PARA A PRÓXIMA RODADA (OPCIONAL)<input id="next-round-start" type="datetime-local" value="'+(currentRound===0?timeInput(comp.starts_at):'')+'"></label></div>'+
   '<p class="cmim-muted">Partidas geradas entram na agenda. A data informada vale para a rodada, mas pode ser ajustada por jogo.</p>'+
@@ -299,6 +351,7 @@ function renderAdminManage(){
   try{await a.call('/rest/v1/cmim_competition_entries?id=eq.'+entry.id,{method:'PATCH',secure:true,body:{group_tiebreak:value.trim()===''?null:Number(value)}});await read();status('Ordem de desempate registrada.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
  });
  $('generate-round').onclick=()=>generateRound(comp);
+ if(hybrid(comp)&&currentRound===0)bindGroupEditor(comp,entries);
  $('bulk-round-save')?.addEventListener('click',async event=>{
   const round=Number($('bulk-round-number')?.value),value=$('bulk-round-start')?.value;
   if(!round||!value)return status('Informe a rodada, dia e horário.',true);
