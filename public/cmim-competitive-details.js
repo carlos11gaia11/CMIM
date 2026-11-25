@@ -24,7 +24,7 @@
  const get=path=>A.call('/rest/v1/'+path);
  let data=null,ok={};
  function metric(label,value,desc=''){return '<div class="cmim-detail-metric"><small>'+esc(label)+'</small><strong>'+esc(value)+'</strong><span>'+esc(desc)+'</span></div>';}
- function linkEvent(c){return './ligas.html?liga='+encodeURIComponent(c.league_tier||'all')+'&campeonato='+encodeURIComponent(c.id)+'#classificacao';}
+ function linkEvent(c){return './campeonato.html?id='+encodeURIComponent(c.id)+'#classificacao';}
  function matchesFor(compIds){return data.matches.filter(m=>compIds.has(m.competition_id));}
  function approvedFor(compIds){return data.entries.filter(e=>compIds.has(e.competition_id)&&e.status==='approved');}
  function finishedGames(matches){return matches.filter(m=>m.status==='approved'&&m.team_b_id&&m.winner_id);}

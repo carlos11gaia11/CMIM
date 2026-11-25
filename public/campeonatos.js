@@ -173,7 +173,7 @@ function render(){
   button.setAttribute('aria-pressed',String(active));
  });
  $('competition-list').innerHTML=visibleComps.length?visibleComps.map(c=>{
-  const count=state.entries.filter(e=>e.competition_id===c.id&&e.status!=='rejected').length;
+  const count=state.entries.filter(e=>e.competition_id===c.id&&e.status==='approved').length;
   const ownEntry=state.entries.find(e=>e.competition_id===c.id&&own().some(t=>t.id===e.team_id));const buttons=ownEntry?'<span class="cmim-badge">'+esc(entryLabel(ownEntry.status))+'</span><a class="cmim-button ghost" href="./meu-time.html#minhas-inscricoes">MINHAS INSCRIÇÕES</a>':c.status==='open'&&state.me?'<button class="cmim-button" data-register="'+c.id+'">SOLICITAR INSCRIÇÃO →</button>':'';
   return '<article class="cmim-cup">'+compLogoTag(c)+'<span class="cmim-kicker">'+esc(label(c.structure))+' · '+esc(seriesLabel(c))+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
   '<div><span class="cmim-badge">'+esc(leagueLabel(c.league_tier))+'</span><span class="cmim-badge">'+esc(label(c.status))+'</span><span class="cmim-badge">'+count+'/'+c.max_teams+' times</span><span class="cmim-badge">'+formatDate(c.starts_at)+'</span></div>'+
@@ -255,7 +255,7 @@ function renderReschedules(){
 }
 async function register(compId){
  if(!state.me){a.gotoLogin();return}
- const comp=competition(compId),eligible=own().filter(t=>startersFor(t.id).length===5&&t.logo_url&&membersFor(t.id).every(m=>state.profiles.find(p=>p.id===m.user_id)?.avatar_url)&&
+ const comp=competition(compId);if(!comp||comp.status!=='open'||(comp.closes_at&&Date.parse(comp.closes_at)<=Date.now())){status('As inscrições deste campeonato estão encerradas.',true);return}const eligible=own().filter(t=>startersFor(t.id).length===5&&t.logo_url&&membersFor(t.id).every(m=>state.profiles.find(p=>p.id===m.user_id)?.avatar_url)&&
   !state.entries.some(e=>e.competition_id===compId&&e.team_id===t.id));
  if(!eligible.length){status('Para se inscrever, tenha cinco titulares, logo e fotos de todos os membros.',true);return}
  const choice=eligible.length===1?eligible[0].id:prompt('Qual time deseja inscrever? Informe a sigla:\n'+eligible.map(t=>t.short_name+' — '+t.name).join('\n'));
