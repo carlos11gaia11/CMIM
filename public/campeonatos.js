@@ -17,7 +17,12 @@ const status=(message,bad=false)=>{
  clearTimeout(status.timer);status.timer=setTimeout(()=>toast.hidden=true,bad?9000:4500);
 };
 const leagueLabel=x=>({open:'CMIM OPEN',academy:'CMIM ACADEMY',major:'CMIM MAJOR'}[x]||'CIRCUITO GERAL');
-const label=s=>({copa:'Copa / Mata-mata',liga:'Liga / Pontos corridos',suico:'Suíço',draft:'Rascunho',open:'Inscrições abertas',closed:'Inscrições encerradas',live:'Em andamento',finished:'Finalizado',pending:'Pendente',approved:'Aprovado',rejected:'Rejeitado',scheduled:'Agendado'}[s]||s);
+const label=s=>({copa:'Copa / Mata-mata',liga:'Liga / Pontos corridos',suico:'Suíço',liga_mata_mata:'Liga + Mata-Mata',draft:'Rascunho',open:'Inscrições abertas',closed:'Inscrições encerradas',live:'Em andamento',finished:'Finalizado',pending:'Pendente',approved:'Aprovado',rejected:'Rejeitado',scheduled:'Agendado'}[s]||s);
+const hybrid=c=>c?.structure==='liga_mata_mata';
+const bestOf=(c,m)=>hybrid(c)?(Number(m.round_number)<=3?1:Number(m.round_number)<=5?3:5):Number(c.series_games);
+const seriesLabel=c=>hybrid(c)?'Grupos MD1 · Quartas e semis MD3 · Final MD5':'MD'+Number(c.series_games||3);
+const roundLabel=(c,r)=>hybrid(c)?(r<=3?'Grupos · Rodada '+r:({4:'Quartas de final',5:'Semifinais',6:'Final'}[r]||'Rodada '+r)):'Rodada '+r;
+const groupLabel=m=>String.fromCharCode(65+Math.floor((Number(m.match_number)-1)/2));
 const team=id=>state.squads.find(x=>x.id===id);
 const competition=id=>state.comps.find(x=>x.id===id);
 const formatDate=x=>x?new Date(x).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
@@ -36,7 +41,7 @@ async function read(){
  '/rest/v1/cmim_squad_members?select=team_id,user_id,lane&limit=2000',
  '/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at&limit=2500',
  '/rest/v1/cmim_competition_matches?select=*&order=round_number.asc,match_number.asc&limit=3000',
- '/rest/v1/cmim_competition_entries?select=id,competition_id,team_id,status,created_at&limit=2000'
+ '/rest/v1/cmim_competition_entries?select=id,competition_id,team_id,status,created_at,group_tiebreak&limit=2000'
  ];
  // As áreas públicas continuam carregando se uma tabela restrita falhar.
  const responses=await Promise.allSettled(requests.map(url=>a.call(url)));
@@ -81,7 +86,7 @@ function renderPublicDashboard(){
       .sort((a,b)=>Number(a.round_number)-Number(b.round_number)||Number(a.match_number)-Number(b.match_number)).slice(0,6);
     schedule.innerHTML=games.length?games.map(m=>{
       const comp=competition(m.competition_id);
-      return '<article class="cmim-official-match-card"><span>'+esc(leagueLabel(comp?.league_tier))+' · RODADA '+Number(m.round_number)+'</span>'+
+      return '<article class="cmim-official-match-card"><span>'+esc(leagueLabel(comp?.league_tier))+' · '+esc(roundLabel(comp,Number(m.round_number)))+(hybrid(comp)&&m.round_number<=3?' · Grupo '+groupLabel(m):'')+'</span>'+
       '<h3>'+teamLink(m.team_a_id)+' <b>×</b> '+teamLink(m.team_b_id)+'</h3>'+
       '<p>'+esc(comp?.title||'Competição CMIM')+' · '+esc(label(m.status))+' · '+esc(dateTime(m.scheduled_at))+'</p>'+
       '<button class="cmim-button ghost" data-goto-event="'+esc(m.competition_id)+'" type="button">VER CHAVEAMENTO →</button></article>';
@@ -132,7 +137,7 @@ function render(){
  $('competition-list').innerHTML=visibleComps.length?visibleComps.map(c=>{
   const count=state.entries.filter(e=>e.competition_id===c.id&&e.status!=='rejected').length;
   const buttons=c.status==='open'&&state.me?'<button class="cmim-button" data-register="'+c.id+'">INSCREVER MEU TIME →</button>':'';
-  return '<article class="cmim-cup"><span class="cmim-kicker">'+esc(label(c.structure))+' · MD'+Number(c.series_games||3)+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
+  return '<article class="cmim-cup"><span class="cmim-kicker">'+esc(label(c.structure))+' · '+esc(seriesLabel(c))+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
   '<div><span class="cmim-badge">'+esc(leagueLabel(c.league_tier))+'</span><span class="cmim-badge">'+esc(label(c.status))+'</span><span class="cmim-badge">'+count+'/'+c.max_teams+' times</span><span class="cmim-badge">'+formatDate(c.starts_at)+'</span></div>'+
   '<div class="cmim-actions"><button class="cmim-button ghost" data-select-comp="'+c.id+'">VER CONFRONTOS</button>'+buttons+'</div>'+(c.league_tier&&['open','academy','major'].includes(c.league_tier)?'<a class="cmim-league-event-link" href="./liga.html?liga='+encodeURIComponent(c.league_tier)+'">PÁGINA DA LIGA →</a>':'')+'</article>'
  }).join(''):'<div class="cmim-empty">Ainda não existem eventos publicados nesta categoria. Acompanhe os anúncios oficiais do CMIM.</div>';
@@ -180,27 +185,54 @@ function standings(compId){
  return scores.sort((x,y)=>y.points-x.points||y.buchholz-x.buchholz||
   ((y.mapsWon-y.mapsLost)-(x.mapsWon-x.mapsLost))||y.wins-x.wins||x.team.localeCompare(y.team));
 }
+function hybridStandings(compId){
+ const games=state.matches.filter(m=>m.competition_id===compId&&m.round_number<=3);
+ const approved=games.filter(m=>m.status==='approved');
+ const groups=['A','B','C','D'].map(group=>{
+  const ids=games.filter(m=>m.round_number===1&&groupLabel(m)===group).flatMap(m=>[m.team_a_id,m.team_b_id]);
+  const rows=ids.map(id=>({id,wins:approved.filter(m=>m.winner_id===id).length,losses:approved.filter(m=>[m.team_a_id,m.team_b_id].includes(id)&&m.winner_id!==id).length,
+   tie:state.entries.find(e=>e.competition_id===compId&&e.team_id===id)?.group_tiebreak??null,direct:0}));
+  for(const row of rows){
+   row.direct=approved.filter(m=>m.winner_id===row.id&&rows.some(o=>o.id!==row.id&&o.wins===row.wins&&[m.team_a_id,m.team_b_id].includes(o.id))).length;
+  }
+  for(const row of rows){
+   const tied=rows.filter(o=>o.wins===row.wins&&o.direct===row.direct);
+   row.unresolved=tied.length>1&&(tied.some(o=>o.tie===null)||new Set(tied.map(o=>o.tie)).size!==tied.length);
+  }
+  rows.sort((a,b)=>b.wins-a.wins||b.direct-a.direct||(a.tie??99)-(b.tie??99)||a.id.localeCompare(b.id));
+  return {group,rows};
+ });
+ return {groups,complete:approved.length===24};
+}
+function hybridTables(comp){
+ const {groups,complete}=hybridStandings(comp.id);
+ if(!groups.some(g=>g.rows.length))return '<div class="cmim-empty">Os quatro grupos serão definidos no sorteio da primeira rodada.</div>';
+ return '<h3 style="color:#ffe58c">CLASSIFICAÇÃO POR GRUPOS</h3><p class="cmim-muted">Vitória = 3 pontos. Desempate: confronto direto entre empatados. Os dois primeiros de cada grupo avançam.</p>'+
+ groups.map(g=>'<h4>GRUPO '+g.group+'</h4><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Pontos</th><th>Situação</th></tr></thead><tbody>'+g.rows.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+teamLink(t.id)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.wins*3+'</td><td>'+(!complete?'Em disputa':t.unresolved?'Desempate pendente':i<2?'<span class="cmim-badge">✓ CLASSIFICADO</span>':'Eliminado')+'</td></tr>').join('')+'</tbody></table></div>').join('');
+}
 function renderOverview(){
  const target=$('competition-overview'),comp=competition($('selected-competition').value);
  if(!comp){target.innerHTML='';return}
  const list=state.matches.filter(m=>m.competition_id===comp.id),rank=standings(comp.id);
  let html='<p class="cmim-muted">'+esc(comp.description||'')+'</p>'+
-  '<div><span class="cmim-badge">'+esc(label(comp.structure))+'</span><span class="cmim-badge">MD'+comp.series_games+'</span><span class="cmim-badge">'+esc(label(comp.status))+'</span></div>';
- if(rank.length)html+='<h3 style="color:#ffe58c">TABELA DE CLASSIFICAÇÃO</h3><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Mapas</th><th>Pontos</th><th>Buchholz</th><th>Folgas</th></tr></thead><tbody>'+rank.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+esc(t.team)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.mapsWon+'/'+t.mapsLost+'</td><td>'+t.points+'</td><td>'+t.buchholz+'</td><td>'+t.byes+'</td></tr>').join('')+'</tbody></table></div>';
+  '<div><span class="cmim-badge">'+esc(label(comp.structure))+'</span><span class="cmim-badge">'+esc(seriesLabel(comp))+'</span><span class="cmim-badge">'+esc(label(comp.status))+'</span></div>';
+ if(hybrid(comp))html+=hybridTables(comp);else if(rank.length)html+='<h3 style="color:#ffe58c">TABELA DE CLASSIFICAÇÃO</h3><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Mapas</th><th>Pontos</th><th>Buchholz</th><th>Folgas</th></tr></thead><tbody>'+rank.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+esc(t.team)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.mapsWon+'/'+t.mapsLost+'</td><td>'+t.points+'</td><td>'+t.buchholz+'</td><td>'+t.byes+'</td></tr>').join('')+'</tbody></table></div>';
  if(list.length){
   const rounds=[...new Set(list.map(m=>m.round_number))].sort((a,b)=>a-b);
   html+='<h3 class="cmim-bracket-title">CHAVEAMENTO POR RODADAS</h3>'+
    '<p class="cmim-muted">Os confrontos abaixo refletem os registros oficiais de cada rodada.</p>'+
    '<div class="cmim-bracket" role="region" aria-label="Confrontos por rodada">'+rounds.map(round=>
-    '<section class="cmim-bracket-round" aria-label="Rodada '+round+'"><h4><span>RODADA</span> '+round+'</h4>'+
+    '<section class="cmim-bracket-round" aria-label="'+esc(roundLabel(comp,round))+'"><h4>'+esc(roundLabel(comp,round))+'</h4>'+
     list.filter(m=>m.round_number===round).map(m=>
-      '<article class="cmim-bracket-match"><span class="cmim-bracket-status">'+esc(m.team_b_id?label(m.status)+' · '+dateTime(m.scheduled_at):'FOLGA')+'</span>'+
+      '<article class="cmim-bracket-match"><span class="cmim-bracket-status">'+esc((hybrid(comp)&&round<=3?'Grupo '+groupLabel(m)+' · ':'')+(m.team_b_id?'MD'+bestOf(comp,m)+' · '+label(m.status)+' · '+dateTime(m.scheduled_at):'FOLGA'))+'</span>'+
       '<div class="cmim-bracket-team"><b>'+teamLink(m.team_a_id)+'</b><strong>'+(m.status==='approved'?Number(m.score_a):'—')+'</strong></div>'+
       '<div class="cmim-bracket-team"><b>'+(m.team_b_id?teamLink(m.team_b_id):'FOLGA · AVANÇA')+'</b><strong>'+(m.team_b_id&&m.status==='approved'?Number(m.score_b):'—')+'</strong></div>'+
       (m.room_id?'<a class="cmim-match-link" href="./selecao.html?room='+encodeURIComponent(m.room_id)+'">▶ Assistir seleção</a>':'')+
       '</article>').join('')+'</section>').join('')+'</div>';
  }
  else html+='<div class="cmim-empty" style="margin-top:18px">Nenhuma rodada gerada ainda. O ADM pode abrir a competição e criar os confrontos.</div>';
+ const final=hybrid(comp)&&list.find(m=>m.round_number===6&&m.status==='approved');
+ if(final)html+='<h3>🏆 CAMPEÃO: '+teamLink(final.winner_id)+'</h3><p>VICE-CAMPEÃO: '+teamLink(final.winner_id===final.team_a_id?final.team_b_id:final.team_a_id)+'</p>';
  target.innerHTML=html;
 }
 async function refresh(){try{await read();status('Dados de campeonatos atualizados.')}catch(e){status('Erro ao atualizar: '+safeErr(e),true)}}
@@ -236,8 +268,10 @@ function renderAdminManage(){
   '<div class="cmim-form-row" style="margin-top:12px"><label class="cmim-field">DATA/HORA PARA A PRÓXIMA RODADA (OPCIONAL)<input id="next-round-start" type="datetime-local" value="'+(currentRound===0?timeInput(comp.starts_at):'')+'"></label></div>'+
   '<p class="cmim-muted">Partidas geradas entram na agenda. A data informada vale para a rodada, mas pode ser ajustada por jogo.</p>'+
   (currentRound?'<div class="cmim-form-row"><label class="cmim-field">REAGENDAR RODADA<select id="bulk-round-number">'+[...new Set(games.map(g=>g.round_number))].sort((a,b)=>a-b).map(round=>'<option value="'+round+'">Rodada '+round+'</option>').join('')+'</select></label><label class="cmim-field">NOVO DIA E HORÁRIO<input id="bulk-round-start" type="datetime-local"></label><button type="button" id="bulk-round-save" class="cmim-button ghost">SALVAR HORÁRIO DA RODADA</button></div>':'')+
+ (hybrid(comp)?hybridTables(comp):'')+
+ (hybrid(comp)&&currentRound===3&&games.filter(g=>g.status==='approved').length===24?'<h3>DESEMPATES CIRCULARES</h3><p class="cmim-muted">Registre a ordem obtida em partidas extras de desempate (1 = melhor). Use números diferentes para cada time empatado.</p>'+hybridStandings(comp.id).groups.map(g=>g.rows.filter(t=>t.unresolved||t.tie!==null).map(t=>'<div class="cmim-match">Grupo '+g.group+' · '+teamLink(t.id)+' <button type="button" class="cmim-button ghost" data-tiebreak="'+t.id+'">Ordem: '+(t.tie??'definir')+'</button></div>').join('')).join(''):'')+
  '<h3 style="color:#ffe08d">CONFRONTOS</h3>'+
- (games.length?games.map(g=>'<form class="cmim-match" data-match-edit="'+g.id+'"><b>Rodada '+g.round_number+' · Jogo '+g.match_number+'</b>'+
+ (games.length?games.map(g=>'<form class="cmim-match" data-match-edit="'+g.id+'"><b>'+esc(roundLabel(comp,Number(g.round_number)))+(hybrid(comp)&&g.round_number<=3?' · Grupo '+groupLabel(g):'')+' · MD'+bestOf(comp,g)+' · Jogo '+g.match_number+'</b>'+
  '<p>'+readable(g.team_a_id)+' × '+(g.team_b_id?readable(g.team_b_id):'FOLGA')+'</p>'+
   (g.team_b_id?'<div class="cmim-form-row"><label class="cmim-field">DATA E HORA (BRASÍLIA)<input type="datetime-local" name="scheduled_at" value="'+timeInput(g.scheduled_at)+'"></label><button type="button" class="cmim-button ghost" data-save-schedule="'+g.id+'">SALVAR DIA/HORA</button></div>':'')+
  '<div class="cmim-form-row"><label class="cmim-field">PLACAR A<input name="score_a" type="number" min="0" max="5" value="'+g.score_a+'"></label><label class="cmim-field">PLACAR B<input name="score_b" type="number" min="0" max="5" value="'+g.score_b+'"></label>'+
@@ -245,7 +279,7 @@ function renderAdminManage(){
  '</div>'+
  '<div class="cmim-actions">'+(g.status==='approved'?'<span class="cmim-badge">✓ RESULTADO HOMOLOGADO (BLOQUEADO)</span>':'<button class="cmim-button ghost">SALVAR RESULTADO</button>')+
  (g.team_b_id&&g.status!=='approved'?(!g.room_id?
-  '<button type="button" class="cmim-button" data-launch-match="'+g.id+'">🎮 CRIAR SELEÇÃO MD'+comp.series_games+'</button>':
+  '<button type="button" class="cmim-button" data-launch-match="'+g.id+'">🎮 CRIAR SELEÇÃO MD'+bestOf(comp,g)+'</button>':
   '<button type="button" class="cmim-button" data-sync-match="'+g.id+'">✓ SINCRONIZAR JOGO HOMOLOGADO</button><a class="cmim-button ghost" href="./admin.html?tab=matches">APROVAR NO ADM ↗</a>'):
   (g.team_b_id?'':'<span class="cmim-badge">FOLGA AUTOMÁTICA</span>'))+
  '</div></form>').join(''):'<p class="cmim-muted">Confrontos ainda não criados.</p>');
@@ -255,6 +289,14 @@ function renderAdminManage(){
  });
  box.querySelectorAll('[data-entry]').forEach(b=>b.onclick=async()=>{
   try{await a.call('/rest/v1/cmim_competition_entries?id=eq.'+b.dataset.entry,{method:'PATCH',secure:true,body:{status:b.dataset.entryStatus}});await read()}catch(e){status(safeErr(e),true)}
+ });
+ box.querySelectorAll('[data-tiebreak]').forEach(b=>b.onclick=async()=>{
+  const entry=entries.find(e=>e.team_id===b.dataset.tiebreak);
+  const value=prompt('Ordem do desempate (1 a 4; vazio para limpar):',entry.group_tiebreak??'');
+  if(value===null)return;
+  if(value.trim()!==''&&!/^[1-4]$/.test(value.trim()))return status('Informe um número de 1 a 4.',true);
+  b.disabled=true;
+  try{await a.call('/rest/v1/cmim_competition_entries?id=eq.'+entry.id,{method:'PATCH',secure:true,body:{group_tiebreak:value.trim()===''?null:Number(value)}});await read();status('Ordem de desempate registrada.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
  });
  $('generate-round').onclick=()=>generateRound(comp);
  $('bulk-round-save')?.addEventListener('click',async event=>{
@@ -283,10 +325,10 @@ function renderAdminManage(){
  box.querySelectorAll('[data-match-edit]').forEach(form=>form.onsubmit=async e=>{
   e.preventDefault();const match=games.find(m=>m.id===form.dataset.matchEdit);
   const f=new FormData(form),score_a=Number(f.get('score_a')),score_b=Number(f.get('score_b')),statusValue=f.get('status');
-  const needed=(Number(comp.series_games)+1)/2;
+  const needed=(bestOf(comp,match)+1)/2;
   if(statusValue==='approved'&&match.room_id)return status('Esta sala vinculada só pode ser homologada pelo botão SINCRONIZAR.',true);
   if(statusValue==='approved'&&!(Math.max(score_a,score_b)===needed&&Math.min(score_a,score_b)<needed))
-   return status('Para aprovar MD'+comp.series_games+', um time precisa de '+needed+' vitória(s).',true);
+   return status('Para aprovar MD'+bestOf(comp,match)+', um time precisa de '+needed+' vitória(s).',true);
   const room_id=match.room_id||null;
   const winner_id=statusValue==='approved'?(score_a>score_b?match.team_a_id:match.team_b_id):null;
   const reason=statusValue==='approved'?prompt('Resultado manual: informe como foi confirmado (mínimo 8 caracteres):'):'';
@@ -327,7 +369,7 @@ async function launchTournamentMatch(matchId,comp){
   const outside=linked.filter(p=>!allowed.has(p.rank_player_id));
   if(outside.length)throw Error('Estes jogadores não estão inscritos na temporada ativa: '+
    outside.map(p=>p.nick+'#'+p.tag).join(', ')+'. Inclua-os pelo ADM antes de jogar.');
-  const payload={teams,games:Number(comp.series_games),mode:'Normal',duration:30,first:'B',pilot:true,
+  const payload={teams,games:bestOf(comp,match),mode:'Normal',duration:30,first:'B',pilot:true,
    source:'competition',createdAt:Date.now()};
   sessionStorage.setItem('cmim:play-handoff',JSON.stringify(payload));
   sessionStorage.setItem('cmim:competition-match-pending',match.id);
@@ -369,6 +411,16 @@ document.querySelectorAll('[data-admin-screen]').forEach(b=>b.onclick=()=>{
  $('admin-comp-create').hidden=b.dataset.adminScreen!=='create';
  $('admin-comp-manage').hidden=b.dataset.adminScreen!=='manage';renderAdminManage();
 });
+const createForm=$('admin-comp-create');
+const updateHybridFields=()=>{
+ const isHybrid=createForm.elements.structure.value==='liga_mata_mata';
+ for(const key of ['series_games','max_teams','swiss_rounds'])createForm.elements[key].disabled=isHybrid;
+ if(isHybrid){createForm.elements.series_games.value='1';createForm.elements.max_teams.value='16';}
+ const hint=$('hybrid-format-hint');if(hint)hint.hidden=!isHybrid;
+};
+createForm.elements.structure.addEventListener('change',updateHybridFields);
+createForm.addEventListener('reset',()=>setTimeout(updateHybridFields,0));
+updateHybridFields();
 $('admin-comp-create').onsubmit=async e=>{
  e.preventDefault();if(!state.admin)return;
  const btn=e.currentTarget.querySelector('button'),f=new FormData(e.currentTarget);
@@ -376,8 +428,8 @@ $('admin-comp-create').onsubmit=async e=>{
  try{
   await a.call('/rest/v1/cmim_competitions',{method:'POST',secure:true,body:{
    title:txt(f.get('title')).trim(),description:txt(f.get('description')).trim(),structure:f.get('structure'),league_tier:txt(f.get('league_tier')).toLowerCase(),
-   series_games:Number(f.get('series_games')),format:'MD'+f.get('series_games'),starts_at:toISO(f.get('starts_at')),
-   max_teams:Number(f.get('max_teams')),swiss_rounds:Number(f.get('swiss_rounds')||5),status:f.get('status')
+   series_games:f.get('structure')==='liga_mata_mata'?1:Number(f.get('series_games')),format:'MD'+(f.get('structure')==='liga_mata_mata'?1:f.get('series_games')),starts_at:toISO(f.get('starts_at')),
+   max_teams:f.get('structure')==='liga_mata_mata'?16:Number(f.get('max_teams')),swiss_rounds:Number(f.get('swiss_rounds')||5),status:f.get('status')
   }});
   e.currentTarget.reset();status('✓ Campeonato criado.');await read();
  }catch(err){status('Erro ao cadastrar: '+safeErr(err),true)}finally{btn.disabled=false}
