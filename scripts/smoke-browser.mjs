@@ -169,5 +169,38 @@ try{
  const adminCircuit=await circuitContext(admin),ap=adminCircuit.p;await open(ap,'admin-campeonatos.html','authenticated');await ap.locator('[data-review-entry]').waitFor();assert.equal(await ap.locator('[data-entry-status="approved"]').count(),1);assert.equal(await ap.locator('[name="staff_note"]').inputValue(),'Atualize a foto');await adminCircuit.ctx.close();
  const playerCircuit=await circuitContext(player),pp=playerCircuit.p;await open(pp,'meu-time.html','authenticated');await pp.locator('#my-entries .cv-review-note').first().waitFor();assert.match(await pp.locator('#my-entries').textContent(),/Atualize a foto/);await open(pp,'admin-campeonatos.html','authenticated');await pp.waitForFunction(()=>document.querySelector('#cv-admin-denied').textContent.includes('exclusiva'));assert.equal(await pp.locator('#competition-admin').isVisible(),false);await playerCircuit.ctx.close();
  console.log('PASS circuit pages, official approved teams, matches, admin review and captain feedback');
+ const eventId='44444444-4444-4444-8444-444444444444',matchId='55555555-5555-4555-8555-555555555555',entryId='66666666-6666-4666-8666-666666666666';
+ const event={id:eventId,title:'Campeonato Teste',description:'Evento de teste',rules:'Regulamento de teste',status:'open',league_tier:'open',structure:'liga_mata_mata',series_games:1,max_teams:16,starts_at:'2027-01-08T22:00:00Z',closes_at:'2099-01-03T22:00:00Z',registration_fee_cents:7500,broadcast_url:'https://example.org/live'};
+ const game={id:matchId,competition_id:eventId,team_a_id:teams[0].id,team_b_id:teams[1].id,status:'scheduled',round_number:1,match_number:1,scheduled_at:'2027-01-08T22:00:00Z'};
+ async function eventContext(user){
+  const ctx=await browser.newContext({viewport:{width:1440,height:900}});
+  if(user)await ctx.addInitScript(({session})=>{localStorage.setItem('cmim_player_session',JSON.stringify(session))},{session:session(user)});
+  await ctx.route('**/*',async route=>{
+   const req=route.request(),u=new URL(req.url());if(u.origin==='http://127.0.0.1:4173')return route.continue();if(!u.hostname.endsWith('.supabase.co'))return route.abort();
+   const headers={'access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,PATCH,OPTIONS','access-control-allow-headers':'*','content-type':'application/json'};if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});let data=[];
+   if(u.pathname==='/auth/v1/user')data=user||{};
+   else if(u.pathname.endsWith('/cmim_competitions'))data=u.searchParams.get('status')==='eq.finished'?[]:[event];
+   else if(u.pathname.endsWith('/cmim_competition_matches'))data=[game];
+   else if(u.pathname.endsWith('/cmim_squads'))data=teams.slice(0,2);
+   else if(u.pathname.endsWith('/cmim_competition_entries'))data=[{id:entryId,competition_id:eventId,team_id:teams[0].id,status:'approved'},...(user?[{id:'pending-entry',competition_id:eventId,team_id:teams[1].id,status:'pending'}]:[])];
+   else if(u.pathname.endsWith('/cmim_profiles'))data=[{id:player.id,nick:'Teste Competitivo',tag:'BR1',lane:'MID',avatar_url:'https://example.org/avatar.png'}];
+   else if(u.pathname.endsWith('/cmim_squad_members'))data=[{team_id:teams[0].id,user_id:player.id,lane:'MID',starter:true}];
+   else if(u.pathname.endsWith('/cmim_entry_reviews'))data=user?[{entry_id:entryId,payment_status:'confirmed',review_state:'ready',staff_note:'Inscrição conferida'}]:[];
+   return route.fulfill({status:200,headers,body:JSON.stringify(data)});
+  });const p=await ctx.newPage();p.on('pageerror',e=>errors.push(p.url()+': '+e.message));return {ctx,p};
+ }
+ const pub=await eventContext(null);
+ await open(pub.p,'campeonato.html?id='+eventId);await pub.p.locator('#cv-champ-tabs').waitFor();assert.match(await pub.p.locator('#cv-champ-hero').textContent(),/Campeonato Teste/);
+ await pub.p.locator('#cv-champ-tabs a[href="#equipes"]').click();await pub.p.locator('.cv-team').waitFor();assert.equal(await pub.p.locator('.cv-team').count(),1);
+ await pub.p.locator('#cv-champ-tabs a[href="#classificacao"]').click();await pub.p.waitForFunction(()=>document.querySelector('#cv-champ-content').textContent.includes('GRUPO A'));
+ await pub.p.locator('#cv-champ-tabs a[href="#playoffs"]').click();await pub.p.waitForFunction(()=>document.querySelector('#cv-champ-content').textContent.includes('Quartas'));
+ await pub.p.locator('#cv-champ-tabs a[href="#partidas"]').click();await pub.p.locator('.cv-game').first().click();await pub.p.locator('.cv-versus').waitFor();assert.match(await pub.p.locator('.cv-versus').textContent(),/Equipe 01/);
+ await open(pub.p,'jogadores.html');await pub.p.locator('.cv-player').waitFor();assert.match(await pub.p.locator('.cv-player').textContent(),/Teste Competitivo/);await pub.p.locator('#cv-search').fill('não existe');assert.equal(await pub.p.locator('.cv-player').count(),0);
+ await open(pub.p,'historico.html');await pub.p.waitForFunction(()=>document.querySelector('#cv-content').textContent.includes('Ainda não há'));
+ await open(pub.p,'ligas.html');assert.equal(await pub.p.locator('#competition-admin').count(),0);
+ await pub.ctx.close();
+ const nonAdmin=await eventContext(player);await open(nonAdmin.p,'admin-campeonatos.html','authenticated');await nonAdmin.p.waitForFunction(()=>document.querySelector('#cv-admin-denied').textContent.includes('exclusiva'));assert.equal(await nonAdmin.p.locator('#competition-admin').isVisible(),false);await nonAdmin.ctx.close();
+ const staff=await eventContext(admin);await open(staff.p,'admin-campeonatos.html','authenticated');await staff.p.locator('#competition-admin').waitFor();await staff.p.locator('[data-review-entry]').first().waitFor();assert.match(await staff.p.locator('#admin-competition-body').textContent(),/PAGAMENTO/);await staff.ctx.close();
+ console.log('PASS dedicated championship tabs, match center, player catalog, history and restricted admin');
  assert.deepEqual(errors,[],'Uncaught browser errors');console.log('All browser smoke checks passed.');
 }finally{await browser.close()}
