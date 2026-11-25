@@ -13,3 +13,4 @@ document.addEventListener('DOMContentLoaded',()=>{
  const main=document.querySelector('main');if(main&&!main.id)main.id='cmim-main-content';
  if(main&&!document.querySelector('.pro-skip')){const skip=document.createElement('a');skip.className='pro-skip';skip.href='#'+main.id;skip.textContent='Pular para o conteúdo';document.body.prepend(skip)}
 });
+if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./cmim-sw.js').catch(()=>{}),{once:true})}

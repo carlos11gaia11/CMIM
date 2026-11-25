@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded',async()=>{'use strict';
   const id=new URLSearchParams(location.search).get('id');if(!uuid(id))throw Error('Endereço de partida inválido.');
   const [m]=await get('cmim_competition_matches?id=eq.'+id+'&select=*');if(!m)throw Error('Partida não encontrada.');
   const ids=[m.team_a_id,m.team_b_id].filter(uuid),q=ids.join(',');
-  const [comps,teams,members,profiles]=await Promise.all([get('cmim_competitions?id=eq.'+m.competition_id+'&select=id,title,league_tier,structure,series_games,status,broadcast_url'),get('cmim_squads?id=in.('+q+')&select=id,name,logo_url,owner_id'),get('cmim_squad_members?team_id=in.('+q+')&select=team_id,user_id,lane,starter'),get('cmim_profiles?select=id,nick,tag,avatar_url&limit=2500')]);
+  const [comps,teams,members]=await Promise.all([get('cmim_competitions?id=eq.'+m.competition_id+'&select=id,title,league_tier,structure,series_games,status,broadcast_url'),get('cmim_squads?id=in.('+q+')&select=id,name,logo_url,owner_id'),get('cmim_squad_members?team_id=in.('+q+')&select=team_id,user_id,lane,starter')]);const playerIds=[...new Set(members.map(m=>m.user_id).filter(uuid))];const profiles=playerIds.length?await get('cmim_profiles?id=in.('+playerIds.join(',')+')&select=id,nick,tag,avatar_url'):[];
   const c=comps[0];if(!c||c.status==='draft')throw Error('Partida não publicada.');const ta=teams.find(t=>t.id===m.team_a_id),tb=teams.find(t=>t.id===m.team_b_id),official=m.status==='approved',md=c.structure==='liga_mata_mata'?(m.round_number<=3?1:m.round_number<=5?3:5):c.series_games;
   document.title=(ta?.name||'Equipe')+' × '+(tb?.name||'Folga')+' | CMIM';
   const side=t=>t?'<a href="'+teamUrl(t.id)+'">'+logo(t)+'<strong>'+esc(t.name)+'</strong></a>':'<span>Folga</span>';
