@@ -153,6 +153,7 @@ try{
  else if(u.pathname.endsWith('/cmim_competitions'))data=[event];
  else if(u.pathname.endsWith('/cmim_squads'))data=fixtureTeams;
  else if(u.pathname.endsWith('/cmim_squad_members'))data=fixtureMembers;
+ else if(u.pathname.endsWith('/rpc/cmim_public_players_page')){const q=req.postDataJSON();assert.equal(q.p_limit,24);data=q.p_search?{total:0,items:[]}:{total:1,items:[{id:player.id,nick:'Jogador Teste',tag:'BR1',lane:'MID',team_id:fixtureTeams[0].id,team_name:fixtureTeams[0].name}]};}
  else if(u.pathname.endsWith('/cmim_profiles'))data=[{id:player.id,nick:'Jogador Teste',tag:'BR1',lane:'MID'}];
  else if(u.pathname.endsWith('/cmim_competition_matches'))data=[fixtureGame];
  else if(u.pathname.endsWith('/cmim_competition_entries'))data=who?fixtureEntries:fixtureEntries.filter(e=>e.status==='approved');
@@ -166,7 +167,7 @@ try{
  await gp.locator('#cv-champ-tabs a[href="#playoffs"]').click();await gp.waitForFunction(()=>document.querySelector('#cv-champ-content').textContent.includes('Quartas'));
  await gp.locator('#cv-champ-tabs a[href="#partidas"]').click();await gp.locator('.cv-game').click();await gp.locator('.cv-versus').waitFor();assert.match(await gp.locator('.cv-versus').textContent(),/VS/);
  await open(gp,'jogadores.html');await gp.locator('.cv-player').waitFor();assert.match(await gp.locator('.cv-player').textContent(),/Jogador Teste/);
- await gp.locator('#cv-search').fill('não existe');assert.equal(await gp.locator('.cv-player').count(),0);
+ await gp.locator('#cv-search').fill('não existe');await gp.waitForFunction(()=>document.querySelector('#cv-content').textContent.includes('Nenhum jogador encontrado'));assert.equal(await gp.locator('.cv-player').count(),0);
  await open(gp,'historico.html');await gp.locator('#cv-year').waitFor();
  await open(gp,'ligas.html');assert.equal(await gp.locator('#competition-admin').count(),0);await guestCircuit.ctx.close();
  const adminCircuit=await circuitContext(admin),ap=adminCircuit.p;await open(ap,'admin-campeonatos.html','authenticated');await ap.locator('[data-review-entry]').waitFor();assert.equal(await ap.locator('[data-entry-status="approved"]').count(),1);assert.equal(await ap.locator('[name="staff_note"]').inputValue(),'Atualize a foto');await adminCircuit.ctx.close();
