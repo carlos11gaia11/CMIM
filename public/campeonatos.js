@@ -23,6 +23,8 @@ const bestOf=(c,m)=>hybrid(c)?(Number(m.round_number)<=3?1:Number(m.round_number
 const seriesLabel=c=>hybrid(c)?'Grupos MD1 · Quartas e semis MD3 · Final MD5':'MD'+Number(c.series_games||3);
 const roundLabel=(c,r)=>hybrid(c)?(r<=3?'Grupos · Rodada '+r:({4:'Quartas de final',5:'Semifinais',6:'Final'}[r]||'Rodada '+r)):'Rodada '+r;
 const groupLabel=m=>String.fromCharCode(65+Math.floor((Number(m.match_number)-1)/2));
+const competitionLogo=c=>/^https:\/\//i.test(c?.cover_url||'')?c.cover_url:'./assets/branding/cmim-'+(['open','major','academy'].includes(c?.league_tier)?c.league_tier:'main')+'.webp';
+const compLogoTag=c=>'<img src="'+esc(competitionLogo(c))+'" alt="Logo do campeonato" style="width:78px;height:78px;object-fit:contain;border-radius:10px;float:right;margin:0 0 12px 12px">';
 const team=id=>state.squads.find(x=>x.id===id);
 const competition=id=>state.comps.find(x=>x.id===id);
 const formatDate=x=>x?new Date(x).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
@@ -151,7 +153,7 @@ function render(){
  $('competition-list').innerHTML=visibleComps.length?visibleComps.map(c=>{
   const count=state.entries.filter(e=>e.competition_id===c.id&&e.status!=='rejected').length;
   const buttons=c.status==='open'&&state.me?'<button class="cmim-button" data-register="'+c.id+'">INSCREVER MEU TIME →</button>':'';
-  return '<article class="cmim-cup"><span class="cmim-kicker">'+esc(label(c.structure))+' · '+esc(seriesLabel(c))+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
+  return '<article class="cmim-cup">'+compLogoTag(c)+'<span class="cmim-kicker">'+esc(label(c.structure))+' · '+esc(seriesLabel(c))+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
   '<div><span class="cmim-badge">'+esc(leagueLabel(c.league_tier))+'</span><span class="cmim-badge">'+esc(label(c.status))+'</span><span class="cmim-badge">'+count+'/'+c.max_teams+' times</span><span class="cmim-badge">'+formatDate(c.starts_at)+'</span></div>'+
   '<div class="cmim-actions"><button class="cmim-button ghost" data-select-comp="'+c.id+'">VER CONFRONTOS</button>'+buttons+'</div>'+(c.league_tier&&['open','academy','major'].includes(c.league_tier)?'<a class="cmim-league-event-link" href="./liga.html?liga='+encodeURIComponent(c.league_tier)+'">PÁGINA DA LIGA →</a>':'')+'</article>'
  }).join(''):'<div class="cmim-empty">Ainda não existem eventos publicados nesta categoria. Acompanhe os anúncios oficiais do CMIM.</div>';
@@ -161,6 +163,7 @@ function render(){
  document.querySelectorAll('[data-register]').forEach(b=>b.onclick=()=>register(b.dataset.register));
  if(state.selected&&!visibleComps.some(c=>c.id===state.selected))state.selected=null;
  $('selected-competition').innerHTML='<option value="">Escolha um campeonato</option>'+visibleComps.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('');
+ if(!state.selected&&visibleComps.length)state.selected=visibleComps[0].id;
  if(state.selected&&competition(state.selected))$('selected-competition').value=state.selected;
  renderOverview();
  if(state.admin){$('competition-admin').hidden=false;
@@ -229,7 +232,8 @@ function hybridStandings(compId){
  const games=state.matches.filter(m=>m.competition_id===compId&&m.round_number<=3);
  const approved=games.filter(m=>m.status==='approved');
  const groups=['A','B','C','D'].map(group=>{
-  const ids=games.filter(m=>m.round_number===1&&groupLabel(m)===group).flatMap(m=>[m.team_a_id,m.team_b_id]);
+  const actual=games.filter(m=>m.round_number===1&&groupLabel(m)===group).flatMap(m=>[m.team_a_id,m.team_b_id]);
+  const ids=actual.length?actual:(competition(compId)?.group_team_order||[]).slice((group.charCodeAt(0)-65)*4,(group.charCodeAt(0)-64)*4).filter(Boolean);
   const rows=ids.map(id=>({id,wins:approved.filter(m=>m.winner_id===id).length,losses:approved.filter(m=>[m.team_a_id,m.team_b_id].includes(id)&&m.winner_id!==id).length,
    tie:state.entries.find(e=>e.competition_id===compId&&e.team_id===id)?.group_tiebreak??null,direct:0}));
   for(const row of rows){
@@ -246,21 +250,21 @@ function hybridStandings(compId){
 }
 function hybridTables(comp){
  const {groups,complete}=hybridStandings(comp.id);
- if(!groups.some(g=>g.rows.length)){
-  const ids=comp.group_team_order;
-  if(!Array.isArray(ids)||ids.filter(Boolean).length!==16)return '<div class="cmim-empty">Os quatro grupos serão definidos pela organização antes da primeira rodada.</div>';
-  return '<h3 style="color:#ffe58c">GRUPOS DEFINIDOS</h3>'+['A','B','C','D'].map((g,i)=>'<div class="cmim-match"><b>GRUPO '+g+'</b><p>'+ids.slice(i*4,i*4+4).map(teamLink).join(' · ')+'</p></div>').join('');
- }
- return '<h3 style="color:#ffe58c">CLASSIFICAÇÃO POR GRUPOS</h3><p class="cmim-muted">Vitória = 3 pontos. Desempate: confronto direto entre empatados. Os dois primeiros de cada grupo avançam.</p>'+
- groups.map(g=>'<h4>GRUPO '+g.group+'</h4><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Pontos</th><th>Situação</th></tr></thead><tbody>'+g.rows.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+teamLink(t.id)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.wins*3+'</td><td>'+(!complete?'Em disputa':t.unresolved?'Desempate pendente':i<2?'<span class="cmim-badge">✓ CLASSIFICADO</span>':'Eliminado')+'</td></tr>').join('')+'</tbody></table></div>').join('');
+ return '<h3 style="color:#ffe58c">CLASSIFICAÇÃO POR GRUPOS</h3><p class="cmim-muted">Vitória = 1 ponto. Desempate: confronto direto entre empatados. Os dois primeiros de cada grupo avançam.</p>'+
+ groups.map(g=>'<h4>GRUPO '+g.group+'</h4><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Pontos</th><th>Situação</th></tr></thead><tbody>'+[...g.rows,...Array.from({length:Math.max(0,4-g.rows.length)},()=>({id:null,wins:0,losses:0}))].map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+(t.id?teamLink(t.id):'Vaga a definir')+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.wins+'</td><td>'+(!t.id?'A definir':!complete?'Em disputa':t.unresolved?'Desempate pendente':i<2?'<span class="cmim-badge">✓ CLASSIFICADO</span>':'Eliminado')+'</td></tr>').join('')+'</tbody></table></div>').join('');
 }
+function playoffPreview(list=[]){
+ const stages=[{r:4,title:'Quartas · MD3',slots:[['1º A','2º B'],['1º C','2º D'],['1º B','2º A'],['1º D','2º C']]},{r:5,title:'Semifinais · MD3',slots:[['Vencedor Q1','Vencedor Q2'],['Vencedor Q3','Vencedor Q4']]},{r:6,title:'Final · MD5',slots:[['Vencedor S1','Vencedor S2']]}];
+ return '<h3>PLAYOFFS · CHAVE FIXA</h3><div class="cmim-bracket">'+stages.map(stage=>'<section class="cmim-bracket-round"><h4>'+stage.title+'</h4>'+stage.slots.map((slot,i)=>{const m=list.find(m=>m.round_number===stage.r&&m.match_number===i+1);return '<article class="cmim-bracket-match"><span class="cmim-bracket-status">'+esc(m?dateTime(m.scheduled_at):'A definir')+'</span><div class="cmim-bracket-team"><b>'+(m?teamLink(m.team_a_id):slot[0])+'</b><strong>'+(m?.status==='approved'?m.score_a:'—')+'</strong></div><div class="cmim-bracket-team"><b>'+(m?teamLink(m.team_b_id):slot[1])+'</b><strong>'+(m?.status==='approved'?m.score_b:'—')+'</strong></div></article>'}).join('')+'</section>').join('')+'</div>';
+}
+function emptyFormatPreview(){return '<p class="cmim-muted">Formato previsto do CMIM Open · modelo ilustrativo, sem equipes ou partidas oficiais cadastradas.</p>'+hybridTables({id:null})+playoffPreview();}
 function renderOverview(){
  const target=$('competition-overview'),comp=competition($('selected-competition').value);
- if(!comp){target.innerHTML='';return}
+ if(!comp){target.innerHTML=state.league==='all'||state.league==='open'?emptyFormatPreview():'<p class="cmim-muted">Formato ainda não publicado para esta liga.</p>';return}
  const list=state.matches.filter(m=>m.competition_id===comp.id),rank=standings(comp.id);
- let html='<p class="cmim-muted">'+esc(comp.description||'')+'</p>'+
+ let html=compLogoTag(comp)+'<p class="cmim-muted">'+esc(comp.description||'')+'</p>'+
   '<div><span class="cmim-badge">'+esc(label(comp.structure))+'</span><span class="cmim-badge">'+esc(seriesLabel(comp))+'</span><span class="cmim-badge">'+esc(label(comp.status))+'</span></div>';
- if(hybrid(comp))html+=hybridTables(comp);else if(rank.length)html+='<h3 style="color:#ffe58c">TABELA DE CLASSIFICAÇÃO</h3><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Mapas</th><th>Pontos</th><th>Buchholz</th><th>Folgas</th></tr></thead><tbody>'+rank.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+esc(t.team)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.mapsWon+'/'+t.mapsLost+'</td><td>'+t.points+'</td><td>'+t.buchholz+'</td><td>'+t.byes+'</td></tr>').join('')+'</tbody></table></div>';
+ if(hybrid(comp))html+=hybridTables(comp)+playoffPreview(list);else if(rank.length)html+='<h3 style="color:#ffe58c">TABELA DE CLASSIFICAÇÃO</h3><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Mapas</th><th>Pontos</th><th>Buchholz</th><th>Folgas</th></tr></thead><tbody>'+rank.map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+esc(t.team)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.mapsWon+'/'+t.mapsLost+'</td><td>'+t.points+'</td><td>'+t.buchholz+'</td><td>'+t.byes+'</td></tr>').join('')+'</tbody></table></div>';
  if(list.length){
   const rounds=[...new Set(list.map(m=>m.round_number))].sort((a,b)=>a-b);
   html+='<h3 class="cmim-bracket-title">CHAVEAMENTO POR RODADAS</h3>'+
@@ -351,13 +355,13 @@ function renderAdminManage(){
  if(!comp){box.innerHTML='<div class="cmim-empty">Cadastre um campeonato antes de administrar.</div>';return}
  const entries=state.entries.filter(e=>e.competition_id===comp.id);
  const games=state.matches.filter(m=>m.competition_id===comp.id),currentRound=Math.max(0,...games.map(g=>g.round_number));
- box.innerHTML='<div class="cmim-actions">'+['draft','open','closed','live','finished'].map(s=>'<button data-comp-status="'+s+'" class="cmim-button '+(comp.status===s?'':'ghost')+'">'+esc(label(s))+'</button>').join('')+'</div>'+
+ box.innerHTML=compLogoTag(comp)+'<form class="cmim-form-row" id="competition-logo-form"><label class="cmim-field">LOGO DO CAMPEONATO<input type="file" name="logo" accept="image/jpeg,image/png,image/webp" required></label><button class="cmim-button ghost">Salvar logo</button></form><div class="cmim-actions">'+['draft','open','closed','live','finished'].map(s=>'<button data-comp-status="'+s+'" class="cmim-button '+(comp.status===s?'':'ghost')+'">'+esc(label(s))+'</button>').join('')+'</div>'+
  '<h3 style="color:#ffe08d">INSCRIÇÕES · '+entries.length+'</h3>'+
  (entries.length?entries.map(e=>'<div class="cmim-match">'+readable(e.team_id)+' · '+esc(label(e.status))+
  '<div class="cmim-actions">'+(e.status==='pending'?'<button class="cmim-button" data-entry="'+e.id+'" data-entry-status="approved">✓ Aprovar time</button><button class="cmim-button ghost" data-entry="'+e.id+'" data-entry-status="rejected">Rejeitar</button>':'')+'</div></div>').join(''):'<p class="cmim-muted">Sem inscrições.</p>')+
  (hybrid(comp)&&currentRound===0?groupEditor(comp,entries):'')+
  '<div class="cmim-actions" style="margin-top:21px"><button id="generate-round" class="cmim-button">⚔ GERAR '+(comp.structure==='liga'?'TABELA DA LIGA':'PRÓXIMA RODADA')+'</button><span class="cmim-muted">Rodada atual: '+currentRound+'</span></div>'+
-  '<div class="cmim-form-row" style="margin-top:12px"><label class="cmim-field">DATA/HORA PARA A PRÓXIMA RODADA (OPCIONAL)<input id="next-round-start" type="datetime-local" value="'+(currentRound===0?timeInput(comp.starts_at):'')+'"></label></div>'+
+  '<div class="cmim-form-row" style="margin-top:12px"><label class="cmim-field">DATA/HORA PARA A PRÓXIMA RODADA (OPCIONAL)<input id="next-round-start" type="datetime-local" value="'+(currentRound===0&&comp.league_tier!=='open'?timeInput(comp.starts_at):'')+'"></label></div>'+
   '<p class="cmim-muted">Partidas geradas entram na agenda. A data informada vale para a rodada, mas pode ser ajustada por jogo.</p>'+
   (currentRound?'<div class="cmim-form-row"><label class="cmim-field">REAGENDAR RODADA<select id="bulk-round-number">'+[...new Set(games.map(g=>g.round_number))].sort((a,b)=>a-b).map(round=>'<option value="'+round+'">Rodada '+round+'</option>').join('')+'</select></label><label class="cmim-field">NOVO DIA E HORÁRIO<input id="bulk-round-start" type="datetime-local"></label><button type="button" id="bulk-round-save" class="cmim-button ghost">SALVAR HORÁRIO DA RODADA</button></div>':'')+
  (hybrid(comp)?hybridTables(comp):'')+
@@ -375,6 +379,7 @@ function renderAdminManage(){
   '<button type="button" class="cmim-button" data-sync-match="'+g.id+'">✓ SINCRONIZAR JOGO HOMOLOGADO</button><a class="cmim-button ghost" href="./admin.html?tab=matches">APROVAR NO ADM ↗</a>'):
   (g.team_b_id?'':'<span class="cmim-badge">FOLGA AUTOMÁTICA</span>'))+
  '</div></form>').join(''):'<p class="cmim-muted">Confrontos ainda não criados.</p>');
+ $('competition-logo-form').onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,b=form.querySelector('button');b.disabled=true;try{const cover_url=await a.uploadTeamLogo(new FormData(form).get('logo'));await a.call('/rest/v1/cmim_competitions?id=eq.'+comp.id,{method:'PATCH',secure:true,body:{cover_url}});await read();status('Logo atualizada.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}};
  box.querySelectorAll('[data-comp-status]').forEach(b=>b.onclick=async()=>{
   if(!confirm('Alterar situação de '+comp.title+' para '+label(b.dataset.compStatus)+'?'))return;
   try{await a.call('/rest/v1/cmim_competitions?id=eq.'+comp.id,{method:'PATCH',secure:true,body:{status:b.dataset.compStatus}});await read()}catch(e){status(safeErr(e),true)}
@@ -516,15 +521,16 @@ createForm.addEventListener('reset',()=>setTimeout(updateHybridFields,0));
 updateHybridFields();
 $('admin-comp-create').onsubmit=async e=>{
  e.preventDefault();if(!state.admin)return;
- const btn=e.currentTarget.querySelector('button'),f=new FormData(e.currentTarget);
+ const form=e.currentTarget,btn=form.querySelector('button'),f=new FormData(form);
  btn.disabled=true;
  try{
-  await a.call('/rest/v1/cmim_competitions',{method:'POST',secure:true,body:{
+  const logo=f.get('cover');const cover_url=logo?.size?await a.uploadTeamLogo(logo):null;
+  await a.call('/rest/v1/cmim_competitions',{method:'POST',secure:true,body:{cover_url,closes_at:toISO(f.get('closes_at')),
    title:txt(f.get('title')).trim(),description:txt(f.get('description')).trim(),structure:f.get('structure'),league_tier:txt(f.get('league_tier')).toLowerCase(),
    series_games:f.get('structure')==='liga_mata_mata'?1:Number(f.get('series_games')),format:'MD'+(f.get('structure')==='liga_mata_mata'?1:f.get('series_games')),starts_at:toISO(f.get('starts_at')),
    max_teams:f.get('structure')==='liga_mata_mata'?16:Number(f.get('max_teams')),swiss_rounds:Number(f.get('swiss_rounds')||5),status:f.get('status')
   }});
-  e.currentTarget.reset();status('✓ Campeonato criado.');await read();
+  form.reset();status('✓ Campeonato criado.');await read();
  }catch(err){status('Erro ao cadastrar: '+safeErr(err),true)}finally{btn.disabled=false}
 };
 try{
