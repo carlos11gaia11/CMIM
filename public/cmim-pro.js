@@ -6,8 +6,10 @@ document.addEventListener('DOMContentLoaded',()=>{
  tabs('pro-inhouse-tabs',['como-funciona','ranking-geral','divisoes','regras','torneio','estatisticas']);
  tabs('pro-team-tabs',['equipes','minhas-inscricoes','reagendamentos'],{convites:'equipes','my-invites':'equipes','my-teams':'equipes'});
  if(document.body.classList.contains('cmim-homepage')){
+  const quick=document.querySelector('.cmim-quick-doors'),news=$('news');if(quick&&news)news.before(quick);
+  const groupBox=document.createElement('section');groupBox.className='wrap pro-home-resources';groupBox.setAttribute('aria-label','Informações e recursos da comunidade');const groupTitle=document.createElement('h2');groupTitle.textContent='Explore a comunidade';groupBox.append(groupTitle);if(news)news.after(groupBox);
   const groups=[['ferramentas','Ferramentas e treinamento'],['divisoes','Divisões do In-House'],['sobre','Sobre a comunidade'],['jogadores','Jogadores da comunidade'],['novidades-regras','Novidades do regulamento'],['regras','Regras e mandamentos'],['historia','Nossa história'],['em-breve','Próximas novidades']];
-  for(const [id,label] of groups){const el=$(id);if(!el)continue;const d=document.createElement('details');d.className='wrap pro-home-fold';const summary=document.createElement('summary');summary.textContent=label;el.before(d);d.append(summary,el)}
+  for(const [id,label] of groups){const el=$(id);if(!el)continue;const d=document.createElement('details');d.className='wrap pro-home-fold';const summary=document.createElement('summary');summary.textContent=label;if(news)groupBox.append(d);else el.before(d);d.append(summary,el)}
   const reveal=()=>{const el=$(location.hash.slice(1));const d=el?.closest('details');if(d){d.open=true;requestAnimationFrame(()=>el.scrollIntoView({block:'start'}))}};window.addEventListener('hashchange',reveal);reveal();
  }
  const main=document.querySelector('main');if(main&&!main.id)main.id='cmim-main-content';
