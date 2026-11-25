@@ -79,5 +79,30 @@ try{
  await rp.locator('#new-password-form [name=confirm]').fill('TestPassword123!');await rp.locator('#new-password-form button').click();await rp.locator('#return-login').waitFor();assert.equal(changed.password,'TestPassword123!');assert.match(await rp.locator('#new-password-status').textContent(),/Senha alterada com sucesso/);
  await rp.goto(base+'conta.html#type=recovery&error=access_denied&error_description=expired');await rp.waitForFunction(()=>document.querySelector('#new-password-status').textContent.includes('expirado'));assert.equal(await rp.locator('#new-password-form').isVisible(),false);
  console.log('PASS password recovery redirect, token validation, mismatch, update and expired link');await recovery.close();
+ const invited=await browser.newContext({viewport:{width:1440,height:900}});const inviteId='22222222-2222-4222-8222-222222222222',teamId='33333333-3333-4333-8333-333333333333';let pending=true,joined=false,brokenStats=false,submitted=false;
+ await invited.addInitScript(({user,session})=>{if(!sessionStorage.getItem('smoke-seeded')){localStorage.setItem('cmim_player_session',JSON.stringify(session));sessionStorage.setItem('smoke-seeded','1')}},{user:player,session:session(player)});
+ await invited.route('**/*',async route=>{
+  const req=route.request(),u=new URL(req.url());if(u.origin==='http://127.0.0.1:4173')return route.continue();if(!u.hostname.endsWith('.supabase.co'))return route.abort();
+  const headers={'access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,PATCH,DELETE,OPTIONS','access-control-allow-headers':'*','content-type':'application/json'};
+  if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});let data=[],status=200;
+  if(u.pathname==='/auth/v1/user')data=player;
+  else if(u.pathname==='/rest/v1/cmim_profiles')data=[{id:player.id,nick:'Teste',tag:'BR1',lane:'MID',secondary_lane:'TOP',avatar_url:base+'assets/branding/cmim-main.webp'}];
+  else if(u.pathname==='/rest/v1/cmim_player_private')data=[{real_name:'Teste CMIM',phone_e164:null}];
+  else if(u.pathname==='/rest/v1/cmim_squads')data=[{id:teamId,name:'Equipe Teste',short_name:'TST',owner_id:'other',captain_lane:'TOP'}];
+  else if(u.pathname==='/rest/v1/cmim_squad_members')data=joined?[{team_id:teamId,user_id:player.id,lane:'MID',starter:true}]:[];
+  else if(u.pathname==='/rest/v1/cmim_squad_invites')data=pending?[{id:inviteId,team_id:teamId,lane:'MID',sender_id:'other'}]:[];
+  else if(u.pathname==='/rest/v1/rpc/cmim_answer_invite'){assert.equal(req.postDataJSON().p_invite,inviteId);assert.equal(req.postDataJSON().p_accept,true);submitted=true;pending=false;joined=true;data='accepted';}
+  else if(u.pathname==='/rest/v1/cmim_rank'){if(brokenStats){status=503;data={message:'unavailable'}}else data=[{data:{players:[],seasons:[],events:[]},version:1}];}
+  return route.fulfill({status,headers,body:JSON.stringify(data)});
+ });
+ const ip=await invited.newPage();ip.on('pageerror',e=>errors.push(ip.url()+': '+e.message));
+ await open(ip,'perfil.html','authenticated');await ip.locator('#profile-content').waitFor();assert.equal(await ip.locator('#player-handle').textContent(),'Teste#BR1');assert.equal(await ip.locator('#account-signout').count(),1);
+ await ip.locator('#cmim-invite-count').waitFor();assert.equal(await ip.locator('#cmim-invite-count').textContent(),'1');
+ brokenStats=true;await open(ip,'perfil.html','authenticated');await ip.locator('#profile-content').waitFor();await ip.locator('#profile-retry').waitFor();assert.match(await ip.locator('#profile-stats-source').textContent(),/indisponíveis/);
+ await ip.setViewportSize({width:390,height:844});assert.equal(await ip.locator('#cmim-invite-link').isVisible(),true);assert.equal(await ip.locator('#cmim-my-team-link').isVisible(),false);
+ await ip.locator('#cmim-invite-link').click();await ip.locator('#my-invites [data-accept="true"]').waitFor();assert.match(await ip.locator('#my-invites').textContent(),/Equipe Teste/);
+ await ip.locator('#my-invites [data-accept="true"]').click();await ip.waitForFunction(()=>document.querySelector('#my-invites').textContent.includes('Nenhum convite pendente'));assert.equal(submitted,true);
+ await ip.waitForFunction(()=>document.querySelector('#cmim-invite-count').hidden);await ip.waitForFunction(()=>!document.querySelector('#cmim-my-team-link').hidden);
+ console.log('PASS profile loading, partial statistics failure, mobile invite notification and acceptance');await invited.close();
  assert.deepEqual(errors,[],'Uncaught browser errors');console.log('All browser smoke checks passed.');
 }finally{await browser.close()}
