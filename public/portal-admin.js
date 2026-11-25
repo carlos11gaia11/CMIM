@@ -487,8 +487,9 @@
   $('news-reader-close')?.addEventListener('click',()=>$('cmim-news-reader').close());
   loadNews();
   // O dashboard abre sozinho ao carregar, sem misturar formularios ao portal.
+  document.addEventListener('cmim-auth-changed',e=>{if(e.detail?.status==='guest'&&$('admin-management-view')){state.admin=false;state.session=null;showLogin()}});
   if($('admin-management-view')){
-    if(state.session){
+    if(window.CMIMAuth){
       verifySession().then(ok=>{
         if(ok){showManager();return loadAdminData().catch(e=>flash(e.message,true));}
         showLogin();
