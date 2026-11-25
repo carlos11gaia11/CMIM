@@ -131,7 +131,7 @@ async function signUp(values){
  // Page access is enforced using Supabase Auth, not merely the presence of a stored token.
  // Pages intentionally marked data-cmim-protected=1 are gated even when opened by direct URL.
  const PROTECTED_PAGES=new Set(['draft.html','ranking.html','selecao.html','inhouse.html','relatorios.html','pontuacao.html','perfil.html']);
- const RETURN_PAGES=new Set([...PROTECTED_PAGES,'ligas.html','campeonatos.html','equipes.html','fila.html','agenda.html','admin.html','admin-fila.html']);
+ const RETURN_PAGES=new Set([...PROTECTED_PAGES,'ligas.html','campeonatos.html','equipes.html','fila.html','agenda.html','admin.html','admin-fila.html','meu-time.html']);
  function safeReturn(raw){
   if(!raw||typeof raw!=='string'||raw.length>1500)return null;
   try{
@@ -204,8 +204,20 @@ async function signUp(values){
  }
 
  function badgeMarkup(){return '<div class="cmim-auth-bar" id="cmim-auth-badge"><a href="./conta.html" title="Conta CMIM">◌ Entrar / Cadastrar</a></div>'}
+ let teamCheck=null,teamCheckId=null,hasTeam=false;
+ async function refreshMyTeam(force=false){
+  const link=document.getElementById('cmim-my-team-link');if(!link)return;
+  const id=authStatus==='authenticated'?verifiedUser?.id:null;
+  if(!id){link.hidden=true;teamCheckId=null;hasTeam=false;return}
+  if(!force&&teamCheckId===id){link.hidden=!hasTeam;return}
+  if(teamCheck===id&&!force)return;teamCheck=id;
+  try{const rows=await call('/rest/v1/cmim_squad_members?user_id=eq.'+encodeURIComponent(id)+'&select=team_id&limit=1',{secure:true});
+   if(verifiedUser?.id===id&&authStatus==='authenticated'){teamCheckId=id;hasTeam=Array.isArray(rows)&&rows.length>0;link.hidden=!hasTeam;document.querySelectorAll('.cmim-team-entry').forEach(x=>x.textContent=hasTeam?'Meus convites':'Criar time / Convites')}
+  }catch{if(teamCheckId!==id)link.hidden=true}finally{if(teamCheck===id)teamCheck=null}
+ }
  function updateBadge(){
   const authenticated=authStatus==='authenticated';
+  void refreshMyTeam();
   document.querySelectorAll('.cmim-admin-link').forEach(el=>el.hidden=!(authenticated&&verifiedUser?.app_metadata?.cmim_admin===true));
   const name=verifiedUser?.user_metadata?.nick||'Meu perfil';
   // On the homepage login belongs in the prominent header CTA, not in the bottom corner.
@@ -225,13 +237,13 @@ async function signUp(values){
   if(session?.access_token)current().then(updateBadge);
  }
  function mountNavigation(){
-  if(document.querySelector('.cmim-unified-nav')||document.body?.classList.contains('admin-page')||document.getElementById('root'))return;
+  if(document.querySelector('.cmim-unified-nav')||document.body?.classList.contains('admin-page')||(document.getElementById('root')&&location.pathname.endsWith('selecao.html')))return;
   const here=location.pathname.split('/').pop()||'index.html';
-  const old=document.querySelector('body > header');if(!old)return;
+  const old=document.querySelector('body > header')||(here==='comp-maker.html'?document.querySelector('header.topbar'):null);if(!old)return;
   const nav=document.createElement('header');nav.className='cmim-unified-nav';nav.dataset.cmimUnified='1';
   const primary=[['Início','./','index.html'],['In-House','./inhouse.html','inhouse.html'],['Ligas','./ligas.html','ligas.html'],['Equipes','./equipes.html','equipes.html'],['Agenda','./agenda.html','agenda.html']];
   const more=[['Entrar em sala pronta','./draft.html?jogar=1'],['Ranking','./ranking.html'],['Relatórios','./relatorios.html'],['Pontuação','./pontuacao.html'],['Draft','./draft.html'],['Seleção de campeões','./selecao.html'],['Regulamento','./regulamento.html'],['Comp Maker','./comp-maker.html'],['Aulas','./aulas.html'],['CMIM News','./#news'],['Jogadores','./#jogadores'],['Comunidade','./#redes']];
-  nav.innerHTML='<div class="cmim-nav-inner"><a class="cmim-nav-brand" href="./"><img src="./assets/branding/cmim-main.webp?v=20261125-logo" alt="" width="48" height="48"><span>CMIM<small>COMPETITIVE CIRCUIT</small></span></a><button type="button" class="cmim-nav-toggle" aria-expanded="false" aria-controls="cmim-nav-links" aria-label="Abrir menu">☰</button><nav id="cmim-nav-links" aria-label="Menu principal">'+primary.map(([name,href,page])=>'<a href="'+href+'"'+(here===page?' aria-current="page"':'')+'>'+name+'</a>').join('')+'<details class="cmim-nav-more"><summary>Mais <span aria-hidden="true">⌄</span></summary><div>'+more.map(([name,href])=>'<a href="'+href+'">'+name+'</a>').join('')+'<a class="cmim-admin-link" href="./admin.html" hidden>Administração</a><a class="cmim-admin-link" id="adminLink" href="./admin-fila.html" hidden>Gestão de filas</a></div></details><a class="cmim-nav-play" href="./fila.html">Jogar</a><a class="cmim-nav-account" id="portal-auth-button" href="./conta.html">Verificando…</a></nav></div>';
+  nav.innerHTML='<div class="cmim-nav-inner"><a class="cmim-nav-brand" href="./"><img src="./assets/branding/cmim-main.webp?v=20261125-logo" alt="" width="48" height="48"><span>CMIM<small>COMPETITIVE CIRCUIT</small></span></a><button type="button" class="cmim-nav-toggle" aria-expanded="false" aria-controls="cmim-nav-links" aria-label="Abrir menu">☰</button><nav id="cmim-nav-links" aria-label="Menu principal">'+primary.map(([name,href,page])=>'<a href="'+href+'"'+(here===page?' aria-current="page"':'')+'>'+name+'</a>').join('')+'<a id="cmim-my-team-link" href="./meu-time.html" hidden'+(here==='meu-time.html'?' aria-current="page"':'')+'>Meu Time</a><details class="cmim-nav-more"><summary>Mais <span aria-hidden="true">⌄</span></summary><div>'+more.map(([name,href])=>'<a href="'+href+'">'+name+'</a>').join('')+'<a class="cmim-team-entry" href="./meu-time.html">Criar time / Convites</a><a class="cmim-admin-link" href="./admin.html" hidden>Administração</a><a class="cmim-admin-link" id="adminLink" href="./admin-fila.html" hidden>Gestão de filas</a></div></details><a class="cmim-nav-play" href="./fila.html">Jogar</a><a class="cmim-nav-account" id="portal-auth-button" href="./conta.html">Verificando…</a></nav></div>';
   if(['ranking.html','comp-maker.html','admin-fila.html'].includes(here)){old.before(nav);old.classList.add('cmim-local-header');}
   else{
    const localLinks=[...old.querySelectorAll('nav a[href^="#"]')];
@@ -247,13 +259,14 @@ async function signUp(values){
  function mountMobileDock(){mountNavigation()}
  window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,uploadTeamLogo,squareImage,esc,session:()=>session,authState:()=>({status:authStatus,user:verifiedUser}),save,requireLogin,gotoLogin,requestedDestination};
  function initialize(){
-  const css=document.createElement('link');css.rel='stylesheet';css.href='./cmim-unified.css?v=20261125-final';document.head.append(css);mountNavigation();
+  const css=document.createElement('link');css.rel='stylesheet';css.href='./cmim-unified.css?v=20261125-areas';document.head.append(css);mountNavigation();
   document.documentElement.classList.remove('cmim-auth-pending');
   if(document.body?.dataset?.cmimProtected==='1'){
    mountMobileDock();
    void requireLogin().then(ok=>{if(ok){mountBadge();updateBadge()}});
   }else{mountBadge();mountMobileDock();updateBadge()}
   void user().then(updateBadge);
+  document.addEventListener('cmim-team-changed',()=>void refreshMyTeam(true));
   window.addEventListener('storage',e=>{if(e.key!==STORAGE)return;const before=verifiedUser?.id||session?.user?.id;const next=readStored();if(!next||before!==next.user?.id){location.reload();return}generation++;session=next;verifiedAt=0;authStatus='checking';notify();void user({force:true})});
   window.addEventListener('online',()=>{if(authStatus==='offline'){if(document.body?.dataset?.cmimProtected==='1')void requireLogin();else void user({force:true})}});
   // Public portal: clicking a protected tool while logged out takes the visitor to login.

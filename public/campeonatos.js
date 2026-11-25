@@ -34,7 +34,9 @@ const teamLink=id=>safeTeamId(id)&&team(id)?'<a href="./equipe.html?id='+encodeU
 const dateTime=x=>{if(!x)return 'Horário a definir';const d=new Date(x);return Number.isNaN(+d)?'Horário a definir':d.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+' (Brasília)'};
 const timeInput=iso=>{if(!iso)return '';const d=new Date(iso);if(Number.isNaN(+d))return '';const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false,hourCycle:'h23'}).formatToParts(d);const get=x=>parts.find(p=>p.type===x)?.value||'';return get('year')+'-'+get('month')+'-'+get('day')+'T'+get('hour')+':'+get('minute')};
 const toISO=local=>{if(!local)return null;const date=new Date(local+':00-03:00');if(Number.isNaN(+date))throw Error('Data ou horário inválido.');return date.toISOString()};
-const own=()=>state.squads.filter(t=>t.owner_id===state.me?.id);
+const own=()=>state.me?state.squads.filter(t=>t.owner_id===state.me.id):[];
+const myTeams=()=>state.me?state.squads.filter(t=>t.owner_id===state.me.id||state.members.some(m=>m.team_id===t.id&&m.user_id===state.me.id)):[];
+const myPage=!!$('my-teams');
 const membersFor=id=>state.members.filter(x=>x.team_id===id);
 const startersFor=id=>membersFor(id).filter(x=>x.starter);
 const myProfile=()=>state.profiles.find(p=>p.id===state.me?.id);
@@ -58,7 +60,7 @@ async function read(){
  if(responses.some(x=>x.status==='rejected')&&state.me){
   $('champ-status').textContent='Algumas informações estão temporariamente indisponíveis. Atualize a página para tentar novamente.';
  }
- if(state.me){
+ if(state.me&&(myPage||state.admin)){
   try{state.invites=await a.call('/rest/v1/cmim_squad_invites?recipient_id=eq.'+state.me.id+'&status=eq.pending&select=id,team_id,lane,sender_id',{secure:true})}catch{state.invites=[]}
   try{state.reschedules=await a.call('/rest/v1/cmim_reschedule_requests?select=*&order=created_at.desc&limit=500',{secure:true});state.rescheduleError=false}catch{state.reschedules=[];state.rescheduleError=true}
  }
@@ -110,22 +112,23 @@ function renderPublicDashboard(){
 function render(){
  renderPublicDashboard();
  const access=$('leagues-access-banner');if(access)access.hidden=!!state.me;
- $('create-squad').hidden=!state.me;
+ if(myPage){
+ $('create-squad').hidden=!state.me||myTeams().length>0||!state.loaded?.squads||!state.loaded?.members;
  if(!state.me)$('my-teams').innerHTML='<div class="cmim-empty">Entre em sua <a href="./conta.html">conta CMIM</a> para criar um time e se inscrever.</div>';
- else $('my-teams').innerHTML=own().length?own().map(t=>{
+ else $('my-teams').innerHTML=myTeams().length?myTeams().map(t=>{
   const members=membersFor(t.id);
-  const canInvite=members.length<10;
+  const captain=t.owner_id===state.me.id,canInvite=captain&&members.length<10;
   return '<article class="cmim-cup" style="margin-bottom:10px"><h3>'+imageTag(t.logo_url,'Logo')+esc(t.name)+'</h3><small>'+members.length+'/10 jogadores · '+startersFor(t.id).length+'/5 titulares · '+esc(t.short_name||'')+'</small>'+
   '<a class="cmim-team-inline-link" href="./equipe.html?id='+encodeURIComponent(t.id)+'">VER PERFIL DA EQUIPE →</a>'+
-  '<form data-logo-team="'+t.id+'" class="cmim-form-row"><label class="cmim-field">ATUALIZAR LOGO (512 × 512)<input name="logo" type="file" accept="image/jpeg,image/png,image/webp" required></label><button class="cmim-button ghost">Salvar logo</button></form><div style="font-size:12px;margin:10px 0">'+members.slice().sort((a,b)=>Number(b.starter)-Number(a.starter)||a.lane.localeCompare(b.lane)).map(m=>{
+  (captain?'<form data-logo-team="'+t.id+'" class="cmim-form-row"><label class="cmim-field">ATUALIZAR LOGO (512 × 512)<input name="logo" type="file" accept="image/jpeg,image/png,image/webp" required></label><button class="cmim-button ghost">Salvar logo</button></form>':'<p class="cmim-muted">Você integra este elenco. Alterações de formação são feitas pelo capitão.</p>')+'<div style="font-size:12px;margin:10px 0">'+members.slice().sort((a,b)=>Number(b.starter)-Number(a.starter)||a.lane.localeCompare(b.lane)).map(m=>{
    const pl=state.profiles.find(p=>p.id===m.user_id);
-   return '<div class="cmim-match">'+imageTag(pl?.avatar_url,'Foto')+esc(pl?pl.nick+'#'+pl.tag:'Jogador')+' · '+esc(m.lane)+' · '+(m.starter?'TITULAR':'RESERVA')+' <button type="button" class="cmim-button ghost" data-starter-team="'+t.id+'" data-starter-player="'+m.user_id+'" data-starter-value="'+(!m.starter)+'">'+(m.starter?'Tornar reserva':'Tornar titular')+'</button></div>'
+   return '<div class="cmim-match">'+imageTag(pl?.avatar_url,'Foto')+esc(pl?pl.nick+'#'+pl.tag:'Jogador')+' · '+esc(m.lane)+' · '+(m.starter?'TITULAR':'RESERVA')+(captain?' <button type="button" class="cmim-button ghost" data-starter-team="'+t.id+'" data-starter-player="'+m.user_id+'" data-starter-value="'+(!m.starter)+'">'+(m.starter?'Tornar reserva':'Tornar titular')+'</button>':'')+'</div>'
   }).join('')+'</div>'+
   (canInvite?'<form data-invite-team="'+t.id+'" class="cmim-form-row"><label class="cmim-field">CONVIDAR JOGADOR<select name="recipient" required><option value="">Escolher jogador</option>'+
   state.profiles.filter(p=>!state.members.some(m=>m.user_id===p.id)).map(p=>'<option value="'+p.id+'">'+esc(p.nick+'#'+p.tag)+'</option>').join('')+'</select></label>'+
-  '<label class="cmim-field">POSIÇÃO<select name="lane">'+['TOP','JG','MID','ADC','SUP'].map(l=>'<option>'+l+'</option>').join('')+'</select></label><button class="cmim-button ghost">Enviar convite</button></form>':'<p class="cmim-badge">✓ TIME COMPLETO</p>')+
+  '<label class="cmim-field">POSIÇÃO<select name="lane">'+['TOP','JG','MID','ADC','SUP'].map(l=>'<option>'+l+'</option>').join('')+'</select></label><button class="cmim-button ghost">Enviar convite</button></form>':captain?'<p class="cmim-badge">✓ TIME COMPLETO</p>':'')+
   '</article>';
- }).join(''):'<p class="cmim-muted">Você ainda não lidera um time. Crie seu primeiro elenco abaixo.</p>';
+ }).join(''):'<p class="cmim-muted">Você ainda não integra um time. Crie seu elenco ou aceite um convite.</p>';
  const photoInput=$('squad-player-photo');if(photoInput){photoInput.required=!!state.me&&!myProfile()?.avatar_url;}
  document.querySelectorAll('[data-starter-team]').forEach(b=>b.onclick=async()=>{
   if(!confirm(b.dataset.starterValue==='true'?'Definir como titular? O titular atual da mesma lane passará para reserva.':'Mover jogador para a reserva?'))return;
@@ -145,7 +148,12 @@ function render(){
  document.querySelectorAll('[data-invite-id]').forEach(b=>b.onclick=async()=>{
   b.disabled=true;try{if(b.dataset.accept==='true'&&!myProfile()?.avatar_url){throw Error('Envie sua foto no perfil antes de aceitar o convite.');}await a.call('/rest/v1/rpc/cmim_answer_invite',{method:'POST',secure:true,body:{p_invite:b.dataset.inviteId,p_accept:b.dataset.accept==='true'}});status('Convite respondido.');await read()}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
  });
- renderReschedules();
+ const myEntries=$('my-entries');if(myEntries){const ids=new Set(myTeams().map(t=>t.id));const entries=state.entries.filter(e=>ids.has(e.team_id));myEntries.innerHTML=entries.length?entries.map(e=>'<article class="cmim-match"><b>'+esc(competition(e.competition_id)?.title||'Campeonato')+'</b><p>'+readable(e.team_id)+' · '+esc(label(e.status))+'</p><a href="./ligas.html?campeonato='+encodeURIComponent(e.competition_id)+'#chaveamentos">Ver classificação e jogos →</a></article>').join(''):'<p class="cmim-muted">Nenhuma inscrição registrada. Consulte os campeonatos disponíveis.</p>';} 
+ document.dispatchEvent(new Event('cmim-team-changed'));
+ }
+ const rescheduleAdmin=$('league-reschedule-admin');if(rescheduleAdmin)rescheduleAdmin.hidden=!state.admin;
+ if(myPage||state.admin)renderReschedules();
+ if(!$('competition-list'))return;
  const visibleComps=state.comps.filter(c=>state.league==='all'||c.league_tier===state.league);
  document.querySelectorAll('[data-filter-league]').forEach(button=>{
   const active=button.dataset.filterLeague===state.league;
@@ -179,13 +187,13 @@ function renderReschedules(){
  const root=$('my-reschedules');if(!root)return;
  if(!state.me){root.innerHTML='<p class="cmim-muted">Entre para consultar pedidos de reagendamento.</p>';return}
  if(state.rescheduleError){root.textContent='Não foi possível consultar solicitações. Atualize a página.';return}
- const ids=new Set(own().map(t=>t.id)),requests=state.reschedules||[];
- const games=state.matches.filter(m=>m.status==='scheduled'&&!m.room_id&&m.team_b_id&&(ids.has(m.team_a_id)||ids.has(m.team_b_id)));
+ const ids=new Set(own().map(t=>t.id)),memberIds=new Set(myTeams().map(t=>t.id)),requests=(state.reschedules||[]).filter(r=>myPage?ids.has(r.requester_team_id)||ids.has(r.recipient_team_id):state.admin&&r.status==='pending_admin');
+ const games=myPage?state.matches.filter(m=>m.status!=='approved'&&m.team_b_id&&(memberIds.has(m.team_a_id)||memberIds.has(m.team_b_id))):[];
  const labels={pending:'Pendente',pending_admin:'Aguardando confirmação do ADM',accepted:'Aceito',rejected:'Recusado',cancelled:'Cancelado',stale:'Expirado ou horário alterado'};
  root.innerHTML='<h3>MEUS CONFRONTOS</h3>'+(games.length?games.map(m=>{
   const pending=requests.some(r=>r.match_id===m.id&&['pending','pending_admin'].includes(r.status));
   return '<div class="cmim-match"><b>'+teamLink(m.team_a_id)+' × '+teamLink(m.team_b_id)+'</b><p>'+esc(dateTime(m.scheduled_at))+'</p>'+
-  (pending?'<p class="cmim-muted">Há uma solicitação pendente ou aguardando confirmação da organização.</p>':'<form class="cmim-form-row" data-reschedule-match="'+m.id+'"><label class="cmim-field">NOVA DATA E HORA (BRASÍLIA)<input type="datetime-local" name="time" required></label><label class="cmim-field">MOTIVO (OPCIONAL)<input name="reason" maxlength="500"></label><button class="cmim-button">SOLICITAR REAGENDAMENTO</button></form>')+'</div>';
+  (!ids.has(m.team_a_id)&&!ids.has(m.team_b_id)?'<p class="cmim-muted">O capitão é responsável pelo reagendamento.</p>':m.status!=='scheduled'||m.room_id?'<p class="cmim-muted">Partida indisponível para reagendamento.</p>':pending?'<p class="cmim-muted">Há uma solicitação pendente ou aguardando confirmação da organização.</p>':'<form class="cmim-form-row" data-reschedule-match="'+m.id+'"><label class="cmim-field">NOVA DATA E HORA (BRASÍLIA)<input type="datetime-local" name="time" required></label><label class="cmim-field">MOTIVO (OPCIONAL)<input name="reason" maxlength="500"></label><button class="cmim-button">SOLICITAR REAGENDAMENTO</button></form>')+'</div>';
  }).join(''):'<p class="cmim-muted">Nenhum confronto disponível para reagendar.</p>')+
  '<h3>SOLICITAÇÕES RECEBIDAS E ENVIADAS</h3>'+(requests.length?requests.map(r=>{
   const m=state.matches.find(x=>x.id===r.match_id);
@@ -298,8 +306,8 @@ document.querySelectorAll('[data-filter-league]').forEach(button=>button.addEven
 }));
 const loginLink=$('league-login-link');
 if(loginLink)loginLink.addEventListener('click',e=>{e.preventDefault();a.gotoLogin()});
-$('selected-competition').onchange=e=>{state.selected=e.target.value;renderOverview()};
-$('create-squad').onsubmit=async e=>{
+if($('selected-competition'))$('selected-competition').onchange=e=>{state.selected=e.target.value;renderOverview()};
+if($('create-squad'))$('create-squad').onsubmit=async e=>{
  e.preventDefault();if(!state.me){a.gotoLogin();return}
  const form=e.currentTarget,btn=form.querySelector('button'),f=new FormData(form);btn.disabled=true;
  try{const photo=f.get('player_photo');if(photo?.size)await a.uploadAvatar(photo);else if(!myProfile()?.avatar_url)throw Error('Sua foto é obrigatória.');const logo_url=await a.uploadTeamLogo(f.get('logo'));await a.call('/rest/v1/cmim_squads',{method:'POST',secure:true,headers:{Prefer:'return=representation'},body:{
@@ -510,7 +518,7 @@ async function generateRound(comp){
  }catch(error){status('Erro no emparelhamento: '+safeErr(error),true)}
  finally{if(button)button.disabled=false}
 }
-$('admin-competition-select').onchange=renderAdminManage;
+if($('admin-competition-select'))$('admin-competition-select').onchange=renderAdminManage;
 document.querySelectorAll('[data-admin-screen]').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('[data-admin-screen]').forEach(x=>x.classList.toggle('active',x===b));
  $('admin-comp-create').hidden=b.dataset.adminScreen!=='create';
@@ -523,7 +531,7 @@ const updateHybridFields=()=>{
  if(isHybrid){createForm.elements.series_games.value='1';createForm.elements.max_teams.value='16';}
  const hint=$('hybrid-format-hint');if(hint)hint.hidden=!isHybrid;
 };
-createForm.elements.structure.addEventListener('change',updateHybridFields);
+if(createForm){createForm.elements.structure.addEventListener('change',updateHybridFields);
 createForm.addEventListener('reset',()=>setTimeout(updateHybridFields,0));
 updateHybridFields();
 $('admin-comp-create').onsubmit=async e=>{
@@ -539,14 +547,14 @@ $('admin-comp-create').onsubmit=async e=>{
   }});
   form.reset();status('✓ Campeonato criado.');await read();
  }catch(err){status('Erro ao cadastrar: '+safeErr(err),true)}finally{btn.disabled=false}
-};
+};}
 try{
  state.me=await a.user();
  state.admin=state.me?.app_metadata?.cmim_admin===true;
- const date=new Date();date.setDate(date.getDate()+7);$('admin-comp-create').querySelector('[name=starts_at]').value=date.toISOString().slice(0,16);
+ const date=new Date();date.setDate(date.getDate()+7);if(createForm)createForm.querySelector('[name=starts_at]').value=date.toISOString().slice(0,16);
  await read();
  }catch(e){
-  if(!state.me){render();$('champ-status').textContent='Você pode conhecer as ligas sem login. Para utilizar equipes e inscrições, entre na sua conta.';}
+  if(!state.me){$('champ-status').textContent=myPage?'Entre na sua conta para acessar seu time.':'Você pode conhecer as ligas sem login. Para utilizar equipes e inscrições, entre na sua conta.';}
   else status('Falha ao consultar campeonatos: '+safeErr(e),true);
  }
 });

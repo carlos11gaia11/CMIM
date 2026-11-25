@@ -1,0 +1,30 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meu Time | CMIM</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-areas"></script><script defer src="./campeonatos.js?v=20261125-areas"></script><style>
+html.cmim-auth-pending body{visibility:visible!important}
+.cmim-circuito{margin:0 0 26px;scroll-margin-top:28px}
+.cmim-circuito-head{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.cmim-circuito-head h2{margin:8px 0 0;font:900 clamp(36px,5vw,55px)/1 "Barlow Condensed",Impact,sans-serif;letter-spacing:.3px;color:#f6f7ee}
+.cmim-circuito-head h2 em{color:#ffe03b;font-style:normal}
+.cmim-circuito-head p{max-width:510px;font-size:13px;color:#c7d3c4;line-height:1.8;margin:0}
+.cmim-circuito-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.cmim-circuito-card{--league-color:#eff0ec;--league-bg:#393d40;position:relative;overflow:hidden;padding:22px;min-height:235px;border-radius:10px;border:1px solid color-mix(in srgb,var(--league-color) 35%,#455145);background:radial-gradient(ellipse at top right,var(--league-bg),transparent 67%),#171e19;display:flex;flex-direction:column}
+.cmim-circuito-card.academy{--league-color:#7ac8ff;--league-bg:#1d405a}
+.cmim-circuito-card.major{--league-color:#ffdc76;--league-bg:#534120}
+.cmim-circuito-card:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--league-color)}
+.cmim-circuito-card small{font-size:10px;letter-spacing:1.3px;font-weight:900;color:var(--league-color)}
+.cmim-circuito-logo{display:block;width:116px;height:128px;object-fit:cover;margin-top:15px;border:1px solid #77754b;border-radius:9px;box-shadow:0 6px 22px #0008}\n.cmim-circuito-card h3{margin:14px 0 13px;font:900 clamp(32px,4vw,43px)/1 "Barlow Condensed",Impact,sans-serif;color:#f5f8f0}
+.cmim-circuito-card h3 span{color:var(--league-color)}
+.cmim-circuito-card p{font-size:13px;line-height:1.75;color:#c6d1c6;margin:0}
+.cmim-circuito-card .cmim-circuito-foot{margin-top:auto;padding-top:15px;color:var(--league-color);font-size:10px;font-weight:800;letter-spacing:.9px}
+.cmim-circuito-note{margin-top:13px;padding:16px 20px;border:1px solid #6a6637;border-radius:8px;background:#282819;color:#d9e0c8;font-size:12px;line-height:1.8}
+.cmim-circuito-note strong{color:#ffea9c}
+@media(max-width:830px){.cmim-circuito-grid{grid-template-columns:1fr}.cmim-circuito-card{min-height:195px}.cmim-circuito-card h3{margin:23px 0 10px;font-size:39px}}
+</style>
+<link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script><link rel="icon" href="./assets/branding/cmim-main.webp?v=20261125-logo" type="image/webp"></head><body class="cmim-account-page cmim-league-hub cmim-my-team-page" data-no-auth-badge="1" data-cmim-protected="1"><header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM</a></header><main class="cmim-shell"><section class="cmim-league-header"><span class="cmim-kicker">CIRCUITO COMPETITIVO / ÁREA DO JOGADOR</span><h1>MEU <em>TIME.</em></h1><p>Seu elenco, convites, inscrições e partidas em um só lugar.</p><div class="cmim-league-actions"><a href="#equipes">MEU ELENCO</a><a class="secondary" href="#minhas-inscricoes">MINHAS INSCRIÇÕES</a><a class="secondary" href="#reagendamentos">MINHAS PARTIDAS</a><a class="secondary" href="./ligas.html">VER LIGAS →</a></div></section><p id="champ-status" class="cmim-status" role="status"></p><section class="cmim-hub-section" id="equipes">
+  <div class="cmim-hub-section-heading"><div><span class="cmim-kicker">01 / ORGANIZAÇÃO DE ELENCOS</span><h2>MEU ELENCO</h2></div><p>Gerencie seu elenco, convites e jogos.</p></div>
+  <div class="cmim-grid" style="margin-bottom:20px"><section class="cmim-card"><h2>SEU TIME</h2><p class="cmim-muted">Cadastre um time de 5 titulares e até 5 reservas antes de disputar um campeonato.</p>
+<div id="my-teams"></div><form id="create-squad" hidden><div class="cmim-form-row"><label class="cmim-field">NOME DO TIME<input name="name" maxlength="55" minlength="3" placeholder="Ex.: CMIM PHANTOMS" required></label>
+<label class="cmim-field">SIGLA (2–6)<input name="short_name" minlength="2" maxlength="6" placeholder="CMP" required></label>
+<label class="cmim-field">SUA POSIÇÃO NO TIME<select name="captain_lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label></div>
+<div class="cmim-form-row"><label class="cmim-field">LOGO DO TIME (OBRIGATÓRIA)<input name="logo" type="file" accept="image/jpeg,image/png,image/webp" required></label><label class="cmim-field">SUA FOTO DE JOGADOR (OBRIGATÓRIA NO PERFIL)<input id="squad-player-photo" name="player_photo" type="file" accept="image/jpeg,image/png,image/webp"></label></div><p class="cmim-muted">Imagens JPG, PNG ou WebP de até 10 MB. Recorte central automático de 512 × 512 px. Se já tem foto no perfil, não precisa reenviar.</p><button class="cmim-button" type="submit">＋ CRIAR TIME</button></form></section>
+<section class="cmim-card"><h2>CONVITES RECEBIDOS</h2><p class="cmim-muted">Aceite ou recuse convites dos capitães para completar seu elenco.</p><div id="my-invites" class="cmim-empty">Entre na sua conta para ver os convites.</div></section></div></section>
+<section class="cmim-hub-section" id="reagendamentos"><div class="cmim-hub-section-heading"><div><span class="cmim-kicker">GESTÃO DE PARTIDAS</span><h2>MINHAS PARTIDAS &amp; REAGENDAMENTOS</h2></div><p>Capitães podem propor novos horários. A agenda muda após a confirmação do adversário e, no CMIM Open, após a confirmação da administração.</p></div><section class="cmim-card" id="my-reschedules"></section></section><section class="cmim-hub-section" id="minhas-inscricoes"><div class="cmim-hub-section-heading"><div><span class="cmim-kicker">CIRCUITO COMPETITIVO</span><h2>MINHAS INSCRIÇÕES</h2></div><a class="cmim-button ghost" href="./ligas.html#eventos">VER CAMPEONATOS</a></div><section class="cmim-card" id="my-entries"></section></section></main></body></html>
