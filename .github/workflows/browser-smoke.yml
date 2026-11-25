@@ -1,0 +1,31 @@
+name: CMIM — teste de navegação no navegador
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-save --package-lock=false --no-audit --no-fund playwright-core@1.51.1
+      - run: npm run build
+        env:
+          BASE_PATH: /CMIM/
+      - name: Testar navegação e autenticação simulada
+        shell: bash
+        run: |
+          export BASE_PATH=/CMIM/
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME_PATH" ]; then npx playwright-core install --with-deps chromium; fi
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/cmim-preview.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          for i in {1..30}; do if curl -fsS http://127.0.0.1:4173/CMIM/ > /dev/null; then break; fi; sleep 1; done
+          node scripts/smoke-browser.mjs
