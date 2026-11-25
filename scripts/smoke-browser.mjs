@@ -124,5 +124,23 @@ try{
  for(let i=0;i<24&&!(await cp.locator('[data-day="2026-11-30"]').count());i++){const year=await cp.locator('[data-day]').first().getAttribute('data-day');await cp.locator(year>'2026-11-30'?'#calendar-prev':'#calendar-next').click();}
  await cp.locator('[data-day="2026-11-30"]').click();assert.match(await cp.locator('#agenda-events').textContent(),/Treino de teste/);await cp.locator('#calendar-all').click();assert.match(await cp.locator('#calendar-list-title').textContent(),/mês/);
  console.log('PASS calendar month/day and Brasília timezone, 4x4 team catalog and roster groups');await circuit.close();
+ const captainContext=await browser.newContext({viewport:{width:1440,height:900}});
+ await captainContext.addInitScript(({session})=>{localStorage.setItem('cmim_player_session',JSON.stringify(session))},{session:session(player)});
+ let formationChanged=false;
+ await captainContext.route('**/*',async route=>{
+  const req=route.request(),u=new URL(req.url());if(u.origin==='http://127.0.0.1:4173')return route.continue();if(!u.hostname.endsWith('.supabase.co'))return route.abort();
+  const headers={'access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,PATCH,OPTIONS','access-control-allow-headers':'*','content-type':'application/json'};if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});let data=[];
+  if(u.pathname==='/auth/v1/user')data=player;
+  else if(u.pathname.endsWith('/cmim_squads'))data=[{id:teams[0].id,name:'Equipe Teste',short_name:'TST',owner_id:player.id,logo_url:'https://example.org/logo.png'}];
+  else if(u.pathname.endsWith('/cmim_profiles'))data=[{id:player.id,nick:'Capitão',tag:'BR1',avatar_url:'https://example.org/player.png'},{id:'reserve',nick:'Reserva',tag:'BR1',avatar_url:'https://example.org/reserve.png'},{id:'available',nick:'Disponível',tag:'BR1'}];
+  else if(u.pathname.endsWith('/cmim_squad_members'))data=[{team_id:teams[0].id,user_id:player.id,lane:'MID',starter:!formationChanged},{team_id:teams[0].id,user_id:'reserve',lane:'MID',starter:formationChanged}];
+  else if(u.pathname.endsWith('/rpc/cmim_set_starter')){assert.equal(req.postDataJSON().p_player,'reserve');formationChanged=true;data=true;}
+  return route.fulfill({status:200,headers,body:JSON.stringify(data)});
+ });
+ const tp=await captainContext.newPage();tp.on('pageerror',e=>errors.push(tp.url()+': '+e.message));await open(tp,'meu-time.html','authenticated');await tp.locator('.mt-dashboard').waitFor();assert.equal(await tp.locator('.mt-roster').first().locator('.mt-player').count(),5);assert.equal(await tp.locator('.mt-vacant').count(),4);assert.equal(await tp.locator('.mt-roster').last().locator('.mt-player').count(),1);assert.equal(await tp.locator('[data-invite-team]').isVisible(),true);assert.equal(await tp.locator('[data-logo-team]').isVisible(),false);
+ await tp.locator('.mt-tool').last().locator('summary').click();assert.equal(await tp.locator('[data-logo-team]').isVisible(),true);
+ tp.on('dialog',d=>d.accept());await tp.locator('[data-starter-player="reserve"]').click();await tp.waitForFunction(()=>document.querySelector('.mt-roster').textContent.includes('Reserva'));
+ await tp.setViewportSize({width:390,height:844});assert.equal(await tp.locator('.mt-player-grid').first().evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);assert.ok(await tp.locator('.mt-dashboard').evaluate(el=>el.scrollWidth<=el.clientWidth+2));
+ console.log('PASS captain dashboard: five lanes, reserves, role change, collapsible logo and mobile layout');await captainContext.close();
  assert.deepEqual(errors,[],'Uncaught browser errors');console.log('All browser smoke checks passed.');
 }finally{await browser.close()}
