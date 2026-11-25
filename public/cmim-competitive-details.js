@@ -24,7 +24,7 @@
  const get=path=>A.call('/rest/v1/'+path);
  let data=null,ok={};
  function metric(label,value,desc=''){return '<div class="cmim-detail-metric"><small>'+esc(label)+'</small><strong>'+esc(value)+'</strong><span>'+esc(desc)+'</span></div>';}
- function linkEvent(c){return './ligas.html?liga='+encodeURIComponent(c.league_tier||'all')+'&campeonato='+encodeURIComponent(c.id)+'#chaveamentos';}
+ function linkEvent(c){return './ligas.html?liga='+encodeURIComponent(c.league_tier||'all')+'&campeonato='+encodeURIComponent(c.id)+'#classificacao';}
  function matchesFor(compIds){return data.matches.filter(m=>compIds.has(m.competition_id));}
  function approvedFor(compIds){return data.entries.filter(e=>compIds.has(e.competition_id)&&e.status==='approved');}
  function finishedGames(matches){return matches.filter(m=>m.status==='approved'&&m.team_b_id&&m.winner_id);}
@@ -35,7 +35,7 @@
    '<div class="team-a"><strong>'+teamLink(a)+'</strong></div>'+
    '<div class="result">'+(official?Number(m.score_a)+' × '+Number(m.score_b):'VS')+'<small>'+esc(fmtStatus(m.status))+'</small></div>'+
    '<div class="team-b"><strong>'+teamLink(b)+'</strong></div>'+
-   '<div class="meta"><span>'+esc(ca?.title||'Competição CMIM')+'</span><span>Rodada '+Number(m.round_number||0)+'</span><span>'+esc(m.scheduled_at?fmtDate(m.scheduled_at):'Horário a definir')+'</span></div></article>';
+   '<div class="meta"><span>'+esc(ca?.title||'Competição CMIM')+'</span><span>Rodada '+Number(m.round_number||0)+'</span><span>'+esc(m.scheduled_at?fmtDate(m.scheduled_at):'Horário a definir')+'</span><a href="./partida.html?id='+encodeURIComponent(m.id)+'">Ver partida →</a></div></article>';
  }
  function standings(comp){
   const registered=data.entries.filter(e=>e.competition_id===comp.id&&e.status==='approved');

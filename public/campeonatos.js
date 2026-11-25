@@ -37,7 +37,10 @@ const timeInput=iso=>{if(!iso)return '';const d=new Date(iso);if(Number.isNaN(+d
 const toISO=local=>{if(!local)return null;const date=new Date(local+':00-03:00');if(Number.isNaN(+date))throw Error('Data ou horário inválido.');return date.toISOString()};
 const own=()=>state.me?state.squads.filter(t=>t.owner_id===state.me.id):[];
 const myTeams=()=>state.me?state.squads.filter(t=>t.owner_id===state.me.id||state.members.some(m=>m.team_id===t.id&&m.user_id===state.me.id)):[];
-const myPage=!!$('my-teams');
+const myPage=!!$('my-teams'),mode=document.body.dataset.circuitMode||'hub';
+const championshipId=new URLSearchParams(location.search).get('id');
+const eventHref=id=>'./campeonato.html?id='+encodeURIComponent(id);
+const matchHref=id=>'./partida.html?id='+encodeURIComponent(id);
 const membersFor=id=>state.members.filter(x=>x.team_id===id);
 const startersFor=id=>membersFor(id).filter(x=>x.starter);
 const myProfile=()=>state.profiles.find(p=>p.id===state.me?.id);
@@ -100,7 +103,7 @@ function renderPublicDashboard(){
       return '<article class="cmim-official-match-card"><span>'+esc(leagueLabel(comp?.league_tier))+' · '+esc(roundLabel(comp,Number(m.round_number)))+(hybrid(comp)&&m.round_number<=3?' · Grupo '+groupLabel(m):'')+'</span>'+
       '<h3>'+teamLink(m.team_a_id)+' <b>×</b> '+teamLink(m.team_b_id)+'</h3>'+
       '<p>'+esc(comp?.title||'Competição CMIM')+' · '+esc(label(m.status))+' · '+esc(dateTime(m.scheduled_at))+'</p>'+
-      '<button class="cmim-button ghost" data-goto-event="'+esc(m.competition_id)+'" type="button">VER CHAVEAMENTO →</button></article>';
+      '<a class="cmim-button ghost" href="'+matchHref(m.id)+'">VER PARTIDA →</a></article>';
     }).join(''):'<div class="cmim-empty">Nenhum confronto agendado foi publicado no circuito até o momento.</div>';
     schedule.querySelectorAll('[data-goto-event]').forEach(button=>button.addEventListener('click',()=>{
       const id=button.dataset.gotoEvent;state.selected=id;state.league='all';render();
@@ -111,6 +114,9 @@ function renderPublicDashboard(){
 }
 
 function render(){
+ if(mode==='championship'){renderChampionship();return}
+ if(mode==='admin'){renderCircuitAdmin();return}
+ document.querySelectorAll('.cmim-circuit-admin').forEach(el=>el.hidden=!state.admin);
  renderPublicDashboard();
  const access=$('leagues-access-banner');if(access)access.hidden=!!state.me;
  if(myPage){
@@ -150,13 +156,13 @@ function render(){
   catch(err){const msg='Erro no convite: '+safeErr(err);status(msg,true);$('invite-send-status').textContent=msg}finally{button.disabled=false}
  });
  renderInvites();
- const myEntries=$('my-entries');if(myEntries){const ids=new Set(myTeams().map(t=>t.id));const entries=state.entries.filter(e=>ids.has(e.team_id));myEntries.innerHTML=entries.length?entries.map(e=>'<article class="cmim-match"><b>'+esc(competition(e.competition_id)?.title||'Campeonato')+'</b><p>'+readable(e.team_id)+' · '+esc(entryLabel(e.status))+'</p><a href="./ligas.html?campeonato='+encodeURIComponent(e.competition_id)+'#chaveamentos">Ver classificação e jogos →</a></article>').join(''):'<p class="cmim-muted">Nenhuma inscrição registrada. Consulte os campeonatos disponíveis.</p>';} 
+ const myEntries=$('my-entries');if(myEntries){const ids=new Set(myTeams().map(t=>t.id));const entries=state.entries.filter(e=>ids.has(e.team_id));myEntries.innerHTML=entries.length?entries.map(e=>'<article class="cmim-match"><b>'+esc(competition(e.competition_id)?.title||'Campeonato')+'</b><p>'+readable(e.team_id)+' · '+esc(entryLabel(e.status))+'</p><a href="./campeonato.html?id='+encodeURIComponent(e.competition_id)+'#classificacao">Ver classificação e jogos →</a></article>').join(''):'<p class="cmim-muted">Nenhuma inscrição registrada. Consulte os campeonatos disponíveis.</p>';} 
  document.dispatchEvent(new Event('cmim-team-changed'));
  }
  const rescheduleAdmin=$('league-reschedule-admin');if(rescheduleAdmin)rescheduleAdmin.hidden=!state.admin;
- if(myPage||state.admin)renderReschedules();
+ if((myPage||state.admin)&&$('my-reschedules'))renderReschedules();
  if(!$('competition-list'))return;
- const visibleComps=state.comps.filter(c=>state.league==='all'||c.league_tier===state.league);
+ const visibleComps=state.comps.filter(c=>c.status!=='draft'&&(state.league==='all'||c.league_tier===state.league));
  document.querySelectorAll('[data-filter-league]').forEach(button=>{
   const active=button.dataset.filterLeague===state.league;
   button.classList.toggle('is-active',active);
@@ -167,7 +173,7 @@ function render(){
   const ownEntry=state.entries.find(e=>e.competition_id===c.id&&own().some(t=>t.id===e.team_id));const buttons=ownEntry?'<span class="cmim-badge">'+esc(entryLabel(ownEntry.status))+'</span><a class="cmim-button ghost" href="./meu-time.html#minhas-inscricoes">MINHAS INSCRIÇÕES</a>':c.status==='open'&&state.me?'<button class="cmim-button" data-register="'+c.id+'">SOLICITAR INSCRIÇÃO →</button>':'';
   return '<article class="cmim-cup">'+compLogoTag(c)+'<span class="cmim-kicker">'+esc(label(c.structure))+' · '+esc(seriesLabel(c))+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
   '<div><span class="cmim-badge">'+esc(leagueLabel(c.league_tier))+'</span><span class="cmim-badge">'+esc(label(c.status))+'</span><span class="cmim-badge">'+count+'/'+c.max_teams+' times</span><span class="cmim-badge">'+formatDate(c.starts_at)+'</span></div>'+
-  '<div class="cmim-actions"><button class="cmim-button ghost" data-select-comp="'+c.id+'">VER CONFRONTOS</button>'+buttons+'</div>'+(c.league_tier&&['open','academy','major'].includes(c.league_tier)?'<a class="cmim-league-event-link" href="./liga.html?liga='+encodeURIComponent(c.league_tier)+'">PÁGINA DA LIGA →</a>':'')+'</article>'
+  '<div class="cmim-actions"><a class="cmim-button ghost" href="'+eventHref(c.id)+'">ABRIR CAMPEONATO →</a>'+buttons+'</div>'+(c.league_tier&&['open','academy','major'].includes(c.league_tier)?'<a class="cmim-league-event-link" href="./liga.html?liga='+encodeURIComponent(c.league_tier)+'">PÁGINA DA LIGA →</a>':'')+'</article>'
  }).join(''):'<div class="cmim-empty">Ainda não existem eventos publicados nesta categoria. Acompanhe os anúncios oficiais do CMIM.</div>';
  document.querySelectorAll('[data-select-comp]').forEach(b=>b.onclick=()=>{
   $('selected-competition').value=b.dataset.selectComp;state.selected=b.dataset.selectComp;renderOverview();$('competition-overview').scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -178,7 +184,7 @@ function render(){
  if(!state.selected&&visibleComps.length)state.selected=visibleComps[0].id;
  if(state.selected&&competition(state.selected))$('selected-competition').value=state.selected;
  renderOverview();
- if(state.admin){$('competition-admin').hidden=false;
+ if(state.admin&&$('competition-admin')){$('competition-admin').hidden=false;
   const selector=$('admin-competition-select'),selected=selector.value;
   selector.innerHTML=state.comps.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('');
   if(state.comps.some(c=>c.id===selected))selector.value=selected;
@@ -301,9 +307,39 @@ function hybridTables(comp){
 }
 function playoffPreview(list=[]){
  const stages=[{r:4,title:'Quartas · MD3',slots:[['1º A','2º B'],['1º C','2º D'],['1º B','2º A'],['1º D','2º C']]},{r:5,title:'Semifinais · MD3',slots:[['Vencedor Q1','Vencedor Q2'],['Vencedor Q3','Vencedor Q4']]},{r:6,title:'Final · MD5',slots:[['Vencedor S1','Vencedor S2']]}];
- return '<h3>PLAYOFFS · CHAVE FIXA</h3><div class="cmim-bracket">'+stages.map(stage=>'<section class="cmim-bracket-round"><h4>'+stage.title+'</h4>'+stage.slots.map((slot,i)=>{const m=list.find(m=>m.round_number===stage.r&&m.match_number===i+1);return '<article class="cmim-bracket-match"><span class="cmim-bracket-status">'+esc(m?dateTime(m.scheduled_at):'A definir')+'</span><div class="cmim-bracket-team"><b>'+(m?teamLink(m.team_a_id):slot[0])+'</b><strong>'+(m?.status==='approved'?m.score_a:'—')+'</strong></div><div class="cmim-bracket-team"><b>'+(m?teamLink(m.team_b_id):slot[1])+'</b><strong>'+(m?.status==='approved'?m.score_b:'—')+'</strong></div></article>'}).join('')+'</section>').join('')+'</div>';
+ return '<h3>PLAYOFFS · CHAVE FIXA</h3><div class="cmim-bracket">'+stages.map(stage=>'<section class="cmim-bracket-round"><h4>'+stage.title+'</h4>'+stage.slots.map((slot,i)=>{const m=list.find(m=>m.round_number===stage.r&&m.match_number===i+1);return '<article class="cmim-bracket-match"><span class="cmim-bracket-status">'+esc(m?dateTime(m.scheduled_at):'A definir')+'</span><div class="cmim-bracket-team"><b>'+(m?teamLink(m.team_a_id):slot[0])+'</b><strong>'+(m?.status==='approved'?m.score_a:'—')+'</strong></div><div class="cmim-bracket-team"><b>'+(m?teamLink(m.team_b_id):slot[1])+'</b><strong>'+(m?.status==='approved'?m.score_b:'—')+'</strong></div>'+(m?'<a class="cv-match-link" href="'+matchHref(m.id)+'">Ver partida →</a>':'')+'</article>'}).join('')+'</section>').join('')+'</div>';
 }
 function emptyFormatPreview(){return '<p class="cmim-muted">Formato previsto do CMIM Open · modelo ilustrativo, sem equipes ou partidas oficiais cadastradas.</p>'+hybridTables({id:null})+playoffPreview();}
+function renderCircuitAdmin(){
+ const denied=$('cv-admin-denied');if(!state.admin){denied.textContent='Acesso exclusivo do administrador.';return}
+ denied.hidden=true;$('competition-admin').hidden=false;$('league-reschedule-admin').hidden=false;renderReschedules();
+ const selector=$('admin-competition-select'),previous=selector.value;
+ selector.innerHTML=state.comps.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.title)+' · '+state.entries.filter(e=>e.competition_id===c.id&&e.status==='pending').length+' pendente(s)</option>').join('');
+ if(state.comps.some(c=>c.id===previous))selector.value=previous;else if(state.comps.some(c=>c.id===initialCompetition))selector.value=initialCompetition;
+ renderAdminManage();
+ if(!document.body.dataset.adminInitialized){document.body.dataset.adminInitialized='1';document.querySelector('[data-admin-screen="manage"]')?.click()}
+}
+function tournamentGame(m,c){const ta=team(m.team_a_id),tb=team(m.team_b_id);return '<a class="cv-game" href="'+matchHref(m.id)+'"><div class="cv-game-meta">'+esc(roundLabel(c,Number(m.round_number)))+' · MD'+bestOf(c,m)+'</div><div class="cv-game-teams"><span>'+imageTag(ta?.logo_url,'')+readable(m.team_a_id)+'</span><strong>'+(m.status==='approved'?Number(m.score_a)+' : '+Number(m.score_b):'VS')+'</strong><span>'+imageTag(tb?.logo_url,'')+(tb?readable(m.team_b_id):'Folga')+'</span></div><small>'+esc(dateTime(m.scheduled_at))+' · '+esc(label(m.status))+'</small></a>'}
+function renderChampionship(){
+ const hero=$('cv-champ-hero'),tabs=$('cv-champ-tabs'),body=$('cv-champ-content'),c=competition(championshipId);
+ if(!c||c.status==='draft'&&!state.admin){hero.textContent=state.loaded?.comps?'Campeonato não encontrado ou ainda não publicado.':'Não foi possível carregar o campeonato.';tabs.hidden=true;body.innerHTML='<a href="./ligas.html">Voltar aos campeonatos</a>';return}
+ document.title=c.title+' | CMIM';
+ const entries=state.entries.filter(e=>e.competition_id===c.id&&e.status==='approved'),games=state.matches.filter(m=>m.competition_id===c.id);
+ const ownEntry=state.entries.find(e=>e.competition_id===c.id&&own().some(t=>t.id===e.team_id));
+ const action=ownEntry?'<a class="cv-btn" href="./meu-time.html#minhas-inscricoes">'+esc(entryLabel(ownEntry.status))+'</a>':c.status==='open'&&(!c.closes_at||Date.parse(c.closes_at)>Date.now())?'<button class="cmim-button" id="cv-register">Solicitar inscrição</button>':'';
+ hero.innerHTML='<div class="cv-champ-head"><img src="'+esc(competitionLogo(c))+'" alt=""><div><span class="cv-kicker">'+esc(leagueLabel(c.league_tier))+'</span><h1>'+esc(c.title)+'</h1><p>'+esc(label(c.status))+' · '+esc(label(c.structure))+'</p></div>'+action+'</div><div class="cv-metrics"><div><small>Equipes aprovadas</small><strong>'+entries.length+'/'+esc(c.max_teams)+'</strong></div><div><small>Início</small><strong>'+formatDate(c.starts_at)+'</strong></div><div><small>Inscrições até</small><strong>'+formatDate(c.closes_at)+'</strong></div><div><small>Formato</small><strong>'+esc(seriesLabel(c))+'</strong></div></div>';
+ $('cv-register')?.addEventListener('click',()=>register(c.id));
+ const views=[['visao-geral','Visão geral'],['equipes','Equipes'],['classificacao',hybrid(c)?'Grupos':'Classificação'],['playoffs',hybrid(c)?'Playoffs':'Chaveamento'],['partidas','Partidas'],['regulamento','Regulamento']];
+ function show(){const key=views.some(x=>x[0]===location.hash.slice(1))?location.hash.slice(1):'visao-geral';tabs.hidden=false;tabs.innerHTML=views.map(([id,name])=>'<a href="#'+id+'" '+(id===key?'aria-current="page"':'')+'>'+name+'</a>').join('');
+  if(key==='equipes'){body.innerHTML='<h2>Equipes homologadas</h2><div class="cv-team-grid">'+entries.map(e=>{const t=team(e.team_id);return '<a class="cv-team" href="./equipe.html?id='+encodeURIComponent(e.team_id)+'">'+imageTag(t?.logo_url,'Logo')+'<strong>'+readable(e.team_id)+'</strong></a>'}).join('')+'</div>'+(entries.length?'':'<p>Nenhuma equipe aprovada.</p>');}
+  else if(key==='classificacao'){body.innerHTML=hybrid(c)?hybridTables(c):'<h2>Classificação</h2><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Equipe</th><th>V</th><th>D</th><th>Mapas</th><th>Pontos</th></tr></thead><tbody>'+standings(c.id).map((t,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(t.team)+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.mapsWon+'/'+t.mapsLost+'</td><td>'+t.points+'</td></tr>').join('')+'</tbody></table></div>';}
+  else if(key==='playoffs'){body.innerHTML=hybrid(c)?playoffPreview(games):'<h2>Confrontos por rodada</h2><div class="cmim-bracket">'+[...new Set(games.map(m=>m.round_number))].sort((a,b)=>a-b).map(r=>'<section class="cmim-bracket-round"><h4>'+esc(roundLabel(c,r))+'</h4>'+games.filter(m=>m.round_number===r).map(m=>tournamentGame(m,c)).join('')+'</section>').join('')+'</div>'+(games.length?'':'<p>Chaveamento ainda não publicado.</p>');}
+  else if(key==='partidas'){body.innerHTML='<h2>Partidas oficiais</h2><div class="cv-game-grid">'+games.map(m=>tournamentGame(m,c)).join('')+'</div>'+(games.length?'':'<p>Partidas ainda não publicadas.</p>');}
+  else if(key==='regulamento'){body.innerHTML='<h2>Regulamento</h2><p class="cv-pre">'+esc(c.rules||c.description||'Regulamento ainda não divulgado.')+'</p>'+(c.league_tier==='open'?'<a class="cv-btn" href="./regulamento-open.html">Regulamento oficial do Open</a>':'');}
+  else {body.innerHTML='<h2>Sobre o campeonato</h2><p class="cv-pre">'+esc(c.description||'Detalhes serão divulgados pela organização.')+'</p><h2>Próximos confrontos</h2><div class="cv-game-grid">'+games.filter(m=>m.status!=='approved').slice(0,6).map(m=>tournamentGame(m,c)).join('')+'</div>'+(!games.some(m=>m.status!=='approved')?'<p>Nenhum próximo confronto publicado.</p>':'')+'<p><a class="cv-btn" href="#partidas">Todas as partidas →</a></p>';}
+ }
+ window.onhashchange=show;show();
+}
 function renderOverview(){
  const target=$('competition-overview'),comp=competition($('selected-competition').value);
  if(!comp){target.innerHTML=state.league==='all'||state.league==='open'?emptyFormatPreview():'<p class="cmim-muted">Formato ainda não publicado para esta liga.</p>';return}
@@ -584,6 +620,8 @@ $('admin-comp-create').onsubmit=async e=>{
 try{
  state.me=await a.user();
  state.admin=state.me?.app_metadata?.cmim_admin===true;
+ if(mode==='admin'&&!state.admin){$('cv-admin-denied').textContent='Área exclusiva de administradores. Entre com uma conta autorizada.';return;}
+ if(mode==='hub'&&safeTeamId(initialCompetition)){location.replace(eventHref(initialCompetition)+(location.hash==='#chaveamentos'?'#classificacao':''));return;}
  const date=new Date();date.setDate(date.getDate()+7);if(createForm)createForm.querySelector('[name=starts_at]').value=date.toISOString().slice(0,16);
  await read();
  }catch(e){

@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    const title=comp?(teamA||'A definir')+' × '+(teamB||'A definir'):e.title;
    const desc=competition?(competition.title+' · Rodada '+comp.round_number+' · Jogo '+comp.match_number):e.description;
    const statusName={scheduled:'Agendado',open:'Em andamento',closed:'Encerrado',completed:'Concluído'}[e.status]||e.status;
-   const link=competition&&safeUuid(competition.id)?'<a href="./ligas.html?campeonato='+encodeURIComponent(competition.id)+'#chaveamentos">Ver chave e classificação</a>':'';
+   const link=competition&&safeUuid(competition.id)?'<a href="./partida.html?id='+encodeURIComponent(comp.id)+'">Ver partida</a> · <a href="./campeonato.html?id='+encodeURIComponent(competition.id)+'">Campeonato</a>':'';
    return '<article class="event"><div><div class="meta"><span class="pill">'+esc(e.type)+'</span><span>'+esc(statusName)+'</span></div>'+
     '<h3>'+esc(title)+'</h3><div class="when">'+esc(fmtDate(e.starts_at))+'</div>'+
     (e.ends_at?'<p>Até '+esc(fmtDate(e.ends_at))+'</p>':'')+
