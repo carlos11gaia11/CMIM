@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM Competitive Circuit | Ligas, Times e Chaveamentos</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><script defer src="./campeonatos.js?v=20261125-grupos"></script><style>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM Competitive Circuit | Ligas, Times e Chaveamentos</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-imagens"></script><script defer src="./campeonatos.js?v=20261125-elencos"></script><style>
 html.cmim-auth-pending body{visibility:visible!important}
 .cmim-circuito{margin:0 0 26px;scroll-margin-top:28px}
 .cmim-circuito-head{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
@@ -55,9 +55,9 @@ html.cmim-auth-pending body{visibility:visible!important}
 <div id="my-teams"></div><form id="create-squad"><div class="cmim-form-row"><label class="cmim-field">NOME DO TIME<input name="name" maxlength="55" minlength="3" placeholder="Ex.: CMIM PHANTOMS" required></label>
 <label class="cmim-field">SIGLA (2–6)<input name="short_name" minlength="2" maxlength="6" placeholder="CMP" required></label>
 <label class="cmim-field">SUA POSIÇÃO NO TIME<select name="captain_lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label></div>
-<button class="cmim-button" type="submit">＋ CRIAR TIME</button></form></section>
+<div class="cmim-form-row"><label class="cmim-field">LOGO DO TIME (OBRIGATÓRIA)<input name="logo" type="file" accept="image/jpeg,image/png,image/webp" required></label><label class="cmim-field">SUA FOTO DE JOGADOR (OBRIGATÓRIA NO PERFIL)<input id="squad-player-photo" name="player_photo" type="file" accept="image/jpeg,image/png,image/webp"></label></div><p class="cmim-muted">Imagens JPG, PNG ou WebP de até 10 MB. Recorte central automático de 512 × 512 px. Se já tem foto no perfil, não precisa reenviar.</p><button class="cmim-button" type="submit">＋ CRIAR TIME</button></form></section>
 <section class="cmim-card"><h2>CONVITES RECEBIDOS</h2><p class="cmim-muted">Aceite ou recuse convites dos capitães para completar seu elenco.</p><div id="my-invites" class="cmim-empty">Entre na sua conta para ver os convites.</div></section></div></section>
-<section class="cmim-hub-section" id="equipes-oficiais">
+<section class="cmim-hub-section" id="reagendamentos"><div class="cmim-hub-section-heading"><div><span class="cmim-kicker">GESTÃO DE PARTIDAS</span><h2>REAGENDAMENTOS</h2></div><p>Capitães podem propor novos horários. A agenda muda somente após a confirmação do adversário.</p></div><section class="cmim-card" id="my-reschedules"></section></section><section class="cmim-hub-section" id="equipes-oficiais">
   <div class="cmim-hub-section-heading"><div><span class="cmim-kicker">02 / ELENCOS HOMOLOGADOS</span><h2>EQUIPES DO CIRCUITO</h2></div><p>Conheça os times confirmados nos campeonatos. Apenas inscrições aprovadas pela organização aparecem aqui.</p></div>
   <div id="cmim-teams-catalog" class="cmim-official-teams" aria-live="polite"><div class="cmim-empty">Carregando equipes...</div></div>
 </section>
