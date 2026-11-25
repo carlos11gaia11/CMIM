@@ -1,0 +1,4 @@
+ALTER POLICY cmim_entry_view ON public.cmim_competition_entries TO anon,authenticated USING (status='approved' OR (SELECT public.cmim_is_admin()) OR EXISTS(SELECT 1 FROM public.cmim_squads s WHERE s.id=cmim_competition_entries.team_id AND s.owner_id=(SELECT auth.uid())) OR EXISTS(SELECT 1 FROM public.cmim_squad_members m WHERE m.team_id=cmim_competition_entries.team_id AND m.user_id=(SELECT auth.uid())));
+REVOKE INSERT,DELETE,TRUNCATE,REFERENCES,TRIGGER ON public.cmim_competition_entries FROM anon,authenticated;
+REVOKE UPDATE ON public.cmim_competition_entries FROM anon;
+NOTIFY pgrst,'reload schema';
