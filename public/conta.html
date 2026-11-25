@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Entrar e cadastrar</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-final"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script><link rel="icon" href="./assets/branding/cmim-main.webp?v=20261125-logo" type="image/webp"></head><body class="cmim-account-page" data-no-auth-badge="1">
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Entrar e cadastrar</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-recovery"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script><link rel="icon" href="./assets/branding/cmim-main.webp?v=20261125-logo" type="image/webp"></head><body class="cmim-account-page" data-no-auth-badge="1">
 <header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>CONTAS E COMUNIDADE</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./perfil.html">Meu perfil</a><a href="./ligas.html">Ligas</a></nav></header>
 <main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">IDENTIDADE CMIM · UMA CONTA PARA TODA A COMUNIDADE</span><h1>FAÇA PARTE <em>DO RIFT.</em></h1><p>Seu perfil acompanha suas participações, picks, vitórias, temporadas e campeonatos. Os dados de sua conta ficam protegidos no Supabase Auth.</p></div>
 <div class="cmim-tabs" role="tablist"><button class="active" data-mode="login" type="button">Já tenho conta</button><button data-mode="signup" type="button">Criar minha conta</button></div>
@@ -27,20 +27,63 @@
 <label class="cmim-field">FOTO DE PERFIL (OBRIGATÓRIA PARA PARTICIPAR DE UM TIME)<input type="file" name="avatar" accept="image/png,image/jpeg,image/webp"><span class="cmim-muted">Até 10 MB, recorte automático de 512 × 512 px. Se for necessário confirmar o e-mail, envie a foto após entrar.</span></label>
 </div><div class="cmim-actions"><button class="cmim-button">CRIAR MEU PERFIL →</button></div></form>
 <p class="cmim-status" id="signup-status" role="status"></p></section>
+<section id="auth-request-reset" class="cmim-card cmim-auth-panel" hidden><h2>RECUPERAR SENHA</h2><p class="cmim-muted">Informe o e-mail da sua conta para receber um novo link de recuperação.</p><form id="request-reset-form"><label class="cmim-field">E-MAIL<input type="email" name="email" autocomplete="email" required></label><div class="cmim-actions"><button class="cmim-button">ENVIAR LINK</button><button type="button" class="cmim-button ghost" id="reset-back">Voltar ao login</button></div></form><p id="request-reset-status" class="cmim-status" role="status"></p></section>
+<section id="auth-new-password" class="cmim-card cmim-auth-panel" hidden><h2>CRIAR NOVA SENHA</h2><p class="cmim-muted">Escolha uma nova senha com pelo menos oito caracteres.</p><p id="recovery-account" class="cmim-muted"></p><form id="new-password-form" hidden><div class="cmim-form-row"><label class="cmim-field">NOVA SENHA<input type="password" name="password" autocomplete="new-password" minlength="8" required></label><label class="cmim-field">CONFIRMAR NOVA SENHA<input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label></div><div class="cmim-actions"><button class="cmim-button">SALVAR NOVA SENHA</button></div></form><p id="new-password-status" class="cmim-status" role="status"></p><div class="cmim-actions"><a href="./conta.html?recover=1" id="new-link">Solicitar outro link</a><a href="./conta.html" id="return-login" hidden>Entrar com a nova senha →</a></div></section>
 </main>
 <script>document.addEventListener('DOMContentLoaded',()=>{
  const a=window.CMIMAuth,$=id=>document.getElementById(id);
  const buttons=[...document.querySelectorAll('[data-mode]')];
- function show(which){buttons.forEach(b=>b.classList.toggle('active',b.dataset.mode===which));$('auth-login').hidden=which!=='login';$('auth-signup').hidden=which!=='signup';}
+ function show(which){buttons.forEach(b=>b.classList.toggle('active',b.dataset.mode===which));$('auth-login').hidden=which!=='login';$('auth-signup').hidden=which!=='signup';$('auth-request-reset').hidden=which!=='request';$('auth-new-password').hidden=which!=='recovery';document.querySelector('.cmim-tabs').hidden=which==='recovery';}
  buttons.forEach(b=>b.onclick=()=>show(b.dataset.mode));
  function status(id,msg,bad=false){$(id).textContent=msg;$(id).classList.toggle('error',bad)}
  const params=new URLSearchParams(location.search);
  const callback=new URLSearchParams(location.hash.slice(1));
  if(params.get('register')==='1')show('signup');
  if(params.get('required')==='1')status('login-status','🔒 Para utilizar as ferramentas do CMIM, faça login ou crie sua conta. Depois você voltará à ferramenta escolhida.');
+ // Recovery sessions stay separate from any existing login, so the password
+ // can only be changed for the account authenticated by the email link.
+ if(callback.get('type')==='recovery'||params.get('type')==='recovery'||params.get('recover')==='callback'){
+   show('recovery');
+   const recoveryToken=callback.get('access_token');
+   const tokenHash=params.get('token_hash');
+   const callbackError=callback.get('error_description')||callback.get('error')||params.get('error_description')||params.get('error');
+   history.replaceState({},document.title,location.pathname+'?recover=callback');
+   const form=$('new-password-form');
+   void (async()=>{
+    try{
+     if(callbackError)throw Error('Link inválido ou expirado. Solicite um novo link.');
+     let token=recoveryToken;
+     if(!token&&tokenHash){const verified=await a.call('/auth/v1/verify',{method:'POST',body:{token_hash:tokenHash,type:'recovery'}});token=verified.access_token;}
+     if(!token)throw Error('Abra o link de recuperação recebido no e-mail. Se já foi utilizado, solicite outro.');
+     const who=await a.call('/auth/v1/user',{headers:{Authorization:'Bearer '+token}});
+     if(!who?.id)throw Error('Não foi possível verificar o link.');
+     $('recovery-account').textContent=who.email?'Conta: '+who.email:'Conta verificada.';
+     status('new-password-status','Link verificado. Você já pode criar sua nova senha.');
+     form.hidden=false;
+     form.onsubmit=async e=>{
+      e.preventDefault();const fd=new FormData(form),password=String(fd.get('password')||''),btn=form.querySelector('button');
+      if(password.length<8)return status('new-password-status','A senha precisa de pelo menos 8 caracteres.',true);
+      if(password!==fd.get('confirm'))return status('new-password-status','As senhas não coincidem.',true);
+      btn.disabled=true;
+      try{
+       const updated=await a.call('/auth/v1/user',{method:'PUT',headers:{Authorization:'Bearer '+token},body:{password}});
+       if(updated?.id!==who.id)throw Error('Não foi possível confirmar a alteração. Tente entrar com a nova senha.');
+       form.reset();form.hidden=true;
+       a.save(null);
+       try{await a.call('/auth/v1/logout?scope=local',{method:'POST',headers:{Authorization:'Bearer '+token}})}catch{}
+       token=null;
+       history.replaceState({},document.title,location.pathname+'?password_changed=1');
+       status('new-password-status','Senha alterada com sucesso! Entre novamente com sua nova senha.');
+       $('new-link').hidden=true;$('return-login').hidden=false;
+      }catch(err){status('new-password-status',[401,403].includes(err.status)?'Link expirado ou inválido. Solicite outro.':err.message,true)}finally{btn.disabled=false}
+     };
+    }catch(err){status('new-password-status',[400,401,403].includes(err.status)?'Link inválido ou expirado. Solicite um novo link.':err.message,true)}
+   })();
+   return;
+ }
  // Supabase redirects to this page with an implicit-flow session in the URL fragment.
  // Remove the sensitive fragment from browser history immediately after reading it.
- const callbackError=callback.get('error_description')||callback.get('error');
+ const callbackError=callback.get('error_description')||callback.get('error')||params.get('error_description')||params.get('error');
  if(callbackError){
    history.replaceState({},document.title,location.pathname+location.search);
    status('login-status','A confirmação não pôde ser concluída: '+callbackError,true);
@@ -59,7 +102,9 @@
  }else if(params.get('confirmed')==='1'){
    status('login-status','✓ Você voltou ao CMIM! Se confirmou o e-mail, entre para acessar seu perfil.');
  }
- if(a.session()?.access_token){void a.user().then(who=>{if(who)location.replace(a.requestedDestination());else if(a.authState().status==='offline')status('login-status','Não foi possível verificar sua sessão. Ela foi preservada. Reconecte ou tente entrar novamente.',true)});}
+ if(params.get('password_changed')==='1')status('login-status','Senha alterada. Entre com sua nova senha.');
+ if(params.get('recover')==='1')show('request');
+ if(params.get('recover')!=='1'&&!callbackError&&a.session()?.access_token){void a.user().then(who=>{if(who)location.replace(a.requestedDestination());else if(a.authState().status==='offline')status('login-status','Não foi possível verificar sua sessão. Ela foi preservada. Reconecte ou tente entrar novamente.',true)});}
  $('login-form').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button');btn.disabled=true;
   try{const f=new FormData(e.currentTarget);await a.signIn(f.get('email'),f.get('password'));location.assign(a.requestedDestination())}
   catch(err){status('login-status',err.message,true)}finally{btn.disabled=false}};
@@ -88,7 +133,11 @@
     status('login-status','✓ Se houver um cadastro aguardando confirmação, um novo e-mail será enviado. Verifique a caixa de entrada e o spam. O link deve voltar ao site CMIM.');
    }catch(error){status('login-status','Não foi possível reenviar: '+error.message,true)}
  };
- $('reset-password').onclick=async e=>{e.preventDefault();const email=prompt('Qual e-mail você usou para entrar no CMIM?');
-   if(!email)return;try{await a.call('/auth/v1/recover',{method:'POST',body:{email}});status('login-status','Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.')}
-   catch(err){status('login-status',err.message,true)}};
+ $('reset-password').onclick=e=>{e.preventDefault();const email=$('login-form').querySelector('[name=email]').value;$('request-reset-form').querySelector('[name=email]').value=email;show('request');$('request-reset-form').querySelector('[name=email]').focus()};
+ $('reset-back').onclick=()=>show('login');
+ $('request-reset-form').onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button'),email=String(new FormData(form).get('email')||'').trim().toLowerCase();if(!email)return;btn.disabled=true;
+  status('request-reset-status','Solicitando link de recuperação...');
+  try{await a.call('/auth/v1/recover?redirect_to='+encodeURIComponent(a.EMAIL_CONFIRM_REDIRECT),{method:'POST',body:{email}});status('request-reset-status','Se houver uma conta cadastrada com este e-mail, você receberá um link. Verifique também o spam. Use sempre o e-mail mais recente.')}
+  catch(err){status('request-reset-status',err.message,true)}finally{btn.disabled=false}
+ };
 });</script></body></html>

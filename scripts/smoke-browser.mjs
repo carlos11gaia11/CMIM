@@ -60,5 +60,24 @@ try{
  await privileged.page.locator('.cmim-nav-more summary').click();
  assert.equal(await privileged.page.locator('.cmim-admin-link').first().isVisible(),true);
  console.log('PASS admin role in navigation');await privileged.context.close();
+ const recovery=await browser.newContext();let requestRedirect=null,changed=null,verified=false;const requests=[];
+ await recovery.route('**/*',async route=>{
+  const req=route.request(),u=new URL(req.url());if(u.origin==='http://127.0.0.1:4173')return route.continue();if(!u.hostname.endsWith('.supabase.co'))return route.abort();
+  const headers={'access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,PUT,OPTIONS','access-control-allow-headers':'*','content-type':'application/json'};
+  if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
+  let data=[],status=200;const authorization=req.headers().authorization;
+  if(u.pathname==='/auth/v1/recover'){requestRedirect=u.searchParams.get('redirect_to');requests.push(req.postDataJSON());data={};}
+  else if(u.pathname==='/auth/v1/user'){if(authorization!=='Bearer recovery-only'){status=401;data={message:'invalid token'}}else if(req.method()==='PUT'){changed=req.postDataJSON();data={id:'recovery-account',email:'test@example.com'}}else{verified=true;data={id:'recovery-account',email:'test@example.com'}}}
+  else if(u.pathname==='/auth/v1/logout')data={};
+  return route.fulfill({status,headers,body:JSON.stringify(data)});
+ });
+ const rp=await recovery.newPage();rp.on('pageerror',e=>errors.push(rp.url()+': '+e.message));
+ await rp.goto(base+'conta.html');await rp.locator('#reset-password').click();await rp.locator('#request-reset-form [name=email]').fill('test@example.com');await rp.locator('#request-reset-form button[type=submit],#request-reset-form button.cmim-button').first().click();await rp.waitForFunction(()=>document.querySelector('#request-reset-status').textContent.includes('Se houver'));
+ assert.equal(requestRedirect,'https://carlos11gaia11.github.io/CMIM/conta.html?confirmed=1');assert.equal(requests[0].email,'test@example.com');
+ await rp.goto(base+'conta.html?confirmed=1#access_token=recovery-only&refresh_token=mock&type=recovery&expires_in=3600');await rp.locator('#new-password-form').waitFor();assert.equal(verified,true);assert.equal(new URL(rp.url()).hash,'');assert.equal(await rp.evaluate(()=>localStorage.getItem('cmim_player_session')),null);
+ await rp.locator('#new-password-form [name=password]').fill('TestPassword123!');await rp.locator('#new-password-form [name=confirm]').fill('Different123!');await rp.locator('#new-password-form button').click();assert.match(await rp.locator('#new-password-status').textContent(),/não coincidem/);assert.equal(changed,null);
+ await rp.locator('#new-password-form [name=confirm]').fill('TestPassword123!');await rp.locator('#new-password-form button').click();await rp.locator('#return-login').waitFor();assert.equal(changed.password,'TestPassword123!');assert.match(await rp.locator('#new-password-status').textContent(),/Senha alterada com sucesso/);
+ await rp.goto(base+'conta.html#type=recovery&error=access_denied&error_description=expired');await rp.waitForFunction(()=>document.querySelector('#new-password-status').textContent.includes('expirado'));assert.equal(await rp.locator('#new-password-form').isVisible(),false);
+ console.log('PASS password recovery redirect, token validation, mismatch, update and expired link');await recovery.close();
  assert.deepEqual(errors,[],'Uncaught browser errors');console.log('All browser smoke checks passed.');
 }finally{await browser.close()}
