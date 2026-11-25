@@ -47,7 +47,7 @@ async function read(){
  '/rest/v1/cmim_competition_entries?select=id,competition_id,team_id,status,created_at,group_tiebreak&limit=2000'
  ];
  // As áreas públicas continuam carregando se uma tabela restrita falhar.
- const responses=await Promise.allSettled(requests.map(url=>a.call(url)));
+ const responses=await Promise.allSettled(requests.map(url=>a.call(url,{secure:!!state.me})));
  const [comps,squads,members,profiles,matches,entries]=responses.map(x=>x.status==='fulfilled'&&Array.isArray(x.value)?x.value:[]);
  Object.assign(state,{comps,squads,members,profiles,matches,entries});
  state.loaded={comps:responses[0].status==='fulfilled',squads:responses[1].status==='fulfilled',members:responses[2].status==='fulfilled',matches:responses[4].status==='fulfilled',entries:responses[5].status==='fulfilled'};
@@ -55,7 +55,7 @@ async function read(){
   $('champ-status').textContent='Algumas informações estão temporariamente indisponíveis. Atualize a página para tentar novamente.';
  }
  if(state.me){
-  try{state.invites=await a.call('/rest/v1/cmim_squad_invites?recipient_id=eq.'+state.me.id+'&status=eq.pending&select=id,team_id,lane,sender_id')}catch{state.invites=[]}
+  try{state.invites=await a.call('/rest/v1/cmim_squad_invites?recipient_id=eq.'+state.me.id+'&status=eq.pending&select=id,team_id,lane,sender_id',{secure:true})}catch{state.invites=[]}
   try{state.reschedules=await a.call('/rest/v1/cmim_reschedule_requests?select=*&order=created_at.desc&limit=500',{secure:true});state.rescheduleError=false}catch{state.reschedules=[];state.rescheduleError=true}
  }
  render();
@@ -292,10 +292,10 @@ if(loginLink)loginLink.addEventListener('click',e=>{e.preventDefault();a.gotoLog
 $('selected-competition').onchange=e=>{state.selected=e.target.value;renderOverview()};
 $('create-squad').onsubmit=async e=>{
  e.preventDefault();if(!state.me){a.gotoLogin();return}
- const btn=e.currentTarget.querySelector('button'),f=new FormData(e.currentTarget);btn.disabled=true;
+ const form=e.currentTarget,btn=form.querySelector('button'),f=new FormData(form);btn.disabled=true;
  try{const photo=f.get('player_photo');if(photo?.size)await a.uploadAvatar(photo);else if(!myProfile()?.avatar_url)throw Error('Sua foto é obrigatória.');const logo_url=await a.uploadTeamLogo(f.get('logo'));await a.call('/rest/v1/cmim_squads',{method:'POST',secure:true,headers:{Prefer:'return=representation'},body:{
   name:f.get('name'),short_name:String(f.get('short_name')).toUpperCase(),captain_lane:f.get('captain_lane'),owner_id:state.me.id,logo_url
- }});e.currentTarget.reset();await read();status('✓ Time criado. Convide jogadores pelo formulário acima.')}
+ }});form.reset();await read();status('✓ Time criado. Convide jogadores pelo formulário acima.')}
  catch(err){status('Não foi possível criar o time: '+safeErr(err),true)}finally{btn.disabled=false}
 };
 function groupEditor(comp,entries){
