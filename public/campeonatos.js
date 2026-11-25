@@ -34,11 +34,14 @@ const timeInput=iso=>{if(!iso)return '';const d=new Date(iso);if(Number.isNaN(+d
 const toISO=local=>{if(!local)return null;const date=new Date(local+':00-03:00');if(Number.isNaN(+date))throw Error('Data ou horário inválido.');return date.toISOString()};
 const own=()=>state.squads.filter(t=>t.owner_id===state.me?.id);
 const membersFor=id=>state.members.filter(x=>x.team_id===id);
+const startersFor=id=>membersFor(id).filter(x=>x.starter);
+const myProfile=()=>state.profiles.find(p=>p.id===state.me?.id);
+const imageTag=(url,alt)=>/^https:\/\//i.test(url||'')?'<img src="'+esc(url)+'" alt="'+esc(alt)+'" style="width:48px;height:48px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:8px" loading="lazy">':'';
 async function read(){
  const requests=[
  '/rest/v1/cmim_competitions?select=*&order=created_at.desc&limit=100',
- '/rest/v1/cmim_squads?select=id,name,short_name,owner_id,captain_lane&limit=500',
- '/rest/v1/cmim_squad_members?select=team_id,user_id,lane&limit=2000',
+ '/rest/v1/cmim_squads?select=id,name,short_name,owner_id,captain_lane,logo_url&limit=500',
+ '/rest/v1/cmim_squad_members?select=team_id,user_id,lane,starter&limit=2000',
  '/rest/v1/cmim_profiles?select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at&limit=2500',
  '/rest/v1/cmim_competition_matches?select=*&order=round_number.asc,match_number.asc&limit=3000',
  '/rest/v1/cmim_competition_entries?select=id,competition_id,team_id,status,created_at,group_tiebreak&limit=2000'
@@ -53,6 +56,7 @@ async function read(){
  }
  if(state.me){
   try{state.invites=await a.call('/rest/v1/cmim_squad_invites?recipient_id=eq.'+state.me.id+'&status=eq.pending&select=id,team_id,lane,sender_id')}catch{state.invites=[]}
+  try{state.reschedules=await a.call('/rest/v1/cmim_reschedule_requests?select=*&order=created_at.desc&limit=500',{secure:true});state.rescheduleError=false}catch{state.reschedules=[];state.rescheduleError=true}
  }
  render();
 }
@@ -106,18 +110,27 @@ function render(){
  if(!state.me)$('my-teams').innerHTML='<div class="cmim-empty">Entre em sua <a href="./conta.html">conta CMIM</a> para criar um time e se inscrever.</div>';
  else $('my-teams').innerHTML=own().length?own().map(t=>{
   const members=membersFor(t.id);
-  const canInvite=members.length<5;
-  return '<article class="cmim-cup" style="margin-bottom:10px"><h3>'+esc(t.name)+'</h3><small>'+members.length+'/5 jogadores · '+esc(t.short_name||'')+'</small>'+
+  const canInvite=members.length<10;
+  return '<article class="cmim-cup" style="margin-bottom:10px"><h3>'+imageTag(t.logo_url,'Logo')+esc(t.name)+'</h3><small>'+members.length+'/10 jogadores · '+startersFor(t.id).length+'/5 titulares · '+esc(t.short_name||'')+'</small>'+
   '<a class="cmim-team-inline-link" href="./equipe.html?id='+encodeURIComponent(t.id)+'">VER PERFIL DA EQUIPE →</a>'+
-  '<div style="font-size:12px;margin:10px 0">'+members.map(m=>{
+  '<form data-logo-team="'+t.id+'" class="cmim-form-row"><label class="cmim-field">ATUALIZAR LOGO (512 × 512)<input name="logo" type="file" accept="image/jpeg,image/png,image/webp" required></label><button class="cmim-button ghost">Salvar logo</button></form><div style="font-size:12px;margin:10px 0">'+members.slice().sort((a,b)=>Number(b.starter)-Number(a.starter)||a.lane.localeCompare(b.lane)).map(m=>{
    const pl=state.profiles.find(p=>p.id===m.user_id);
-   return '<span class="cmim-badge">'+esc(pl?pl.nick+'#'+pl.tag:'Jogador')+' · '+esc(m.lane)+'</span>'
+   return '<div class="cmim-match">'+imageTag(pl?.avatar_url,'Foto')+esc(pl?pl.nick+'#'+pl.tag:'Jogador')+' · '+esc(m.lane)+' · '+(m.starter?'TITULAR':'RESERVA')+' <button type="button" class="cmim-button ghost" data-starter-team="'+t.id+'" data-starter-player="'+m.user_id+'" data-starter-value="'+(!m.starter)+'">'+(m.starter?'Tornar reserva':'Tornar titular')+'</button></div>'
   }).join('')+'</div>'+
   (canInvite?'<form data-invite-team="'+t.id+'" class="cmim-form-row"><label class="cmim-field">CONVIDAR JOGADOR<select name="recipient" required><option value="">Escolher jogador</option>'+
-  state.profiles.filter(p=>!members.some(m=>m.user_id===p.id)).map(p=>'<option value="'+p.id+'">'+esc(p.nick+'#'+p.tag)+'</option>').join('')+'</select></label>'+
+  state.profiles.filter(p=>!state.members.some(m=>m.user_id===p.id)).map(p=>'<option value="'+p.id+'">'+esc(p.nick+'#'+p.tag)+'</option>').join('')+'</select></label>'+
   '<label class="cmim-field">POSIÇÃO<select name="lane">'+['TOP','JG','MID','ADC','SUP'].map(l=>'<option>'+l+'</option>').join('')+'</select></label><button class="cmim-button ghost">Enviar convite</button></form>':'<p class="cmim-badge">✓ TIME COMPLETO</p>')+
   '</article>';
  }).join(''):'<p class="cmim-muted">Você ainda não lidera um time. Crie seu primeiro elenco abaixo.</p>';
+ const photoInput=$('squad-player-photo');if(photoInput){photoInput.required=!!state.me&&!myProfile()?.avatar_url;}
+ document.querySelectorAll('[data-starter-team]').forEach(b=>b.onclick=async()=>{
+  if(!confirm(b.dataset.starterValue==='true'?'Definir como titular? O titular atual da mesma lane passará para reserva.':'Mover jogador para a reserva?'))return;
+  b.disabled=true;try{await a.call('/rest/v1/rpc/cmim_set_starter',{method:'POST',secure:true,body:{p_team:b.dataset.starterTeam,p_player:b.dataset.starterPlayer,p_starter:b.dataset.starterValue==='true'}});await read();status('Elenco atualizado.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
+ });
+ document.querySelectorAll('[data-logo-team]').forEach(form=>form.onsubmit=async e=>{
+  e.preventDefault();const b=form.querySelector('button');b.disabled=true;
+  try{const logo_url=await a.uploadTeamLogo(new FormData(form).get('logo'));await a.call('/rest/v1/cmim_squads?id=eq.'+form.dataset.logoTeam,{method:'PATCH',secure:true,body:{logo_url}});await read();status('Logo atualizada.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
+ });
  document.querySelectorAll('[data-invite-team]').forEach(form=>form.onsubmit=async e=>{
   e.preventDefault();const f=new FormData(form),button=form.querySelector('button');button.disabled=true;
   try{await a.call('/rest/v1/rpc/cmim_invite_player',{method:'POST',secure:true,body:{p_team:form.dataset.inviteTeam,p_recipient:f.get('recipient'),p_lane:f.get('lane')}});status('✓ Convite enviado! O jogador verá o convite após entrar.')}
@@ -126,8 +139,9 @@ function render(){
  $('my-invites').innerHTML=state.me?(state.invites.length?state.invites.map(i=>'<div class="cmim-cup" style="margin:8px 0"><b>'+readable(i.team_id)+'</b><p>Convite para '+esc(i.lane)+'</p>'+
    '<button class="cmim-button" data-invite-id="'+i.id+'" data-accept="true">Aceitar</button> <button class="cmim-button ghost" data-invite-id="'+i.id+'" data-accept="false">Recusar</button></div>').join(''):'<p class="cmim-muted">Nenhum convite pendente.</p>'):'<div class="cmim-empty">Entre para consultar seus convites.</div>';
  document.querySelectorAll('[data-invite-id]').forEach(b=>b.onclick=async()=>{
-  b.disabled=true;try{await a.call('/rest/v1/rpc/cmim_answer_invite',{method:'POST',secure:true,body:{p_invite:b.dataset.inviteId,p_accept:b.dataset.accept==='true'}});status('Convite respondido.');await read()}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
+  b.disabled=true;try{if(b.dataset.accept==='true'&&!myProfile()?.avatar_url){throw Error('Envie sua foto no perfil antes de aceitar o convite.');}await a.call('/rest/v1/rpc/cmim_answer_invite',{method:'POST',secure:true,body:{p_invite:b.dataset.inviteId,p_accept:b.dataset.accept==='true'}});status('Convite respondido.');await read()}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
  });
+ renderReschedules();
  const visibleComps=state.comps.filter(c=>state.league==='all'||c.league_tier===state.league);
  document.querySelectorAll('[data-filter-league]').forEach(button=>{
   const active=button.dataset.filterLeague===state.league;
@@ -156,11 +170,37 @@ function render(){
   renderAdminManage();
  }
 }
+function renderReschedules(){
+ const root=$('my-reschedules');if(!root)return;
+ if(!state.me){root.innerHTML='<p class="cmim-muted">Entre para consultar pedidos de reagendamento.</p>';return}
+ if(state.rescheduleError){root.textContent='Não foi possível consultar solicitações. Atualize a página.';return}
+ const ids=new Set(own().map(t=>t.id)),requests=state.reschedules||[];
+ const games=state.matches.filter(m=>m.status==='scheduled'&&!m.room_id&&m.team_b_id&&(ids.has(m.team_a_id)||ids.has(m.team_b_id)));
+ const labels={pending:'Pendente',accepted:'Aceito',rejected:'Recusado',cancelled:'Cancelado',stale:'Expirado ou horário alterado'};
+ root.innerHTML='<h3>MEUS CONFRONTOS</h3>'+(games.length?games.map(m=>{
+  const pending=requests.some(r=>r.match_id===m.id&&r.status==='pending');
+  return '<div class="cmim-match"><b>'+teamLink(m.team_a_id)+' × '+teamLink(m.team_b_id)+'</b><p>'+esc(dateTime(m.scheduled_at))+'</p>'+
+  (pending?'<p class="cmim-muted">Há uma solicitação pendente. Responda ou cancele antes de propor outro horário.</p>':'<form class="cmim-form-row" data-reschedule-match="'+m.id+'"><label class="cmim-field">NOVA DATA E HORA (BRASÍLIA)<input type="datetime-local" name="time" required></label><label class="cmim-field">MOTIVO (OPCIONAL)<input name="reason" maxlength="500"></label><button class="cmim-button">SOLICITAR REAGENDAMENTO</button></form>')+'</div>';
+ }).join(''):'<p class="cmim-muted">Nenhum confronto disponível para reagendar.</p>')+
+ '<h3>SOLICITAÇÕES RECEBIDAS E ENVIADAS</h3>'+(requests.length?requests.map(r=>{
+  const m=state.matches.find(x=>x.id===r.match_id);
+  const incoming=ids.has(r.recipient_team_id),outgoing=ids.has(r.requester_team_id);
+  return '<div class="cmim-match"><b>'+readable(r.requester_team_id)+' → '+readable(r.recipient_team_id)+'</b><p>'+esc(labels[r.status]||r.status)+' · '+esc(m?competition(m.competition_id)?.title||'Campeonato':'Campeonato')+'</p><p>Atual: '+esc(dateTime(r.old_time))+' · Proposta: '+esc(dateTime(r.proposed_time))+'</p><p>'+esc(r.reason||'Sem motivo informado')+'</p>'+
+  (r.status==='pending'?'<div class="cmim-actions">'+(incoming?'<button class="cmim-button" data-reschedule-id="'+r.id+'" data-action="accepted">Aceitar</button><button class="cmim-button ghost" data-reschedule-id="'+r.id+'" data-action="rejected">Recusar</button>':'')+(outgoing?'<button class="cmim-button ghost" data-reschedule-id="'+r.id+'" data-action="cancelled">Cancelar pedido</button>':'')+'</div>':'')+'</div>';
+ }).join(''):'<p class="cmim-muted">Nenhuma solicitação.</p>');
+ root.querySelectorAll('[data-reschedule-match]').forEach(form=>form.onsubmit=async e=>{
+  e.preventDefault();const b=form.querySelector('button'),f=new FormData(form);b.disabled=true;
+  try{await a.call('/rest/v1/rpc/cmim_request_reschedule',{method:'POST',secure:true,body:{p_match:form.dataset.rescheduleMatch,p_time:toISO(f.get('time')),p_reason:f.get('reason')}});await read();status('Solicitação enviada ao capitão adversário.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
+ });
+ root.querySelectorAll('[data-reschedule-id]').forEach(b=>b.onclick=async()=>{
+  b.disabled=true;try{const result=await a.call('/rest/v1/rpc/cmim_answer_reschedule',{method:'POST',secure:true,body:{p_request:b.dataset.rescheduleId,p_action:b.dataset.action}});await read();status(result==='accepted'?'Novo horário confirmado na agenda.':result==='stale'?'Solicitação expirada ou horário alterado.':'Solicitação respondida.',result==='stale')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
+ });
+}
 async function register(compId){
  if(!state.me){a.gotoLogin();return}
- const comp=competition(compId),eligible=own().filter(t=>membersFor(t.id).length===5&&
+ const comp=competition(compId),eligible=own().filter(t=>startersFor(t.id).length===5&&t.logo_url&&membersFor(t.id).every(m=>state.profiles.find(p=>p.id===m.user_id)?.avatar_url)&&
   !state.entries.some(e=>e.competition_id===compId&&e.team_id===t.id&&e.status!=='rejected'));
- if(!eligible.length){status('Para se inscrever, crie um time com cinco jogadores (convites aceitos).',true);return}
+ if(!eligible.length){status('Para se inscrever, tenha cinco titulares, logo e fotos de todos os membros.',true);return}
  const choice=eligible.length===1?eligible[0].id:prompt('Qual time deseja inscrever? Informe a sigla:\n'+eligible.map(t=>t.short_name+' — '+t.name).join('\n'));
  const chosen=eligible.length===1?eligible[0]:eligible.find(t=>t.id===choice||t.short_name.toLowerCase()===String(choice||'').toLowerCase());
  if(!chosen)return;
@@ -253,8 +293,8 @@ $('selected-competition').onchange=e=>{state.selected=e.target.value;renderOverv
 $('create-squad').onsubmit=async e=>{
  e.preventDefault();if(!state.me){a.gotoLogin();return}
  const btn=e.currentTarget.querySelector('button'),f=new FormData(e.currentTarget);btn.disabled=true;
- try{await a.call('/rest/v1/cmim_squads',{method:'POST',secure:true,headers:{Prefer:'return=representation'},body:{
-  name:f.get('name'),short_name:String(f.get('short_name')).toUpperCase(),captain_lane:f.get('captain_lane'),owner_id:state.me.id
+ try{const photo=f.get('player_photo');if(photo?.size)await a.uploadAvatar(photo);else if(!myProfile()?.avatar_url)throw Error('Sua foto é obrigatória.');const logo_url=await a.uploadTeamLogo(f.get('logo'));await a.call('/rest/v1/cmim_squads',{method:'POST',secure:true,headers:{Prefer:'return=representation'},body:{
+  name:f.get('name'),short_name:String(f.get('short_name')).toUpperCase(),captain_lane:f.get('captain_lane'),owner_id:state.me.id,logo_url
  }});e.currentTarget.reset();await read();status('✓ Time criado. Convide jogadores pelo formulário acima.')}
  catch(err){status('Não foi possível criar o time: '+safeErr(err),true)}finally{btn.disabled=false}
 };
@@ -399,8 +439,8 @@ async function launchTournamentMatch(matchId,comp){
  if(!match||match.status==='approved'||match.room_id||!match.team_b_id)return status('Confronto indisponível.',true);
  const lanes=['TOP','JG','MID','ADC','SUP'];
  function lineup(teamId){
-  const squad=team(teamId),members=membersFor(teamId);
-  if(!squad||members.length!==5)throw Error('A equipe '+(squad?.name||'?')+' precisa de cinco membros.');
+  const squad=team(teamId),members=startersFor(teamId);
+  if(!squad||members.length!==5)throw Error('A equipe '+(squad?.name||'?')+' precisa de cinco titulares.');
   const lineup=lanes.map(l=>members.find(m=>m.lane===l));
   if(lineup.some(x=>!x)||new Set(lineup.map(x=>x.user_id)).size!==5)
    throw Error('A equipe '+squad.name+' precisa de um jogador diferente em cada lane.');
@@ -409,7 +449,7 @@ async function launchTournamentMatch(matchId,comp){
   const pending=profiles.filter(p=>!p.rank_player_id||!p.rank_verified_at);
   if(pending.length)throw Error('Vincule ao Ranking as contas: '+pending.map(p=>p.nick+'#'+p.tag).join(', ')+'.');
   const captain=state.profiles.find(p=>p.id===squad.owner_id)?.nick||profiles[0].nick;
-  return {name:squad.name,logo:'',captain,
+  return {name:squad.name,logo:squad.logo_url||'',captain,
    players:profiles.map(p=>p.nick),profileIds:profiles.map(p=>p.id)};
  }
  try{
