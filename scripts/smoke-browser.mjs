@@ -104,5 +104,25 @@ try{
  await ip.locator('#my-invites [data-accept="true"]').click();await ip.waitForFunction(()=>document.querySelector('#my-invites').textContent.includes('Nenhum convite pendente'));assert.equal(submitted,true);
  await ip.waitForFunction(()=>document.querySelector('#cmim-invite-count').hidden);await ip.waitForFunction(()=>!document.querySelector('#cmim-my-team-link').hidden);
  console.log('PASS profile loading, partial statistics failure, mobile invite notification and acceptance');await invited.close();
+ const circuit=await browser.newContext({viewport:{width:1440,height:900}});
+ const teams=Array.from({length:17},(_,i)=>({id:'aaaaaaaa-aaaa-4aaa-8aaa-'+String(i+1).padStart(12,'0'),name:'Equipe '+String(i+1).padStart(2,'0'),short_name:'T'+i,owner_id:player.id,logo_url:'https://example.org/logo.png'}));
+ const scheduled=[{id:'event-1',title:'Treino de teste',type:'Treino',status:'scheduled',starts_at:'2026-12-01T02:00:00Z'},{id:'event-2',title:'Partida a definir',type:'MD3',status:'scheduled',starts_at:null,match_id:'match-1'}];
+ await circuit.route('**/*',async route=>{
+ const u=new URL(route.request().url());if(u.origin==='http://127.0.0.1:4173')return route.continue();if(!u.hostname.endsWith('.supabase.co'))return route.abort();
+ const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','content-type':'application/json'};let data=[];
+ if(u.pathname.endsWith('/cmim_squads'))data=teams;
+ if(u.pathname.endsWith('/cmim_portal_events'))data=scheduled;
+ if(u.pathname.endsWith('/cmim_profiles'))data=[{id:player.id,nick:'TitularTeste',tag:'BR1',avatar_url:'https://example.org/player.png'},{id:'reserve',nick:'ReservaTeste',tag:'BR1',avatar_url:'https://example.org/player.png'}];
+ if(u.pathname.endsWith('/cmim_squad_members'))data=[{team_id:teams[0].id,user_id:player.id,lane:'MID',starter:true},{team_id:teams[0].id,user_id:'reserve',lane:'MID',starter:false}];
+ return route.fulfill({status:200,headers,body:JSON.stringify(data)});
+ });
+ const cp=await circuit.newPage();cp.on('pageerror',e=>errors.push(cp.url()+': '+e.message));
+ await open(cp,'equipes.html');await cp.locator('.team-tile').first().waitFor();assert.equal(await cp.locator('.team-tile').count(),16);assert.equal(await cp.locator('.team-tile p,.team-tile .team-score,.team-tile .team-meta').count(),0);assert.equal(await cp.locator('#team-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),4);
+ await cp.locator('#team-next').click();assert.equal(await cp.locator('.team-tile').count(),1);await cp.locator('#team-prev').click();await cp.locator('.team-tile').first().click();await cp.locator('.cmim-roster-group').first().waitFor();assert.equal(await cp.locator('.cmim-roster-group').count(),2);assert.match(await cp.locator('.cmim-roster-group').first().textContent(),/TitularTeste/);assert.match(await cp.locator('.cmim-roster-group').last().textContent(),/ReservaTeste/);
+ await open(cp,'agenda.html');await cp.locator('[data-day]').first().waitFor();assert.match(await cp.locator('#calendar-undated').textContent(),/Partida a definir/);
+ const currentMonth=await cp.locator('#calendar-month').textContent();await cp.locator('#calendar-next').click();assert.notEqual(await cp.locator('#calendar-month').textContent(),currentMonth);await cp.locator('#calendar-prev').click();assert.equal(await cp.locator('#calendar-month').textContent(),currentMonth);
+ for(let i=0;i<24&&!(await cp.locator('[data-day="2026-11-30"]').count());i++){const year=await cp.locator('[data-day]').first().getAttribute('data-day');await cp.locator(year>'2026-11-30'?'#calendar-prev':'#calendar-next').click();}
+ await cp.locator('[data-day="2026-11-30"]').click();assert.match(await cp.locator('#agenda-events').textContent(),/Treino de teste/);await cp.locator('#calendar-all').click();assert.match(await cp.locator('#calendar-list-title').textContent(),/mês/);
+ console.log('PASS calendar month/day and Brasília timezone, 4x4 team catalog and roster groups');await circuit.close();
  assert.deepEqual(errors,[],'Uncaught browser errors');console.log('All browser smoke checks passed.');
 }finally{await browser.close()}
