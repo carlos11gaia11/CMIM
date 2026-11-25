@@ -52,6 +52,8 @@ async function read(){
  const responses=await Promise.allSettled(requests.map(url=>a.call(url,{secure:!!state.me})));
  const [comps,squads,members,profiles,matches,entries]=responses.map(x=>x.status==='fulfilled'&&Array.isArray(x.value)?x.value:[]);
  Object.assign(state,{comps,squads,members,profiles,matches,entries});
+ state.hybridRanks={};
+ await Promise.all(comps.filter(c=>hybrid(c)&&matches.some(m=>m.competition_id===c.id&&m.round_number===1)).map(async c=>{try{const rows=await a.call('/rest/v1/rpc/cmim_hybrid_standings',{method:'POST',secure:!!state.me,body:{p_competition:c.id}});if(Array.isArray(rows))state.hybridRanks[c.id]=rows;}catch{}}));
  state.loaded={comps:responses[0].status==='fulfilled',squads:responses[1].status==='fulfilled',members:responses[2].status==='fulfilled',matches:responses[4].status==='fulfilled',entries:responses[5].status==='fulfilled'};
  if(responses.some(x=>x.status==='rejected')&&state.me){
   $('champ-status').textContent='Algumas informações estão temporariamente indisponíveis. Atualize a página para tentar novamente.';
@@ -245,13 +247,15 @@ function hybridStandings(compId){
    row.unresolved=tied.length>1&&(tied.some(o=>o.tie===null)||new Set(tied.map(o=>o.tie)).size!==tied.length);
   }
   rows.sort((a,b)=>b.wins-a.wins||b.direct-a.direct||(a.tie??99)-(b.tie??99)||a.id.localeCompare(b.id));
+  const official=state.hybridRanks?.[compId];
+  if(Array.isArray(official)&&official.length){const ranks=official.filter(r=>Number(r.group_no)===group.charCodeAt(0)-64);for(const row of rows){const r=ranks.find(x=>x.team_id===row.id);if(r)Object.assign(row,{wins:r.wins,losses:r.losses,direct:r.direct_wins,tie:r.tie_order,unresolved:r.unresolved,position:Number(r.standing_position)});}rows.sort((a,b)=>(a.position??99)-(b.position??99));}
   return {group,rows};
  });
  return {groups,complete:approved.length===24};
 }
 function hybridTables(comp){
  const {groups,complete}=hybridStandings(comp.id);
- return '<h3 style="color:#ffe58c">CLASSIFICAÇÃO POR GRUPOS</h3><p class="cmim-muted">Vitória = 1 ponto. Desempate: confronto direto entre empatados. Os dois primeiros de cada grupo avançam.</p>'+
+ return '<h3 style="color:#ffe58c">CLASSIFICAÇÃO POR GRUPOS</h3><p class="cmim-muted">Vitória = 1 ponto. Desempate: confronto direto; no Open, tempo médio de vitória entre empatados quando persistir empate múltiplo. Os dois primeiros de cada grupo avançam.</p>'+
  groups.map(g=>'<h4>GRUPO '+g.group+'</h4><div class="cmim-table-wrap"><table class="cmim-table"><thead><tr><th>Pos.</th><th>Time</th><th>V</th><th>D</th><th>Pontos</th><th>Situação</th></tr></thead><tbody>'+[...g.rows,...Array.from({length:Math.max(0,4-g.rows.length)},()=>({id:null,wins:0,losses:0}))].map((t,i)=>'<tr><td>'+(i+1)+'º</td><td>'+(t.id?teamLink(t.id):'Vaga a definir')+'</td><td>'+t.wins+'</td><td>'+t.losses+'</td><td>'+t.wins+'</td><td>'+(!t.id?'A definir':!complete?'Em disputa':t.unresolved?'Desempate pendente':i<2?'<span class="cmim-badge">✓ CLASSIFICADO</span>':'Eliminado')+'</td></tr>').join('')+'</tbody></table></div>').join('');
 }
 function playoffPreview(list=[]){
@@ -371,6 +375,7 @@ function renderAdminManage(){
  (games.length?games.map(g=>'<form class="cmim-match" data-match-edit="'+g.id+'"><b>'+esc(roundLabel(comp,Number(g.round_number)))+(hybrid(comp)&&g.round_number<=3?' · Grupo '+groupLabel(g):'')+' · MD'+bestOf(comp,g)+' · Jogo '+g.match_number+'</b>'+
  '<p>'+readable(g.team_a_id)+' × '+(g.team_b_id?readable(g.team_b_id):'FOLGA')+'</p>'+
   (g.team_b_id?'<div class="cmim-form-row"><label class="cmim-field">DATA E HORA (BRASÍLIA)<input type="datetime-local" name="scheduled_at" value="'+timeInput(g.scheduled_at)+'"></label><button type="button" class="cmim-button ghost" data-save-schedule="'+g.id+'">SALVAR DIA/HORA</button></div>':'')+
+ (hybrid(comp)&&comp.league_tier==='open'&&g.round_number<=3&&!games.some(m=>m.round_number>=4)&&g.team_b_id?'<div class="cmim-form-row"><label class="cmim-field">DURAÇÃO DA VITÓRIA (SEGUNDOS)<input type="number" min="1" max="21600" name="victory_seconds" value="'+(g.victory_seconds??'')+'" placeholder="Ex.: 1800 para 30 min"></label><label class="cmim-field"><input name="is_walkover" type="checkbox" '+(g.is_walkover?'checked':'')+'> Vitória por W.O.</label><button type="button" data-save-victory="'+g.id+'" class="cmim-button ghost">SALVAR DADOS DE DESEMPATE</button></div>':'')+
  '<div class="cmim-form-row"><label class="cmim-field">PLACAR A<input name="score_a" type="number" min="0" max="5" value="'+g.score_a+'"></label><label class="cmim-field">PLACAR B<input name="score_b" type="number" min="0" max="5" value="'+g.score_b+'"></label>'+
  '<label class="cmim-field">STATUS<select name="status">'+['scheduled','live','pending','approved'].map(x=>'<option value="'+x+'" '+(g.status===x?'selected':'')+'>'+esc(label(x))+'</option>').join('')+'</select></label>'+
  '</div>'+
@@ -381,6 +386,7 @@ function renderAdminManage(){
   (g.team_b_id?'':'<span class="cmim-badge">FOLGA AUTOMÁTICA</span>'))+
  '</div></form>').join(''):'<p class="cmim-muted">Confrontos ainda não criados.</p>');
  $('competition-logo-form').onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,b=form.querySelector('button');b.disabled=true;try{const cover_url=await a.uploadTeamLogo(new FormData(form).get('logo'));await a.call('/rest/v1/cmim_competitions?id=eq.'+comp.id,{method:'PATCH',secure:true,body:{cover_url}});await read();status('Logo atualizada.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}};
+ box.querySelectorAll('[data-save-victory]').forEach(b=>b.onclick=async()=>{const form=b.closest('form'),fd=new FormData(form),is_walkover=fd.has('is_walkover'),raw=fd.get('victory_seconds');const victory_seconds=is_walkover||!raw?null:Number(raw);if(victory_seconds!==null&&(!Number.isInteger(victory_seconds)||victory_seconds<1||victory_seconds>21600))return status('Duração inválida.',true);b.disabled=true;try{await a.call('/rest/v1/cmim_competition_matches?id=eq.'+b.dataset.saveVictory,{method:'PATCH',secure:true,body:{victory_seconds,is_walkover}});await read();status('Dados de desempate atualizados.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}});
  box.querySelectorAll('[data-comp-status]').forEach(b=>b.onclick=async()=>{
   if(!confirm('Alterar situação de '+comp.title+' para '+label(b.dataset.compStatus)+'?'))return;
   try{await a.call('/rest/v1/cmim_competitions?id=eq.'+comp.id,{method:'PATCH',secure:true,body:{status:b.dataset.compStatus}});await read()}catch(e){status(safeErr(e),true)}
