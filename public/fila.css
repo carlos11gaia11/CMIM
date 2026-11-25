@@ -28,3 +28,7 @@
 .history-items{display:flex;flex-wrap:wrap;gap:6px}
 .history-items span{font-size:10px;background:#283527;border:1px solid #3b4c36;border-radius:5px;padding:5px 8px;color:#d9e8d5}
 @media(max-width:600px){.teams.four{grid-template-columns:1fr}}
+
+/* CMIM 3.0 — graphite palette, preserving role and game-state colors. */
+:root{--bg:#101013;--bg2:#151519;--card:#19191e;--card2:#212126;--panel:#19191e;--panel2:#212126;--surface:#19191e;--surface-2:#212126;--line:#35353d;--line2:#414148;--border:#35353d;--ink:#f4f4f5;--cream:#f4f4f5;--white:#f4f4f5;--text:#f4f4f5;--dim:#b4b4be;--muted:#b4b4be;--yellow:#ffe134;--round:12px}
+body{background:#101013;color:#f4f4f5}main .card,main .panel{background:#19191e;border-color:#35353d;box-shadow:none;border-radius:12px}main input,main select,main textarea{border-color:#414148;background:#111115;color:#f4f4f5;border-radius:8px}main .lead,main .hint,main .muted{color:#b4b4be}main button.primary,main .primary:not(.button){background:#ffe134;color:#101013;border-color:#ffe134;box-shadow:none}main button:disabled{cursor:not-allowed}main h1{letter-spacing:-.02em}main .toolbar,main .filters{gap:12px}main .card h2,main .panel h2{color:#f4f4f5}main .team,main .entry,main .slot{border-color:#35353d}main .team h2{color:inherit}@media(max-width:650px){main .card,main .panel{padding:14px}main .hero{padding-block:20px}main .finder,main .form{grid-template-columns:1fr}}
