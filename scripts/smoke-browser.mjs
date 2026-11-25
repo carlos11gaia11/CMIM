@@ -142,5 +142,32 @@ try{
  tp.on('dialog',d=>d.accept());await tp.locator('[data-starter-player="reserve"]').click();await tp.waitForFunction(()=>document.querySelector('.mt-roster').textContent.includes('Reserva'));
  await tp.setViewportSize({width:390,height:844});assert.equal(await tp.locator('.mt-player-grid').first().evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);assert.ok(await tp.locator('.mt-dashboard').evaluate(el=>el.scrollWidth<=el.clientWidth+2));
  console.log('PASS captain dashboard: five lanes, reserves, role change, collapsible logo and mobile layout');await captainContext.close();
+ const tournamentId='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',gameId='cccccccc-cccc-4ccc-8ccc-cccccccccccc',entryId='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+ const event={id:tournamentId,title:'CMIM Open Teste',status:'open',league_tier:'open',structure:'liga_mata_mata',series_games:1,max_teams:16,registration_fee_cents:7500,starts_at:'2027-01-08T22:00:00Z',closes_at:'2027-01-03T23:59:00Z',description:'Regulamento de teste'};
+ const fixtureTeams=teams.slice(0,2),fixtureMembers=[{team_id:fixtureTeams[0].id,user_id:player.id,lane:'MID',starter:true}];
+ const fixtureGame={id:gameId,competition_id:tournamentId,round_number:1,match_number:1,team_a_id:fixtureTeams[0].id,team_b_id:fixtureTeams[1].id,status:'scheduled',scheduled_at:'2027-01-08T22:00:00Z'};
+ const fixtureEntries=[{id:entryId,competition_id:tournamentId,team_id:fixtureTeams[0].id,status:'pending'},{id:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',competition_id:tournamentId,team_id:fixtureTeams[1].id,status:'approved'}];
+ async function circuitContext(who){const ctx=await browser.newContext();if(who)await ctx.addInitScript(({session})=>{localStorage.setItem('cmim_player_session',JSON.stringify(session))},{session:session(who)});
+ await ctx.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.origin==='http://127.0.0.1:4173')return route.continue();if(!u.hostname.endsWith('.supabase.co'))return route.abort();const headers={'access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,PATCH,OPTIONS','access-control-allow-headers':'*','content-type':'application/json'};if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});let data=[];
+ if(u.pathname==='/auth/v1/user')data=who||{};
+ else if(u.pathname.endsWith('/cmim_competitions'))data=[event];
+ else if(u.pathname.endsWith('/cmim_squads'))data=fixtureTeams;
+ else if(u.pathname.endsWith('/cmim_squad_members'))data=fixtureMembers;
+ else if(u.pathname.endsWith('/cmim_profiles'))data=[{id:player.id,nick:'Jogador Teste',tag:'BR1',lane:'MID'}];
+ else if(u.pathname.endsWith('/cmim_competition_matches'))data=[fixtureGame];
+ else if(u.pathname.endsWith('/cmim_competition_entries'))data=who?fixtureEntries:fixtureEntries.filter(e=>e.status==='approved');
+ else if(u.pathname.endsWith('/cmim_entry_reviews'))data=who?[{entry_id:entryId,payment_status:'pending',review_state:'corrections',staff_note:'Atualize a foto'}]:[];
+ return route.fulfill({status:200,headers,body:JSON.stringify(data)});});
+ const p=await ctx.newPage();p.on('pageerror',e=>errors.push(p.url()+': '+e.message));return{ctx,p}}
+ const guestCircuit=await circuitContext(null),gp=guestCircuit.p;
+ await open(gp,'campeonato.html?id='+tournamentId);await gp.locator('#cv-champ-tabs').waitFor();assert.match(await gp.locator('#cv-champ-hero').textContent(),/CMIM Open Teste/);
+ await gp.locator('#cv-champ-tabs a[href="#equipes"]').click();await gp.locator('.cv-team').waitFor();assert.equal(await gp.locator('.cv-team').count(),1);
+ await gp.locator('#cv-champ-tabs a[href="#classificacao"]').click();await gp.locator('#cv-champ-content table').first().waitFor();
+ await gp.locator('#cv-champ-tabs a[href="#partidas"]').click();await gp.locator('.cv-game').click();await gp.locator('.cv-versus').waitFor();assert.match(await gp.locator('.cv-versus').textContent(),/VS/);
+ await open(gp,'jogadores.html');await gp.locator('.cv-player').waitFor();assert.match(await gp.locator('.cv-player').textContent(),/Jogador Teste/);
+ await open(gp,'ligas.html');assert.equal(await gp.locator('#competition-admin').count(),0);await guestCircuit.ctx.close();
+ const adminCircuit=await circuitContext(admin),ap=adminCircuit.p;await open(ap,'admin-campeonatos.html','authenticated');await ap.locator('[data-review-entry]').waitFor();assert.equal(await ap.locator('[data-entry-status="approved"]').count(),1);assert.equal(await ap.locator('[name="staff_note"]').inputValue(),'Atualize a foto');await adminCircuit.ctx.close();
+ const playerCircuit=await circuitContext(player),pp=playerCircuit.p;await open(pp,'meu-time.html','authenticated');await pp.locator('#my-entries .cv-review-note').first().waitFor();assert.match(await pp.locator('#my-entries').textContent(),/Atualize a foto/);await open(pp,'admin-campeonatos.html','authenticated');await pp.waitForFunction(()=>document.querySelector('#cv-admin-denied').textContent.includes('exclusiva'));assert.equal(await pp.locator('#competition-admin').isVisible(),false);await playerCircuit.ctx.close();
+ console.log('PASS circuit pages, official approved teams, matches, admin review and captain feedback');
  assert.deepEqual(errors,[],'Uncaught browser errors');console.log('All browser smoke checks passed.');
 }finally{await browser.close()}
