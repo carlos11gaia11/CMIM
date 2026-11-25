@@ -195,33 +195,30 @@ async function signUp(values){
   if(authenticated)el.innerHTML='<a href="./perfil.html">◉ '+esc(name)+' · Perfil</a>';
   else el.innerHTML='<a href="./conta.html">'+(authStatus==='checking'?'Verificando…':authStatus==='offline'?'Reconectar':'Entrar / Cadastrar')+'</a>';
  }
- function mountBadge(){if(document.getElementById('cmim-auth-badge')||document.body?.dataset?.noAuthBadge==='1')return;
+ function mountBadge(){if(document.querySelector('.cmim-unified-nav')||document.getElementById('cmim-auth-badge')||document.body?.dataset?.noAuthBadge==='1')return;
   document.body.insertAdjacentHTML('beforeend',badgeMarkup());updateBadge();
   if(session?.access_token)current().then(updateBadge);
  }
- function mountMobileDock(){
-  if(!document.body||document.getElementById('cmim-mobile-dock'))return;
-  const links=[
-   ['⌂','Portal','./'],
-   ['▶','Jogar','./fila.html'],
-   ['♛','Ligas','./ligas.html'],
-   ['♟','Equipes','./equipes.html'],
-   ['◉','Perfil','./perfil.html'],
-   ['▥','Ranking','./ranking.html']
-  ];
+ function mountNavigation(){
+  const old=document.querySelector('header.site-header,header.cmim-topbar');
+  if(!old||old.dataset.cmimUnified==='1')return;
   const here=location.pathname.split('/').pop()||'index.html';
-  const nav=document.createElement('nav');nav.id='cmim-mobile-dock';nav.className='cmim-mobile-dock';
-  nav.setAttribute('aria-label','Acesso rápido às seções CMIM');
-  nav.innerHTML=links.map(([icon,label,href])=>{
-    const path=href.replace('./','').split('?')[0]||'index.html';
-    const active=here===path;
-    return '<a href="'+href+'"'+(active?' aria-current="page"':'')+'>'+
-      '<span aria-hidden="true">'+icon+'</span><small>'+label+'</small></a>';
-  }).join('');
-  document.body.append(nav);
+  const nav=document.createElement('header');nav.className='cmim-unified-nav';nav.dataset.cmimUnified='1';
+  const primary=[['Início','./','index.html'],['In-House','./inhouse.html','inhouse.html'],['Ligas','./ligas.html','ligas.html'],['Equipes','./equipes.html','equipes.html'],['Agenda','./agenda.html','agenda.html']];
+  const more=[['Ranking','./ranking.html'],['Draft','./draft.html'],['Seleção de campeões','./selecao.html'],['Regulamento','./regulamento.html'],['Comp Maker','./comp-maker.html'],['Aulas','./aulas.html'],['CMIM News','./#news'],['Jogadores','./#jogadores'],['Comunidade','./#redes'],['Administração','./admin.html']];
+  nav.innerHTML='<div class="cmim-nav-inner"><a class="cmim-nav-brand" href="./"><img src="./assets/branding/cmim-main.webp?v=3" alt="" width="48" height="48"><span>CMIM<small>COMPETITIVE CIRCUIT</small></span></a><button type="button" class="cmim-nav-toggle" aria-expanded="false" aria-controls="cmim-nav-links" aria-label="Abrir menu">☰</button><nav id="cmim-nav-links" aria-label="Menu principal">'+primary.map(([name,href,page])=>'<a href="'+href+'"'+(here===page?' aria-current="page"':'')+'>'+name+'</a>').join('')+'<details class="cmim-nav-more"><summary>Mais <span aria-hidden="true">⌄</span></summary><div>'+more.map(([name,href])=>'<a href="'+href+'">'+name+'</a>').join('')+'</div></details><a class="cmim-nav-play" href="./fila.html">Jogar</a><a class="cmim-nav-account" id="portal-auth-button" href="./conta.html">Verificando…</a></nav></div>';
+  old.replaceWith(nav);
+  const toggle=nav.querySelector('.cmim-nav-toggle');toggle.onclick=()=>{const open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(open));nav.classList.toggle('is-open',open)};
+  nav.addEventListener('keydown',e=>{if(e.key==='Escape'){nav.querySelector('details').open=false;nav.classList.remove('is-open');toggle.setAttribute('aria-expanded','false');toggle.focus()}});
+  document.addEventListener('click',e=>{if(!nav.contains(e.target)){nav.querySelector('details').open=false;nav.classList.remove('is-open');toggle.setAttribute('aria-expanded','false')}});
+  document.getElementById('cmim-auth-badge')?.remove();
+  document.getElementById('cmim-mobile-dock')?.remove();
+  updateBadge();
  }
+ function mountMobileDock(){mountNavigation()}
  window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,uploadTeamLogo,squareImage,esc,session:()=>session,authState:()=>({status:authStatus,user:verifiedUser}),save,requireLogin,gotoLogin,requestedDestination};
  function initialize(){
+  const css=document.createElement('link');css.rel='stylesheet';css.href='./cmim-unified.css?v=20261125';document.head.append(css);mountNavigation();
   document.documentElement.classList.remove('cmim-auth-pending');
   if(document.body?.dataset?.cmimProtected==='1'){
    mountMobileDock();
