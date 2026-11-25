@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Entrar e cadastrar</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head><body class="cmim-account-page" data-no-auth-badge="1">
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Entrar e cadastrar</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-imagens"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head><body class="cmim-account-page" data-no-auth-badge="1">
 <header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>CONTAS E COMUNIDADE</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./perfil.html">Meu perfil</a><a href="./ligas.html">Ligas</a></nav></header>
 <main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">IDENTIDADE CMIM · UMA CONTA PARA TODA A COMUNIDADE</span><h1>FAÇA PARTE <em>DO RIFT.</em></h1><p>Seu perfil acompanha suas participações, picks, vitórias, temporadas e campeonatos. Os dados de sua conta ficam protegidos no Supabase Auth.</p></div>
 <div class="cmim-tabs" role="tablist"><button class="active" data-mode="login" type="button">Já tenho conta</button><button data-mode="signup" type="button">Criar minha conta</button></div>
@@ -24,7 +24,7 @@
 <label class="cmim-field">TELEFONE COM DDD (PRIVADO)<input type="tel" name="phone" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="(11) 99999-9999" required><span class="cmim-muted">Seu número não aparece publicamente.</span></label>
 <label class="cmim-field">SENHA (8+ CARACTERES)<input type="password" name="password" minlength="8" autocomplete="new-password" required></label>
 <label class="cmim-field">CONFIRMAR SENHA<input type="password" name="confirm" minlength="8" autocomplete="new-password" required></label>
-<label class="cmim-field">FOTO DE PERFIL (OPCIONAL)<input type="file" name="avatar" accept="image/png,image/jpeg,image/webp"><span class="cmim-muted">Até 2 MB. Se for necessário confirmar o e-mail, você poderá enviar a foto após entrar.</span></label>
+<label class="cmim-field">FOTO DE PERFIL (OBRIGATÓRIA PARA PARTICIPAR DE UM TIME)<input type="file" name="avatar" accept="image/png,image/jpeg,image/webp"><span class="cmim-muted">Até 10 MB, recorte automático de 512 × 512 px. Se for necessário confirmar o e-mail, envie a foto após entrar.</span></label>
 </div><div class="cmim-actions"><button class="cmim-button">CRIAR MEU PERFIL →</button></div></form>
 <p class="cmim-status" id="signup-status" role="status"></p></section>
 </main>
