@@ -23,7 +23,7 @@ jobs:
 
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
 
     steps:
       - name: Baixar arquivos
@@ -70,7 +70,7 @@ jobs:
         run: |
           for attempt in {1..15}; do
             count=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq '[.artifacts[] | select(.name == env.ARTIFACT_NAME and .expired == false)] | length' || echo 0)
-            if [ "$count" = "1" ]; then exit 0; fi
+            if [ "$count" = "1" ]; then sleep 15; exit 0; fi
             sleep 3
           done
           echo 'O pacote de publicação não ficou disponível na API do GitHub.' >&2
@@ -78,6 +78,18 @@ jobs:
 
       - name: Publicar site
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Aguardar nova tentativa
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 15
+
+      - name: Repetir publicação se necessário
+        if: steps.deployment.outcome == 'failure'
+        id: deployment_retry
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
