@@ -50,9 +50,9 @@ function explainInvalid(event,feedbackId){
  notice(message,true);
 }
 function saving(button,on){if(!button)return;if(on){button.dataset.originalLabel=button.textContent;button.disabled=true;button.textContent='◌ SALVANDO...';button.setAttribute('aria-busy','true')}else{button.disabled=false;button.textContent=button.dataset.originalLabel||'SALVAR ALTERAÇÕES';button.removeAttribute('aria-busy')}};
-const getSession=()=>{try{return window.CMIMAuth?.session()||null}catch{return null}};
+const getSession=async()=>{const a=window.CMIMAuth,who=await a?.user();if(who?.app_metadata?.cmim_admin!==true)return null;return a.current()};
 async function req(path,options={}){
- const session=getSession();if(!session?.access_token)throw Error('Entre com sua conta ADM para gerenciar usuários.');
+ const session=await getSession();if(!session?.access_token)throw Error('Entre com sua conta ADM para gerenciar usuários.');
  const r=await fetch(BASE+path,{method:options.method||'GET',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json',...(options.body?{Prefer:'return=minimal'}:{})},
   body:options.body?JSON.stringify(options.body):undefined});
  const text=await r.text();let data={};try{data=JSON.parse(text)}catch{}
@@ -164,7 +164,7 @@ $('registered-riot-sync')?.addEventListener('click', async event => {
  const button = event.currentTarget;
  const feedback = $('registered-riot-sync-status');
  if (!confirm('Consultar a API oficial da Riot e atualizar o elo e o tier atual dos perfis encontrados? O pré-tier será mantido e jogadores sem Solo/Duo não serão alterados.')) return;
- const session = getSession();
+ const session = await getSession();
  if (!session?.access_token) { status('Entre com a conta ADM primeiro.',true); return; }
  saving(button,true);
  if (feedback) feedback.textContent='Consultando Riot IDs e elos Solo/Duo...';

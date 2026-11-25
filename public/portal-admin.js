@@ -3,7 +3,6 @@
   'use strict';
   const API='https://klpvidxhzofbwstvvxib.supabase.co';
   const KEY='sb_publishable_B5WMdyJBIdYhauVepUIOZw_hnvXs4Xn';
-  const SESSION='cmim_session';
   const $=id=>document.getElementById(id);
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const state={session:null,admin:false,rank:null,version:null,metadata:[],news:[],reports:[],loading:false,reviewBusy:false};
@@ -31,7 +30,7 @@
   }
   async function ensureSession(){
     const auth=window.CMIMAuth;if(!auth)throw Error('Autenticação indisponível.');
-    const who=await auth.user();if(!hasAdminClaim(who)){state.admin=false;throw Error('Faça login como administrador.');}
+    const who=await auth.user();if(!hasAdminClaim(who)){state.admin=false;state.session=null;if($('admin-management-view'))showLogin();throw Error('Faça login como administrador.');}
     state.session=await auth.current();if(!state.session)throw Error('Sessão indisponível.');return state.session;
   }
   function hasAdminClaim(user){return user?.app_metadata?.cmim_admin===true;}
@@ -487,7 +486,7 @@
   $('news-reader-close')?.addEventListener('click',()=>$('cmim-news-reader').close());
   loadNews();
   // O dashboard abre sozinho ao carregar, sem misturar formularios ao portal.
-  document.addEventListener('cmim-auth-changed',e=>{if(e.detail?.status==='guest'&&$('admin-management-view')){state.admin=false;state.session=null;showLogin()}});
+  document.addEventListener('cmim-auth-changed',e=>{if(! $('admin-management-view'))return;if(e.detail?.status==='guest'||(e.detail?.status==='authenticated'&&!hasAdminClaim(window.CMIMAuth.authState().user))){state.admin=false;state.session=null;showLogin()}});
   if($('admin-management-view')){
     if(window.CMIMAuth){
       verifySession().then(ok=>{

@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Meu perfil e estatísticas</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-imagens"></script><style>html.cmim-auth-pending body{visibility:visible!important}</style>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Meu perfil e estatísticas</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-final"></script><style>html.cmim-auth-pending body{visibility:visible!important}</style>
 <link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head><body data-cmim-protected="1" class="cmim-account-page" data-no-auth-badge="1">
 <header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>PLAYER PROFILE</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./draft.html?jogar=1">Jogar</a><a href="./ligas.html">Ligas</a><button id="account-signout" class="cmim-button ghost">Sair</button></nav></header>
 <main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">ESTATÍSTICAS INDIVIDUAIS · HISTÓRICO REAL</span><h1>MINHA <em>JORNADA.</em></h1><p>Veja sua ficha, seus campeões, o desempenho em partidas aprovadas, a evolução e as temporadas em que participa.</p></div>
@@ -36,7 +36,7 @@
  $('toggle-edit').onclick=()=>{$('profile-edit').hidden=!$('profile-edit').hidden};
  $('cancel-edit').onclick=()=>{$('profile-edit').hidden=true};
  try{
-  who=await a.user();if(!who){location.replace('./conta.html');return}
+  who=await a.user();if(!who){if(a.authState().status==='offline'){$('profile-loading').textContent='Conexão indisponível. Sua sessão foi preservada; recarregue para tentar novamente.';}else a.gotoLogin();return}
   const [publicProfiles,privateData,roles,rankRows,reports]=await Promise.all([
    a.call('/rest/v1/cmim_profiles?id=eq.'+who.id+'&select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at'),
    a.call('/rest/v1/cmim_player_private?id=eq.'+who.id+'&select=real_name,phone_e164',{secure:true}),

@@ -175,8 +175,8 @@
   async function init(){
     try{
       state.me=await CMIMAuth.user();
-      if(!state.me){$('signin').hidden=false;return;}
-      if(state.me.app_metadata?.cmim_admin===true)$('adminLink').hidden=false;
+      if(!state.me){$('signin').hidden=false;if(CMIMAuth.authState().status==='offline')notice('Não foi possível verificar sua sessão. Tente reconectar.',true);return;}
+      if(state.me.app_metadata?.cmim_admin===true&&$('adminLink'))$('adminLink').hidden=false;
       $('mainGrid').hidden=false;
       await load();
     }catch(e){notice(e.message||String(e),true);}

@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Entrar e cadastrar</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-imagens"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head><body class="cmim-account-page" data-no-auth-badge="1">
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Entrar e cadastrar</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-final"></script><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script></head><body class="cmim-account-page" data-no-auth-badge="1">
 <header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>CONTAS E COMUNIDADE</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./perfil.html">Meu perfil</a><a href="./ligas.html">Ligas</a></nav></header>
 <main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">IDENTIDADE CMIM · UMA CONTA PARA TODA A COMUNIDADE</span><h1>FAÇA PARTE <em>DO RIFT.</em></h1><p>Seu perfil acompanha suas participações, picks, vitórias, temporadas e campeonatos. Os dados de sua conta ficam protegidos no Supabase Auth.</p></div>
 <div class="cmim-tabs" role="tablist"><button class="active" data-mode="login" type="button">Já tenho conta</button><button data-mode="signup" type="button">Criar minha conta</button></div>
@@ -59,7 +59,7 @@
  }else if(params.get('confirmed')==='1'){
    status('login-status','✓ Você voltou ao CMIM! Se confirmou o e-mail, entre para acessar seu perfil.');
  }
- if(a.session()?.access_token){void a.user().then(who=>{if(who)location.replace(a.requestedDestination())});}
+ if(a.session()?.access_token){void a.user().then(who=>{if(who)location.replace(a.requestedDestination());else if(a.authState().status==='offline')status('login-status','Não foi possível verificar sua sessão. Ela foi preservada. Reconecte ou tente entrar novamente.',true)});}
  $('login-form').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button');btn.disabled=true;
   try{const f=new FormData(e.currentTarget);await a.signIn(f.get('email'),f.get('password'));location.assign(a.requestedDestination())}
   catch(err){status('login-status',err.message,true)}finally{btn.disabled=false}};
