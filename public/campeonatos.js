@@ -61,7 +61,7 @@ async function read(){
   $('champ-status').textContent='Algumas informações estão temporariamente indisponíveis. Atualize a página para tentar novamente.';
  }
  if(state.me&&(myPage||state.admin)){
-  try{state.invites=await a.call('/rest/v1/cmim_squad_invites?recipient_id=eq.'+state.me.id+'&status=eq.pending&select=id,team_id,lane,sender_id',{secure:true})}catch{state.invites=[]}
+  try{state.invites=await a.call('/rest/v1/cmim_squad_invites?recipient_id=eq.'+state.me.id+'&status=eq.pending&select=id,team_id,lane,sender_id,created_at&order=created_at.desc',{secure:true});state.inviteError=false}catch{state.invites=[];state.inviteError=true}
   try{state.reschedules=await a.call('/rest/v1/cmim_reschedule_requests?select=*&order=created_at.desc&limit=500',{secure:true});state.rescheduleError=false}catch{state.reschedules=[];state.rescheduleError=true}
  }
  render();
@@ -140,14 +140,10 @@ function render(){
  });
  document.querySelectorAll('[data-invite-team]').forEach(form=>form.onsubmit=async e=>{
   e.preventDefault();const f=new FormData(form),button=form.querySelector('button');button.disabled=true;
-  try{await a.call('/rest/v1/rpc/cmim_invite_player',{method:'POST',secure:true,body:{p_team:form.dataset.inviteTeam,p_recipient:f.get('recipient'),p_lane:f.get('lane')}});status('✓ Convite enviado! O jogador verá o convite após entrar.')}
-  catch(err){status('Erro no convite: '+safeErr(err),true)}finally{button.disabled=false}
+  try{const sent=await a.call('/rest/v1/rpc/cmim_invite_player',{method:'POST',secure:true,body:{p_team:form.dataset.inviteTeam,p_recipient:f.get('recipient'),p_lane:f.get('lane')}});if(typeof sent!=='string'||!sent)throw Error('Não foi possível confirmar o envio do convite.');form.reset();status('✓ Convite enviado! O jogador verá a notificação no sino e poderá aceitar em Meu Time.');$('invite-send-status').textContent='Convite enviado com sucesso.';await read()}
+  catch(err){const msg='Erro no convite: '+safeErr(err);status(msg,true);$('invite-send-status').textContent=msg}finally{button.disabled=false}
  });
- $('my-invites').innerHTML=state.me?(state.invites.length?state.invites.map(i=>'<div class="cmim-cup" style="margin:8px 0"><b>'+readable(i.team_id)+'</b><p>Convite para '+esc(i.lane)+'</p>'+
-   '<button class="cmim-button" data-invite-id="'+i.id+'" data-accept="true">Aceitar</button> <button class="cmim-button ghost" data-invite-id="'+i.id+'" data-accept="false">Recusar</button></div>').join(''):'<p class="cmim-muted">Nenhum convite pendente.</p>'):'<div class="cmim-empty">Entre para consultar seus convites.</div>';
- document.querySelectorAll('[data-invite-id]').forEach(b=>b.onclick=async()=>{
-  b.disabled=true;try{if(b.dataset.accept==='true'&&!myProfile()?.avatar_url){throw Error('Envie sua foto no perfil antes de aceitar o convite.');}await a.call('/rest/v1/rpc/cmim_answer_invite',{method:'POST',secure:true,body:{p_invite:b.dataset.inviteId,p_accept:b.dataset.accept==='true'}});status('Convite respondido.');await read()}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
- });
+ renderInvites();
  const myEntries=$('my-entries');if(myEntries){const ids=new Set(myTeams().map(t=>t.id));const entries=state.entries.filter(e=>ids.has(e.team_id));myEntries.innerHTML=entries.length?entries.map(e=>'<article class="cmim-match"><b>'+esc(competition(e.competition_id)?.title||'Campeonato')+'</b><p>'+readable(e.team_id)+' · '+esc(label(e.status))+'</p><a href="./ligas.html?campeonato='+encodeURIComponent(e.competition_id)+'#chaveamentos">Ver classificação e jogos →</a></article>').join(''):'<p class="cmim-muted">Nenhuma inscrição registrada. Consulte os campeonatos disponíveis.</p>';} 
  document.dispatchEvent(new Event('cmim-team-changed'));
  }
@@ -183,6 +179,37 @@ function render(){
   renderAdminManage();
  }
 }
+let inboxBusy=false;
+function renderInvites(){
+ const root=$('my-invites');if(!root)return;
+ root.innerHTML=!state.me?'<p>Entre para consultar seus convites.</p>':state.inviteError?'<p>Não foi possível consultar os convites. Use Atualizar para tentar novamente.</p>':state.invites.length?state.invites.map(i=>'<div class="cmim-cup" style="margin:8px 0">'+imageTag(team(i.team_id)?.logo_url,'Logo')+'<b>'+readable(i.team_id)+'</b><p>Convite para '+esc(i.lane)+'</p><button type="button" class="cmim-button" data-invite-id="'+esc(i.id)+'" data-accept="true">Aceitar</button> <button type="button" class="cmim-button ghost" data-invite-id="'+esc(i.id)+'" data-accept="false">Recusar</button></div>').join(''):'<p class="cmim-muted">Nenhum convite pendente.</p>';
+ const sendStatus=$('invite-inbox-status');
+ root.querySelectorAll('[data-invite-id]').forEach(b=>b.onclick=async()=>{
+  if(inboxBusy)return;inboxBusy=true;root.querySelectorAll('button').forEach(x=>x.disabled=true);
+  try{
+   if(b.dataset.accept==='true'&&!myProfile()?.avatar_url){throw Error('Envie sua foto em Meu perfil antes de aceitar o convite.')}
+   const accept=b.dataset.accept==='true';
+   const result=await a.call('/rest/v1/rpc/cmim_answer_invite',{method:'POST',secure:true,body:{p_invite:b.dataset.inviteId,p_accept:accept}});
+   if(result!==(accept?'accepted':'declined'))throw Error('Não foi possível confirmar a resposta.');
+   if(sendStatus)sendStatus.textContent=accept?'Convite aceito! Você agora integra a equipe.':'Convite recusado.';
+   await read();document.dispatchEvent(new Event('cmim-invite-answered'));
+  }catch(e){if(sendStatus)sendStatus.textContent=safeErr(e);status(safeErr(e),true)}
+  finally{inboxBusy=false;root.querySelectorAll('button').forEach(x=>x.disabled=false)}
+ });
+}
+async function refreshInbox(){
+ if(!myPage||!state.me||inboxBusy)return;
+ inboxBusy=true;
+ try{
+  const rows=await a.call('/rest/v1/cmim_squad_invites?recipient_id=eq.'+encodeURIComponent(state.me.id)+'&status=eq.pending&select=id,team_id,lane,sender_id,created_at&order=created_at.desc',{secure:true});
+  if(!Array.isArray(rows))throw Error('Convites indisponíveis');
+  const unknown=rows.map(r=>r.team_id).filter(id=>!team(id));
+  if(unknown.length){const squads=await a.call('/rest/v1/cmim_squads?id=in.('+[...new Set(unknown)].map(encodeURIComponent).join(',')+')&select=id,name,short_name,owner_id,captain_lane,logo_url',{secure:true});if(Array.isArray(squads))state.squads.push(...squads.filter(t=>!team(t.id)))}
+  state.invites=rows;state.inviteError=false;
+ }catch{state.inviteError=true}
+ finally{inboxBusy=false;renderInvites()}
+}
+if(myPage){$('refresh-invites')?.addEventListener('click',()=>void refreshInbox());document.addEventListener('cmim-invites-changed',()=>void refreshInbox())}
 function renderReschedules(){
  const root=$('my-reschedules');if(!root)return;
  if(!state.me){root.innerHTML='<p class="cmim-muted">Entre para consultar pedidos de reagendamento.</p>';return}

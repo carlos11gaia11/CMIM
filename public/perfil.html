@@ -1,8 +1,8 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Meu perfil e estatísticas</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-final"></script><style>html.cmim-auth-pending body{visibility:visible!important}</style>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM · Meu perfil e estatísticas</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-invites"></script><style>html.cmim-auth-pending body{visibility:visible!important}</style>
 <link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script><link rel="icon" href="./assets/branding/cmim-main.webp?v=20261125-logo" type="image/webp"></head><body data-cmim-protected="1" class="cmim-account-page" data-no-auth-badge="1">
-<header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>PLAYER PROFILE</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./draft.html?jogar=1">Jogar</a><a href="./ligas.html">Ligas</a><button id="account-signout" class="cmim-button ghost">Sair</button></nav></header>
+<header class="cmim-topbar"><a class="cmim-brand" href="./">CMIM <small>PLAYER PROFILE</small></a><nav class="cmim-mini-nav"><a href="./">Portal</a><a href="./draft.html?jogar=1">Jogar</a><a href="./ligas.html">Ligas</a></nav></header>
 <main class="cmim-shell"><div class="cmim-hero"><span class="cmim-kicker">ESTATÍSTICAS INDIVIDUAIS · HISTÓRICO REAL</span><h1>MINHA <em>JORNADA.</em></h1><p>Veja sua ficha, seus campeões, o desempenho em partidas aprovadas, a evolução e as temporadas em que participa.</p></div>
-<div id="profile-loading" class="cmim-empty">Conectando à sua conta...</div>
+<div class="cmim-actions"><a class="cmim-button ghost" href="./meu-time.html#convites">Meus convites <span id="profile-invite-count"></span></a><button id="account-signout" type="button" class="cmim-button ghost">Sair da conta</button></div><div id="profile-loading" class="cmim-empty" role="status">Conectando à sua conta...</div><button type="button" id="profile-retry" class="cmim-button ghost" hidden>Tentar novamente</button>
 <div id="profile-content" hidden>
 <section class="cmim-card"><div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
 <img id="player-avatar" class="cmim-portrait" src="./assets/branding/cmim-main.webp?v=20261125-logo" alt="Avatar do jogador">
@@ -18,7 +18,7 @@
 <label class="cmim-field">LANE PRINCIPAL<select id="edit-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
 <label class="cmim-field">LANE SECUNDÁRIA<select id="edit-secondary-lane"><option>TOP</option><option>JG</option><option>MID</option><option>ADC</option><option>SUP</option></select></label>
 <label class="cmim-field">FOTO (512 × 512 · PNG/JPG/WEBP ATÉ 10 MB)<input id="edit-avatar" type="file" accept="image/png,image/jpeg,image/webp"></label>
-</div><div class="cmim-actions"><button class="cmim-button">SALVAR ALTERAÇÕES</button><button id="cancel-edit" type="button" class="cmim-button ghost">Cancelar</button></div>
+</div><div class="cmim-actions"><button type="submit" class="cmim-button">SALVAR ALTERAÇÕES</button><button id="cancel-edit" type="button" class="cmim-button ghost">Cancelar</button></div>
 <p id="edit-status" class="cmim-status" role="status"></p></form>
 <div class="cmim-stats"><div class="cmim-stat"><strong id="stat-games">—</strong><span>JOGOS REGISTRADOS</span></div><div class="cmim-stat"><strong id="stat-wins">—</strong><span>VITÓRIAS</span></div><div class="cmim-stat"><strong id="stat-wr">—</strong><span>WIN RATE</span></div><div class="cmim-stat"><strong id="stat-champs">—</strong><span>CAMPEÕES IDENTIFICADOS</span></div></div>
 <p class="cmim-muted" id="profile-stats-source" style="margin:0 0 15px">Consultando resultados do ranking e partidas homologadas...</p>
@@ -32,18 +32,26 @@
  const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
  const empty=label=>'<div class="cmim-empty">'+E(label)+'</div>';
  let who=null,profile=null,privateInfo=null;
+ const bounded=(promise,ms=12000)=>{let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Tempo de conexão excedido.')),ms)})]).finally(()=>clearTimeout(timer))};
+ const retry=$('profile-retry');retry.onclick=()=>location.reload();
+ const failed=msg=>{$('profile-loading').hidden=false;$('profile-loading').textContent=msg;retry.hidden=false};
+ const invites=()=>{const n=a.inviteState?.().count;$('profile-invite-count').textContent=n>0?'('+n+')':''};document.addEventListener('cmim-invites-changed',invites);invites();
  $('account-signout').onclick=async()=>{await a.logout();location.href='./conta.html'};
  $('toggle-edit').onclick=()=>{$('profile-edit').hidden=!$('profile-edit').hidden};
  $('cancel-edit').onclick=()=>{$('profile-edit').hidden=true};
  try{
-  who=await a.user();if(!who){if(a.authState().status==='offline'){$('profile-loading').textContent='Conexão indisponível. Sua sessão foi preservada; recarregue para tentar novamente.';}else a.gotoLogin();return}
-  const [publicProfiles,privateData,roles,rankRows,reports]=await Promise.all([
-   a.call('/rest/v1/cmim_profiles?id=eq.'+who.id+'&select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at'),
-   a.call('/rest/v1/cmim_player_private?id=eq.'+who.id+'&select=real_name,phone_e164',{secure:true}),
-   a.call('/rest/v1/cmim_user_roles?user_id=eq.'+who.id+'&select=role_slug',{secure:true}),
-   a.call('/rest/v1/cmim_rank?id=eq.1&select=data'),
-   a.call('/rest/v1/cmim_draft_game_reports?review_status=eq.approved&select=room_id,game,season_id,season_name,confirmed_at,winner_side,winner_team,teams,picks&order=confirmed_at.desc&limit=1500')
+  who=await bounded(a.user());if(!who){if(a.authState().status==='offline'){failed('Conexão indisponível. Sua sessão foi preservada.');}else a.gotoLogin();return}
+  const id=encodeURIComponent(who.id);
+  const profileRequest=bounded(a.call('/rest/v1/cmim_profiles?id=eq.'+id+'&select=id,nick,tag,lane,secondary_lane,avatar_url,rank_player_id,rank_verified_at',{secure:true}));
+  const privateRequest=bounded(a.call('/rest/v1/cmim_player_private?id=eq.'+id+'&select=real_name,phone_e164',{secure:true}));
+  const rolesRequest=bounded(a.call('/rest/v1/cmim_user_roles?user_id=eq.'+id+'&select=role_slug',{secure:true}));
+  const statsPromise=Promise.allSettled([
+   bounded(a.call('/rest/v1/cmim_rank?id=eq.1&select=data',{secure:true})),
+   bounded(a.call('/rest/v1/cmim_draft_game_reports?review_status=eq.approved&select=room_id,game,season_id,season_name,confirmed_at,winner_side,winner_team,teams,picks&order=confirmed_at.desc&limit=1500',{secure:true}))
   ]);
+  const identity=await Promise.allSettled([profileRequest,privateRequest,rolesRequest]);
+  if(identity[0].status==='rejected')throw identity[0].reason;
+  const [publicProfiles,privateData,roles]=identity.map(x=>x.status==='fulfilled'&&Array.isArray(x.value)?x.value:[]);
   profile=publicProfiles?.[0];privateInfo=privateData?.[0];
   if(!profile)throw Error('Perfil não encontrado. Entre em contato com o administrador.');
   $('player-realname').textContent=privateInfo?.real_name||'JOGADOR CMIM';
@@ -56,6 +64,7 @@
     '<span class="cmim-badge">◷ AGUARDANDO VÍNCULO DO ADM</span>');
   $('edit-realname').value=privateInfo?.real_name||'';
   $('edit-phone').value=privateInfo?.phone_e164||'';
+  if(identity[1].status==='rejected'||!privateInfo){for(const key of ['edit-realname','edit-phone'])$(key).disabled=true;$('edit-status').textContent='Dados privados indisponíveis. Você ainda pode atualizar a ficha pública e a foto.';}
   $('edit-nick').value=profile.nick;$('edit-tag').value=profile.tag;
   $('edit-lane').value=profile.lane||'MID';$('edit-secondary-lane').value=profile.secondary_lane||'SUP';
   $('profile-edit').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type=submit]');btn.disabled=true;
@@ -63,12 +72,16 @@
     const nick=$('edit-nick').value.trim(),tag=$('edit-tag').value.trim().toUpperCase(),lane=$('edit-lane').value,secondary_lane=$('edit-secondary-lane').value;
     if(lane===secondary_lane)throw Error('Escolha duas lanes diferentes.');
     await a.call('/rest/v1/cmim_profiles?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{nick,tag,lane,secondary_lane,updated_at:new Date().toISOString()}});
-    await a.call('/rest/v1/cmim_player_private?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{real_name:$('edit-realname').value.trim(),phone_e164:$('edit-phone').value.trim()?a.normalizePhone($('edit-phone').value):null,updated_at:new Date().toISOString()}});
+    if(privateInfo&&!$('edit-realname').disabled)await a.call('/rest/v1/cmim_player_private?id=eq.'+who.id,{method:'PATCH',secure:true,headers:{Prefer:'return=minimal'},body:{real_name:$('edit-realname').value.trim(),phone_e164:$('edit-phone').value.trim()?a.normalizePhone($('edit-phone').value):null,updated_at:new Date().toISOString()}});
     if($('edit-avatar').files[0])await a.uploadAvatar($('edit-avatar').files[0]);
     $('edit-status').textContent='✓ Perfil salvo.';setTimeout(()=>location.reload(),800);
    }catch(err){$('edit-status').textContent=err.message;$('edit-status').classList.add('error')}finally{btn.disabled=false}
   };
 
+  $('profile-loading').hidden=true;$('profile-content').hidden=false;
+  const stats=await statsPromise;
+  const [rankRows,reports]=stats.map(x=>x.status==='fulfilled'&&Array.isArray(x.value)?x.value:[]);
+  if(stats.some(x=>x.status==='rejected')){ $('profile-stats-source').textContent='Estatísticas temporariamente indisponíveis. Seu perfil está disponível normalmente.';for(const key of ['profile-chart','profile-champions','profile-game-history','profile-seasons'])$(key).textContent='Não foi possível consultar estes dados. Tente novamente.';retry.hidden=false;return; }
   // Prioridade: identidade da conta e vinculo aprovado pelo ADM com o ranking.
   // O ranking guarda as series historicas; o draft aprovado guarda os picks por partida.
   const rank=rankRows?.[0]?.data||{};
@@ -178,5 +191,5 @@
   const seasons=(rank.seasons||[]).filter(x=>(x.roster||[]).includes(verifiedRankId));
   $('profile-seasons').innerHTML=seasons.length?seasons.map(x=>'<div class="cmim-badge">'+E(x.name)+' · '+E(x.division||'Misto')+' · '+E(x.status||'')+'</div>').join(''):empty('Nenhuma temporada do Ranking foi vinculada ao seu usuário ainda.');
   $('profile-loading').hidden=true;$('profile-content').hidden=false;
- }catch(err){$('profile-loading').textContent='Não foi possível carregar seu perfil: '+err.message;}
+ }catch(err){failed('Não foi possível carregar '+($('profile-content').hidden?'seu perfil':'todas as estatísticas')+': '+err.message);}
 });</script></body></html>

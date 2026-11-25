@@ -215,9 +215,42 @@ async function signUp(values){
    if(verifiedUser?.id===id&&authStatus==='authenticated'){teamCheckId=id;hasTeam=Array.isArray(rows)&&rows.length>0;link.hidden=!hasTeam;document.querySelectorAll('.cmim-team-entry').forEach(x=>x.textContent=hasTeam?'Meus convites':'Criar time / Convites')}
   }catch{if(teamCheckId!==id)link.hidden=true}finally{if(teamCheck===id)teamCheck=null}
  }
+ let inviteInfo={id:null,count:0,signature:'',status:'idle'},inviteRequest=null;
+ function renderInviteIndicator(){
+  const link=document.getElementById('cmim-invite-link'),counter=document.getElementById('cmim-invite-count');
+  if(!link||!counter)return;
+  link.hidden=authStatus!=='authenticated';
+  const count=inviteInfo.id===verifiedUser?.id?inviteInfo.count:0;
+  counter.hidden=!count;counter.textContent=count>99?'99+':String(count);
+  link.setAttribute('aria-label',count?count+' convite(s) de equipe pendente(s)':'Convites de equipe');
+  link.title=count?'Você tem '+count+' convite(s) de equipe':inviteInfo.status==='error'?'Não foi possível consultar os convites. Clique para verificar.':'Convites de equipe';
+ }
+ async function refreshInvites(force=false){
+  const id=authStatus==='authenticated'?verifiedUser?.id:null;
+  if(!id){inviteInfo={id:null,count:0,signature:'',status:'idle'};renderInviteIndicator();return inviteInfo}
+  if(inviteRequest?.id===id)return inviteRequest.promise;
+  if(!force&&inviteInfo.id===id&&inviteInfo.status==='ready')return inviteInfo;
+  const req={id};
+  req.promise=(async()=>{
+   try{
+    const rows=await call('/rest/v1/cmim_squad_invites?recipient_id=eq.'+encodeURIComponent(id)+'&status=eq.pending&select=id&limit=1000',{secure:true});
+    if(!Array.isArray(rows))throw Error('Convites indisponíveis');
+    if(verifiedUser?.id!==id||authStatus!=='authenticated')return inviteInfo;
+    const signature=rows.map(r=>r.id).sort().join(','),changed=inviteInfo.id!==id||signature!==inviteInfo.signature||inviteInfo.status!=='ready';
+    inviteInfo={id,count:rows.length,signature,status:'ready'};
+    renderInviteIndicator();
+    if(changed)document.dispatchEvent(new CustomEvent('cmim-invites-changed',{detail:{count:rows.length}}));
+   }catch{if(verifiedUser?.id===id&&authStatus==='authenticated'){inviteInfo={id,count:inviteInfo.id===id?inviteInfo.count:0,signature:inviteInfo.id===id?inviteInfo.signature:'',status:'error'};renderInviteIndicator()}}
+   finally{if(inviteRequest===req)inviteRequest=null}
+   return inviteInfo;
+  })();
+  inviteRequest=req;return req.promise;
+ }
  function updateBadge(){
   const authenticated=authStatus==='authenticated';
   void refreshMyTeam();
+  renderInviteIndicator();
+  if(document.getElementById('cmim-invite-link'))void refreshInvites();
   document.querySelectorAll('.cmim-admin-link').forEach(el=>el.hidden=!(authenticated&&verifiedUser?.app_metadata?.cmim_admin===true));
   const name=verifiedUser?.user_metadata?.nick||'Meu perfil';
   // On the homepage login belongs in the prominent header CTA, not in the bottom corner.
@@ -243,7 +276,7 @@ async function signUp(values){
   const nav=document.createElement('header');nav.className='cmim-unified-nav';nav.dataset.cmimUnified='1';
   const primary=[['Início','./','index.html'],['In-House','./inhouse.html','inhouse.html'],['Ligas','./ligas.html','ligas.html'],['Equipes','./equipes.html','equipes.html'],['Agenda','./agenda.html','agenda.html']];
   const more=[['Entrar em sala pronta','./draft.html?jogar=1'],['Ranking','./ranking.html'],['Relatórios','./relatorios.html'],['Pontuação','./pontuacao.html'],['Draft','./draft.html'],['Seleção de campeões','./selecao.html'],['Regulamento','./regulamento.html'],['Comp Maker','./comp-maker.html'],['Aulas','./aulas.html'],['CMIM News','./#news'],['Jogadores','./#jogadores'],['Comunidade','./#redes']];
-  nav.innerHTML='<div class="cmim-nav-inner"><a class="cmim-nav-brand" href="./"><img src="./assets/branding/cmim-main.webp?v=20261125-logo" alt="" width="48" height="48"><span>CMIM<small>COMPETITIVE CIRCUIT</small></span></a><button type="button" class="cmim-nav-toggle" aria-expanded="false" aria-controls="cmim-nav-links" aria-label="Abrir menu">☰</button><nav id="cmim-nav-links" aria-label="Menu principal">'+primary.map(([name,href,page])=>'<a href="'+href+'"'+(here===page?' aria-current="page"':'')+'>'+name+'</a>').join('')+'<a id="cmim-my-team-link" href="./meu-time.html" hidden'+(here==='meu-time.html'?' aria-current="page"':'')+'>Meu Time</a><details class="cmim-nav-more"><summary>Mais <span aria-hidden="true">⌄</span></summary><div>'+more.map(([name,href])=>'<a href="'+href+'">'+name+'</a>').join('')+'<a class="cmim-team-entry" href="./meu-time.html">Criar time / Convites</a><a class="cmim-admin-link" href="./admin.html" hidden>Administração</a><a class="cmim-admin-link" id="adminLink" href="./admin-fila.html" hidden>Gestão de filas</a></div></details><a class="cmim-nav-play" href="./fila.html">Jogar</a><a class="cmim-nav-account" id="portal-auth-button" href="./conta.html">Verificando…</a></nav></div>';
+  nav.innerHTML='<div class="cmim-nav-inner"><a class="cmim-nav-brand" href="./"><img src="./assets/branding/cmim-main.webp?v=20261125-logo" alt="" width="48" height="48"><span>CMIM<small>COMPETITIVE CIRCUIT</small></span></a><button type="button" class="cmim-nav-toggle" aria-expanded="false" aria-controls="cmim-nav-links" aria-label="Abrir menu">☰</button><nav id="cmim-nav-links" aria-label="Menu principal">'+primary.map(([name,href,page])=>'<a href="'+href+'"'+(here===page?' aria-current="page"':'')+'>'+name+'</a>').join('')+'<a id="cmim-my-team-link" href="./meu-time.html" hidden'+(here==='meu-time.html'?' aria-current="page"':'')+'>Meu Time</a><details class="cmim-nav-more"><summary>Mais <span aria-hidden="true">⌄</span></summary><div>'+more.map(([name,href])=>'<a href="'+href+'">'+name+'</a>').join('')+'<a class="cmim-team-entry" href="./meu-time.html">Criar time / Convites</a><a class="cmim-admin-link" href="./admin.html" hidden>Administração</a><a class="cmim-admin-link" id="adminLink" href="./admin-fila.html" hidden>Gestão de filas</a></div></details><a class="cmim-nav-play" href="./fila.html">Jogar</a><a class="cmim-nav-account" id="portal-auth-button" href="./conta.html">Verificando…</a></nav><a class="cmim-invite-link" id="cmim-invite-link" href="./meu-time.html#convites" hidden aria-label="Convites de equipe"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="cmim-invite-count" hidden>0</span></a></div>';
   if(['ranking.html','comp-maker.html','admin-fila.html'].includes(here)){old.before(nav);old.classList.add('cmim-local-header');}
   else{
    const localLinks=[...old.querySelectorAll('nav a[href^="#"]')];
@@ -257,9 +290,9 @@ async function signUp(values){
   updateBadge();
  }
  function mountMobileDock(){mountNavigation()}
- window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,uploadTeamLogo,squareImage,esc,session:()=>session,authState:()=>({status:authStatus,user:verifiedUser}),save,requireLogin,gotoLogin,requestedDestination};
+ window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,uploadTeamLogo,squareImage,esc,session:()=>session,authState:()=>({status:authStatus,user:verifiedUser}),save,requireLogin,gotoLogin,requestedDestination,refreshInvites,inviteState:()=>({...inviteInfo})};
  function initialize(){
-  const css=document.createElement('link');css.rel='stylesheet';css.href='./cmim-unified.css?v=20261125-areas';document.head.append(css);mountNavigation();
+  const css=document.createElement('link');css.rel='stylesheet';css.href='./cmim-unified.css?v=20261125-invites';document.head.append(css);mountNavigation();
   document.documentElement.classList.remove('cmim-auth-pending');
   if(document.body?.dataset?.cmimProtected==='1'){
    mountMobileDock();
@@ -267,6 +300,10 @@ async function signUp(values){
   }else{mountBadge();mountMobileDock();updateBadge()}
   void user().then(updateBadge);
   document.addEventListener('cmim-team-changed',()=>void refreshMyTeam(true));
+  document.addEventListener('cmim-invite-answered',()=>void refreshInvites(true));
+  window.addEventListener('focus',()=>void refreshInvites(true));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refreshInvites(true)});
+  setInterval(()=>{if(!document.hidden&&authStatus==='authenticated')void refreshInvites(true)},30000);
   window.addEventListener('storage',e=>{if(e.key!==STORAGE)return;const before=verifiedUser?.id||session?.user?.id;const next=readStored();if(!next||before!==next.user?.id){location.reload();return}generation++;session=next;verifiedAt=0;authStatus='checking';notify();void user({force:true})});
   window.addEventListener('online',()=>{if(authStatus==='offline'){if(document.body?.dataset?.cmimProtected==='1')void requireLogin();else void user({force:true})}});
   // Public portal: clicking a protected tool while logged out takes the visitor to login.
