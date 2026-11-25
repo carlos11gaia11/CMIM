@@ -7,7 +7,7 @@
   const $=id=>document.getElementById(id);
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const state={session:null,admin:false,rank:null,version:null,metadata:[],news:[],reports:[],loading:false,reviewBusy:false};
-  try{state.session=JSON.parse(sessionStorage.getItem(SESSION)||'null')}catch{}
+  
   const tierList=['S+','S','A+','A','B+','B','C','D','E','F'];
   const laneList=['TOP','JG','MID','ADC','SUP'];
 
@@ -29,32 +29,13 @@
     if(!response.ok)throw Error(data?.message||data?.error_description||data?.msg||data?.details||data?.error||'Falha na comunicação com o Supabase ('+response.status+').');
     return data;
   }
-  async function refreshSession(){
-    if(!state.session?.refresh_token)throw Error('Sessão expirada. Entre novamente.');
-    const response=await fetch(API+'/auth/v1/token?grant_type=refresh_token',{
-      method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({refresh_token:state.session.refresh_token})
-    });
-    const fresh=await response.json().catch(()=>null);
-    if(!response.ok||!fresh?.access_token)throw Error('Sessão expirada. Entre novamente.');
-    state.session=fresh;
-    sessionStorage.setItem(SESSION,JSON.stringify(fresh));
-  }
   async function ensureSession(){
-    if(!state.session?.access_token)throw Error('Faça login como administrador.');
-    if(!state.session.expires_at||state.session.expires_at<Date.now()/1000+60)await refreshSession();
-    return state.session;
+    const auth=window.CMIMAuth;if(!auth)throw Error('Autenticação indisponível.');
+    const who=await auth.user();if(!hasAdminClaim(who)){state.admin=false;throw Error('Faça login como administrador.');}
+    state.session=await auth.current();if(!state.session)throw Error('Sessão indisponível.');return state.session;
   }
   function hasAdminClaim(user){return user?.app_metadata?.cmim_admin===true;}
-  async function verifySession(){
-    try{
-      const data=await jsonFetch('/auth/v1/user',{secured:true});
-      if(!hasAdminClaim(data))throw Error('Conta sem permissão administrativa.');
-      state.admin=true;return true;
-    }catch{
-      state.admin=false;state.session=null;sessionStorage.removeItem(SESSION);return false;
-    }
-  }
+  async function verifySession(){try{await ensureSession();state.admin=true;return true}catch{state.admin=false;state.session=null;return false}}
   function showLogin(){
     $('admin-login-view').hidden=false;$('admin-management-view').hidden=true;
     const button=$('portal-admin-button');if(button)button.textContent='⚙ ACESSO ADMIN';
@@ -88,19 +69,14 @@
         await fetch(API+'/auth/v1/logout',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token}}).catch(()=>{});
         throw Error('Este usuário não tem permissão de administrador do CMIM.');
       }
-      state.session=session;sessionStorage.setItem(SESSION,JSON.stringify(session));
+      window.CMIMAuth.save(session);state.session=session;
       if(!await verifySession())throw Error('Não foi possível validar as permissões deste administrador.');
       form.reset();showManager();
       await loadAdminData();flash('Acesso administrativo autorizado.');
     }catch(e){error.textContent=String(e.message||e);}
     finally{button.disabled=false;}
   }
-  async function logout(){
-    const token=state.session?.access_token;
-    state.session=null;state.admin=false;sessionStorage.removeItem(SESSION);
-    if(token)await fetch(API+'/auth/v1/logout',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+token}}).catch(()=>{});
-    showLogin();flash('Sessão administrativa encerrada.');
-  }
+  async function logout(){await window.CMIMAuth.logout();state.session=null;state.admin=false;showLogin();flash('Sessão encerrada.');}
   const metaFor=id=>state.metadata.find(m=>m.rank_player_id===id)||null;
   async function loadAdminData(){
     if(!state.admin)return;
