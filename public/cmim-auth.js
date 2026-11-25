@@ -130,7 +130,7 @@ async function signUp(values){
  
  // Page access is enforced using Supabase Auth, not merely the presence of a stored token.
  // Pages intentionally marked data-cmim-protected=1 are gated even when opened by direct URL.
- const PROTECTED_PAGES=new Set(['draft.html','ranking.html','selecao.html','inhouse.html','relatorios.html','pontuacao.html','perfil.html']);
+ const PROTECTED_PAGES=new Set(['draft.html','ranking.html','selecao.html','relatorios.html','pontuacao.html','perfil.html']);
  const RETURN_PAGES=new Set([...PROTECTED_PAGES,'ligas.html','campeonatos.html','equipes.html','fila.html','agenda.html','admin.html','admin-fila.html','meu-time.html']);
  function safeReturn(raw){
   if(!raw||typeof raw!=='string'||raw.length>1500)return null;

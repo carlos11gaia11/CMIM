@@ -17,7 +17,7 @@ async function contextFor(user=null){
   if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
   if(u.pathname==='/auth/v1/user'){data=user||{message:'No session'};status=user?200:401}
   else if(u.pathname.startsWith('/auth/v1/token'))data=session(user||player);
-  else if(u.pathname.includes('/rest/v1/cmim_rank'))data=[{data:{players:[],seasons:[]},version:1}];
+  else if(u.pathname.includes('/rest/v1/cmim_rank'))data=[{data:{players:[],seasons:[],events:[]},version:1}];
   else if(u.pathname==='/auth/v1/logout')data={};
   return route.fulfill({status,headers,body:JSON.stringify(data)});
  });
@@ -31,14 +31,14 @@ async function open(page,path='',status='guest'){
 }
 try{
  const {context,page}=await contextFor();
- for(const path of ['', 'ligas.html','equipes.html','agenda.html','fila.html','regulamento.html','regulamento-open.html','aulas.html','comp-maker.html','ranking.html','inhouse.html','draft.html','relatorios.html','pontuacao.html']){
+ for(const path of ['', 'ligas.html','equipes.html','meu-time.html','agenda.html','fila.html','regulamento.html','regulamento-open.html','aulas.html','comp-maker.html','ranking.html','inhouse.html','draft.html','relatorios.html','pontuacao.html']){
   await open(page,path);await page.locator('.cmim-unified-nav').waitFor({state:'attached'});
   assert.equal(await page.locator('.cmim-unified-nav').count(),1,path+' duplicate header');
   assert.equal(await page.locator('#portal-auth-button').textContent(),'Entrar',path+' guest label');
   const logo=page.locator('.cmim-nav-brand img');await logo.evaluate(img=>img.decode());assert.equal(await logo.evaluate(img=>img.naturalWidth),256,path+' logo');
   if(path==='ranking.html')assert.equal(await page.locator('#authButton').count(),1);
-  if(path==='comp-maker.html')assert.equal(await page.locator('#undoBtn').count(),1);
-  if(['ranking.html','inhouse.html','draft.html','relatorios.html','pontuacao.html'].includes(path))assert.equal(await page.locator('#cmim-login-wall').isVisible(),true,path+' login gate');
+  if(path==='comp-maker.html')assert.equal(await page.locator('#slotsBlue').count(),1);
+  if(['ranking.html','meu-time.html','draft.html','relatorios.html','pontuacao.html'].includes(path))assert.equal(await page.locator('#cmim-login-wall').isVisible(),true,path+' login gate');
   console.log('PASS guest/navigation',path||'home');
  }
  await open(page);
