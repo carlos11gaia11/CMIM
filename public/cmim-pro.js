@@ -1,0 +1,14 @@
+document.addEventListener('DOMContentLoaded',()=>{
+ const $=id=>document.getElementById(id);
+ const here=location.pathname.split('/').pop()||'index.html';
+ const tabs=(navId,ids,aliases={})=>{const nav=$(navId);if(!nav)return;const select=()=>{let k=location.hash.slice(1);k=aliases[k]||k;if(!ids.includes(k))k=ids[0];for(const id of ids){const section=$(id);if(section)section.hidden=id!==k}nav.querySelectorAll('[data-pro-tab]').forEach(x=>{if(x.dataset.proTab===k)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')})};window.addEventListener('hashchange',select);select()};
+ tabs('pro-inhouse-tabs',['como-funciona','ranking-geral','divisoes','regras','torneio','estatisticas']);
+ tabs('pro-team-tabs',['equipes','minhas-inscricoes','reagendamentos'],{convites:'equipes','my-invites':'equipes','my-teams':'equipes'});
+ if(document.body.classList.contains('cmim-homepage')){
+  const groups=[['ferramentas','Ferramentas e treinamento'],['divisoes','Divisões do In-House'],['sobre','Sobre a comunidade'],['jogadores','Jogadores da comunidade'],['novidades-regras','Novidades do regulamento'],['regras','Regras e mandamentos'],['historia','Nossa história'],['em-breve','Próximas novidades']];
+  for(const [id,label] of groups){const el=$(id);if(!el)continue;const d=document.createElement('details');d.className='wrap pro-home-fold';const summary=document.createElement('summary');summary.textContent=label;el.before(d);d.append(summary,el)}
+  const reveal=()=>{const el=$(location.hash.slice(1));const d=el?.closest('details');if(d){d.open=true;requestAnimationFrame(()=>el.scrollIntoView({block:'start'}))}};window.addEventListener('hashchange',reveal);reveal();
+ }
+ const main=document.querySelector('main');if(main&&!main.id)main.id='cmim-main-content';
+ if(main&&!document.querySelector('.pro-skip')){const skip=document.createElement('a');skip.className='pro-skip';skip.href='#'+main.id;skip.textContent='Pular para o conteúdo';document.body.prepend(skip)}
+});
