@@ -6,9 +6,11 @@ document.addEventListener('DOMContentLoaded',()=>{
  const TZ='America/Sao_Paulo';
  const dateKey=iso=>{if(!iso||!Number.isFinite(Date.parse(iso)))return '';return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso))};
  const todayKey=()=>dateKey(new Date().toISOString());
- let month=todayKey().slice(0,7),selected=null;
+ let month=todayKey().slice(0,7),selected=null,view='month',weekStart=todayKey(),exportRows=[];
+ const addDays=(key,n)=>{const d=new Date(key+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+ const sunday=key=>addDays(key,-new Date(key+'T12:00:00Z').getUTCDay());
  const monthDate=()=>new Date(month+'-01T12:00:00Z');
- const shiftMonth=n=>{const d=monthDate();d.setUTCMonth(d.getUTCMonth()+n);month=d.toISOString().slice(0,7);selected=null;render()};
+ const shiftMonth=n=>{if(view==='week'){weekStart=addDays(sunday(weekStart),n*7);month=weekStart.slice(0,7);selected=null;render();return}const d=monthDate();d.setUTCMonth(d.getUTCMonth()+n);month=d.toISOString().slice(0,7);selected=null;render()};
  const dayLabel=key=>new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',day:'numeric',month:'long',year:'numeric'}).format(new Date(key+'T12:00:00Z'));
  const overlaps=(e,key)=>{const start=dateKey(e.starts_at),end=dateKey(e.ends_at)||start;return !!start&&start<=key&&end>=key};
  const kind=e=>['completed','closed'].includes(e.status)?'done':e.match_id?'match':'event';
@@ -69,15 +71,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   }).sort((a,b)=>(a.starts_at?Date.parse(a.starts_at):Infinity)-(b.starts_at?Date.parse(b.starts_at):Infinity));
   const first=monthDate(),last=new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0,12)).toISOString().slice(0,10);
   const startKey=month+'-01',monthEvents=visible.filter(e=>{const start=dateKey(e.starts_at),end=dateKey(e.ends_at)||start;return !!start&&start<=last&&end>=startKey});
-  const current=todayKey(),offset=first.getUTCDay(),days=Number(last.slice(-2)),cells=Math.ceil((days+offset)/7)*7;
+  const current=todayKey(),offset=first.getUTCDay(),days=Number(last.slice(-2)),cells=view==='week'?7:Math.ceil((days+offset)/7)*7;
+  const weekFrom=sunday(weekStart),weekTo=addDays(weekFrom,6);
+  $('calendar-grid').parentElement.hidden=view==='list';
   $('calendar-month').textContent=new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',month:'long',year:'numeric'}).format(first);
+  if(view==='week')$('calendar-month').textContent=dayLabel(weekFrom)+' – '+dayLabel(weekTo);
   $('calendar-grid').innerHTML=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d=>'<div class="calendar-weekday">'+d+'</div>').join('')+Array.from({length:cells},(_,i)=>{
-   const d=new Date(first);d.setUTCDate(1-offset+i);const key=d.toISOString().slice(0,10),events=visible.filter(e=>overlaps(e,key)),outside=!key.startsWith(month);
-   return '<button type="button" class="calendar-day'+(outside?' outside':'')+(key===current?' today':'')+(key===selected?' selected':'')+'" data-day="'+key+'" aria-pressed="'+(key===selected)+'" aria-label="'+esc(dayLabel(key)+', '+events.length+' evento(s)')+'"><span class="calendar-number">'+d.getUTCDate()+'</span>'+events.slice(0,3).map(e=>'<span class="calendar-chip '+kind(e)+'" title="'+esc(e.title)+'">'+esc(e.title)+'</span>').join('')+(events.length>3?'<span class="calendar-more">+'+(events.length-3)+'</span>':'')+'</button>';
+   const d=new Date(first);d.setUTCDate(1-offset+i);const key=view==='week'?addDays(weekFrom,i):d.toISOString().slice(0,10),events=visible.filter(e=>overlaps(e,key)),outside=!key.startsWith(month);
+   return '<button type="button" class="calendar-day'+(outside?' outside':'')+(key===current?' today':'')+(key===selected?' selected':'')+'" data-day="'+key+'" aria-pressed="'+(key===selected)+'" aria-label="'+esc(dayLabel(key)+', '+events.length+' evento(s)')+'"><span class="calendar-number">'+Number(key.slice(-2))+'</span>'+events.slice(0,3).map(e=>'<span class="calendar-chip '+kind(e)+'" title="'+esc(e.title)+'">'+esc(e.title)+'</span>').join('')+(events.length>3?'<span class="calendar-more">+'+(events.length-3)+'</span>':'')+'</button>';
   }).join('');
   $('calendar-grid').querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{selected=b.dataset.day;month=selected.slice(0,7);render()});
   $('calendar-all').hidden=!selected;$('calendar-list-title').textContent=selected?'Eventos de '+dayLabel(selected):'Programação do mês';
-  const displayed=selected?visible.filter(e=>overlaps(e,selected)):monthEvents;
+  const period=view==='week'?visible.filter(e=>{const start=dateKey(e.starts_at),end=dateKey(e.ends_at)||start;return !!start&&start<=weekTo&&end>=weekFrom}):monthEvents;
+  const displayed=selected?visible.filter(e=>overlaps(e,selected)):period;exportRows=displayed;
+  if(view==='week'&&!selected)$('calendar-list-title').textContent='Programação da semana';
   const card=e=>{
    const comp=e.match_id?state.matches.find(m=>m.id===e.match_id):null;
    const competition=comp?state.comps.find(c=>c.id===comp.competition_id):null;
@@ -112,7 +119,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   const [events,comps,matches,squads]=res.map(x=>x.status==='fulfilled'&&Array.isArray(x.value)?x.value:[]);
   Object.assign(state,{events,comps,matches,squads});render();
  }
- $('calendar-prev').onclick=()=>shiftMonth(-1);$('calendar-next').onclick=()=>shiftMonth(1);$('calendar-today').onclick=()=>{month=todayKey().slice(0,7);selected=null;render()};$('calendar-all').onclick=()=>{selected=null;render()};
+ $('calendar-prev').onclick=()=>shiftMonth(-1);$('calendar-next').onclick=()=>shiftMonth(1);$('calendar-today').onclick=()=>{month=todayKey().slice(0,7);weekStart=todayKey();selected=null;render()};$('calendar-all').onclick=()=>{selected=null;render()};
+ document.querySelectorAll('[data-cal-view]').forEach(b=>b.onclick=()=>{view=b.dataset.calView;weekStart=selected||month+'-01';if(month===todayKey().slice(0,7)&&!selected)weekStart=todayKey();selected=null;document.querySelectorAll('[data-cal-view]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render()});
+ $('calendar-export').onclick=()=>{const fmt=x=>new Date(x).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z'),clean=x=>String(x||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//CMIM//Agenda//PT','CALSCALE:GREGORIAN'];for(const e of exportRows){if(!e.starts_at)continue;lines.push('BEGIN:VEVENT','UID:'+clean(e.id)+'@cmim','DTSTAMP:'+fmt(new Date()),'DTSTART:'+fmt(e.starts_at));if(e.ends_at)lines.push('DTEND:'+fmt(e.ends_at));lines.push('SUMMARY:'+clean(e.title),'DESCRIPTION:'+clean(e.description),'END:VEVENT')}lines.push('END:VCALENDAR');const url=URL.createObjectURL(new Blob([lines.join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='cmim-agenda.ics';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
  $('agenda-search').addEventListener('input',render);
  $('agenda-category').addEventListener('change',render);
  $('agenda-scope').addEventListener('change',render);

@@ -1,0 +1,27 @@
+document.addEventListener('DOMContentLoaded',async()=>{'use strict';
+ const A=window.CMIMAuth,$=id=>document.getElementById(id),esc=A.esc,mode=document.body.dataset.central,status=$('central-status'),root=$('central-content');
+ const get=(q,secure=true)=>A.call('/rest/v1/'+q,{secure});
+ const date=v=>v?new Date(v).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'A definir';
+ const uid=v=>/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(v||'');
+ const card=(title,desc,url)=>'<a class="cv-panel pro-feed" href="'+esc(url)+'"><strong>'+esc(title)+'</strong><p>'+esc(desc)+'</p><span>Ver detalhes →</span></a>';
+ let busy=false;
+ async function load(){if(busy)return;busy=true;try{
+ if(mode==='news'){const id=new URLSearchParams(location.search).get('id');if(!uid(id))throw Error('Notícia inválida.');const [n]=await get('cmim_portal_news?id=eq.'+id+'&published=eq.true&select=id,title,excerpt,body,category,image_url,published_at',false);if(!n)throw Error('Notícia não encontrada.');document.title=n.title+' | CMIM';status.innerHTML='<span class="cv-kicker">'+esc(n.category||'CMIM News')+' · '+esc(date(n.published_at))+'</span><h1>'+esc(n.title)+'</h1><p>'+esc(n.excerpt||'')+'</p>'+(/^https:\/\//i.test(n.image_url||'')?'<img class="pro-news-image" src="'+esc(n.image_url)+'" alt="">':'')+'<div class="cv-pre">'+esc(n.body||'')+'</div>';return}
+ const who=await A.user();if(!who){status.textContent='Entre na sua conta para continuar.';return}
+ if(mode==='admin'&&who.app_metadata?.cmim_admin!==true){status.textContent='Área exclusiva da administração.';root.hidden=true;return}
+ status.hidden=true;root.hidden=false;
+ if(mode==='admin'){
+ const queries=[['Inscrições pendentes','cmim_competition_entries?select=id&status=eq.pending','./admin-campeonatos.html'],['Mapas a homologar','cmim_draft_game_reports?select=room_id,game&review_status=eq.pending','./admin.html'],['Reagendamentos','cmim_reschedule_requests?select=id&status=eq.pending_admin','./admin-campeonatos.html'],['Reportes em análise','cmim_queue_reports?select=id&status=eq.pending','./admin-fila.html']];
+ const results=await Promise.allSettled(queries.map(x=>get(x[1])));
+ $('central-metrics').innerHTML=queries.map(([label,,url],i)=>'<a class="cv-panel pro-metric" href="'+url+'"><small>'+esc(label)+'</small><strong>'+(results[i].status==='fulfilled'&&Array.isArray(results[i].value)?(results[i].value.length>=1000?'1000+':results[i].value.length):'—')+'</strong><span>Resolver →</span></a>').join('');
+ try{const rows=await get('cmim_queue_audit?select=*&order=created_at.desc&limit=15');$('central-audit').innerHTML=rows.length?rows.map(r=>'<div class="pro-audit-row"><b>'+esc(r.action||r.event||'Ação registrada')+'</b><small>'+esc(date(r.created_at))+'</small></div>').join(''):'Nenhuma ação de fila registrada.'}catch{$('central-audit').textContent='O histórico da fila está temporariamente indisponível.'}
+ }else{
+ const id=encodeURIComponent(who.id);const results=await Promise.allSettled([get('cmim_squad_invites?recipient_id=eq.'+id+'&status=eq.pending&select=id,team_id,lane'),get('cmim_squad_members?user_id=eq.'+id+'&select=team_id'),get('cmim_competition_entries?select=id,team_id,competition_id,status&limit=1000'),get('cmim_entry_reviews?select=entry_id,payment_status,review_state,staff_note&limit=1000'),get('cmim_reschedule_requests?select=id,requester_team_id,recipient_team_id,proposed_time,status&limit=500'),get('cmim_competition_matches?select=id,team_a_id,team_b_id,scheduled_at,status&status=eq.scheduled&order=scheduled_at.asc&limit=1000'),get('cmim_squads?select=id,name&limit=1000'),get('cmim_competitions?select=id,title&limit=1000')]);
+ const [inv,members,entries,reviews,changes,games,teams,comps]=results.map(r=>r.status==='fulfilled'&&Array.isArray(r.value)?r.value:[]);
+ const ids=new Set(members.map(m=>m.team_id)),team=id=>teams.find(t=>t.id===id)?.name||'Equipe',comp=id=>comps.find(c=>c.id===id)?.title||'Campeonato';
+ const feed=[...inv.map(i=>card('Convite de '+team(i.team_id),'Posição: '+i.lane,'./meu-time.html#convites')),...entries.filter(e=>ids.has(e.team_id)).map(e=>{const r=reviews.find(r=>r.entry_id===e.id);return card(comp(e.competition_id),({pending:'Aguardando aprovação',approved:'Inscrição homologada',rejected:'Inscrição recusada'}[e.status]||e.status)+(r?.staff_note?' · '+r.staff_note:''),'./meu-time.html#minhas-inscricoes')}),...changes.filter(r=>ids.has(r.requester_team_id)||ids.has(r.recipient_team_id)).filter(r=>['pending','pending_admin'].includes(r.status)).map(r=>card('Solicitação de reagendamento',date(r.proposed_time),'./meu-time.html#reagendamentos')),...games.filter(g=>ids.has(g.team_a_id)||ids.has(g.team_b_id)).slice(0,12).map(g=>card(team(g.team_a_id)+' × '+team(g.team_b_id),date(g.scheduled_at),'./partida.html?id='+encodeURIComponent(g.id)))];
+ $('central-feed').innerHTML=(results.some(r=>r.status==='rejected')?'<p>Algumas informações não puderam ser consultadas.</p>':'')+(feed.join('')||'<div class="cv-panel">Nenhuma atividade pendente ou partida agendada encontrada.</div>');
+ }
+ }catch(e){status.hidden=false;status.textContent='Não foi possível carregar: '+e.message}finally{busy=false}}
+ $('central-refresh')?.addEventListener('click',load);await load();
+});
