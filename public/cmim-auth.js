@@ -4,30 +4,45 @@
  const STORAGE='cmim_player_session',LANES=['TOP','JG','MID','ADC','SUP'];
  // Confirmations must return to the published CMIM site, never to Supabase's localhost default.
  const EMAIL_CONFIRM_REDIRECT='https://carlos11gaia11.github.io/CMIM/conta.html?confirmed=1';
- let session=null,loginInFlight=null;try{const adm=JSON.parse(sessionStorage.getItem('cmim_session')||'null'),player=JSON.parse(localStorage.getItem(STORAGE)||'null');session=adm?.user?.app_metadata?.cmim_admin===true?adm:(player||adm)}catch{}
+ let session=null,loginInFlight=null,verifyInFlight=null,verifiedUser=null,authStatus='checking',generation=0;
+ function readStored(){try{return JSON.parse(localStorage.getItem(STORAGE)||'null')}catch{return null}}
+ session=readStored();
+ if(!session){try{session=JSON.parse(sessionStorage.getItem('cmim_session')||'null')}catch{}}
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
- function save(data){session=data||null;try{if(data)localStorage.setItem(STORAGE,JSON.stringify(data));else localStorage.removeItem(STORAGE)}catch{}document.dispatchEvent(new CustomEvent('cmim-auth-changed',{detail:{loggedIn:!!session}}));updateBadge()}
+ function notify(){document.body?.setAttribute('data-auth-state',authStatus);document.dispatchEvent(new CustomEvent('cmim-auth-changed',{detail:{loggedIn:authStatus==='authenticated',status:authStatus}}));updateBadge()}
+ function save(data){generation++;session=data||null;verifiedUser=null;authStatus=data?'checking':'guest';try{if(data)localStorage.setItem(STORAGE,JSON.stringify(data));else localStorage.removeItem(STORAGE);sessionStorage.removeItem('cmim_session')}catch{}notify()}
  async function call(path,{method='GET',body,secure=false,headers={}}={}){
-  if(secure)await current();
-  const res=await fetch(BASE+path,{method,cache:'no-store',headers:{apikey:KEY,...(secure?{Authorization:'Bearer '+session.access_token}:{}),...(body instanceof Blob?{}:{'Content-Type':'application/json'}),...headers},body:body instanceof Blob?body:body!==undefined?JSON.stringify(body):undefined});
-  const text=await res.text();let payload={};try{payload=JSON.parse(text)}catch{payload={message:text.slice(0,120)}}
-  if(!res.ok)throw Error(payload.msg||payload.error_description||payload.message||payload.error||payload.details||'Erro do Supabase ('+res.status+')');
+  const active=secure?await current():null;
+  if(secure&&!active?.access_token)throw Error('Sessão indisponível. Entre novamente ou tente reconectar.');
+  const res=await fetch(BASE+path,{method,cache:'no-store',headers:{apikey:KEY,...(secure?{Authorization:'Bearer '+active.access_token}:{}),...(body instanceof Blob?{}:{'Content-Type':'application/json'}),...headers},body:body instanceof Blob?body:body!==undefined?JSON.stringify(body):undefined});
+  const raw=await res.text();let payload={};try{payload=JSON.parse(raw)}catch{payload={message:raw.slice(0,120)}}
+  if(!res.ok){const error=Error(payload.msg||payload.error_description||payload.message||payload.error||payload.details||'Erro do Supabase ('+res.status+')');error.status=res.status;throw error}
   return payload;
  }
  async function current(){
   if(!session?.access_token)return null;
   if((session.expires_at||0)>Date.now()/1000+90)return session;
   if(loginInFlight)return loginInFlight;
-  loginInFlight=(async()=>{try{const fresh=await call('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:session.refresh_token}});save(fresh);return fresh}catch{save(null);return null}finally{loginInFlight=null}})();
+  const original=session,epoch=generation;
+  loginInFlight=(async()=>{try{
+   const latest=readStored();if(latest?.access_token&&latest.refresh_token!==original.refresh_token&&(latest.expires_at||0)>Date.now()/1000+90){if(epoch===generation)save(latest);return session}
+   const fresh=await call('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:original.refresh_token}});if(epoch===generation)save(fresh);return session;
+  }catch(e){if(epoch===generation){const latest=readStored();if(latest?.refresh_token&&latest.refresh_token!==original.refresh_token){save(latest);return session}if([400,401,403].includes(e.status))save(null);else{authStatus='offline';notify()}}return null}finally{loginInFlight=null}})();
   return loginInFlight;
  }
  async function user(){
-  if(!await current())return null;
-  try{return await call('/auth/v1/user',{secure:true})}catch{save(null);return null}
+  if(verifyInFlight)return verifyInFlight;
+  verifyInFlight=(async()=>{try{
+   const active=await current();if(!active){if(!session){authStatus='guest';notify()}return null}
+   const epoch=generation;
+   try{const who=await call('/auth/v1/user',{secure:true});if(epoch!==generation)return null;verifiedUser=who;authStatus='authenticated';notify();return who}
+   catch(e){if(epoch===generation){if([401,403].includes(e.status))save(null);else{authStatus='offline';notify()}}return null}
+  }finally{verifyInFlight=null}})();
+  return verifyInFlight;
  }
  async function signIn(email,password){
   const data=await call('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});
-  save(data);return data;
+  save(data);await user();return data;
  }
  function normalizePhone(value){
  let digits=String(value||'').replace(/[^0-9]/g,'');
@@ -155,7 +170,7 @@ async function signUp(values){
   showLoginGate(true);
   try{
    const verified=await user();
-   if(!verified?.id){showLoginGate(false);return false;}
+   if(!verified?.id){showLoginGate(false);if(authStatus==='offline'){document.getElementById('cmim-login-wall-description').textContent='Não foi possível verificar a sessão. Sua sessão foi preservada; recarregue para tentar novamente.';}return false;}
    hideLoginGate();
    document.dispatchEvent(new Event('cmim-auth-ready'));
    return true;
@@ -166,19 +181,19 @@ async function signUp(values){
 
  function badgeMarkup(){return '<div class="cmim-auth-bar" id="cmim-auth-badge"><a href="./conta.html" title="Conta CMIM">◌ Entrar / Cadastrar</a></div>'}
  function updateBadge(){
-  const authenticated=!!session?.access_token;
-  const name=session?.user?.user_metadata?.nick||'Meu perfil';
+  const authenticated=authStatus==='authenticated';
+  const name=verifiedUser?.user_metadata?.nick||'Meu perfil';
   // On the homepage login belongs in the prominent header CTA, not in the bottom corner.
   const header=document.getElementById('portal-auth-button');
   if(header){
    header.href=authenticated?'./perfil.html':'./conta.html';
-   header.textContent=authenticated?'◉ '+name+' · MEU PERFIL ↗':'◉ ENTRAR / CRIAR CONTA ↗';
+   header.textContent=authenticated?name+' · Meu perfil':authStatus==='checking'?'Verificando…':authStatus==='offline'?'Reconectar':'Entrar';
    header.setAttribute('aria-label',authenticated?'Abrir meu perfil CMIM':'Entrar no CMIM ou criar conta');
   }
   const el=document.getElementById('cmim-auth-badge');
   if(!el)return;
   if(authenticated)el.innerHTML='<a href="./perfil.html">◉ '+esc(name)+' · Perfil</a>';
-  else el.innerHTML='<a href="./conta.html">◌ Entrar / Cadastrar</a>';
+  else el.innerHTML='<a href="./conta.html">'+(authStatus==='checking'?'Verificando…':authStatus==='offline'?'Reconectar':'Entrar / Cadastrar')+'</a>';
  }
  function mountBadge(){if(document.getElementById('cmim-auth-badge')||document.body?.dataset?.noAuthBadge==='1')return;
   document.body.insertAdjacentHTML('beforeend',badgeMarkup());updateBadge();
@@ -205,15 +220,15 @@ async function signUp(values){
   }).join('');
   document.body.append(nav);
  }
- window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,uploadTeamLogo,squareImage,esc,session:()=>session,save,requireLogin,gotoLogin,requestedDestination};
+ window.CMIMAuth={BASE,KEY,EMAIL_CONFIRM_REDIRECT,LANES,call,current,user,signIn,signUp,normalizePhone,logout,uploadAvatar,uploadTeamLogo,squareImage,esc,session:()=>session,authState:()=>({status:authStatus,user:verifiedUser}),save,requireLogin,gotoLogin,requestedDestination};
  function initialize(){
   document.documentElement.classList.remove('cmim-auth-pending');
   if(document.body?.dataset?.cmimProtected==='1'){
    mountMobileDock();
    void requireLogin().then(ok=>{if(ok){mountBadge();updateBadge()}});
   }else{mountBadge();mountMobileDock();updateBadge()}
-  if(document.getElementById('portal-auth-button')&&session?.access_token)
-   current().then(updateBadge).catch(()=>updateBadge());
+  void user().then(updateBadge);
+  window.addEventListener('storage',e=>{if(e.key!==STORAGE)return;generation++;session=readStored();verifiedUser=null;authStatus=session?'checking':'guest';notify();void user().then(()=>{if(document.body?.dataset?.cmimProtected==='1')void requireLogin()})});
   // Public portal: clicking a protected tool while logged out takes the visitor to login.
   if(document.body?.dataset?.cmimProtected!=='1'){
    document.addEventListener('click',event=>{
