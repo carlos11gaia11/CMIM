@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM Competitive Circuit | Ligas, Times e Chaveamentos</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><script defer src="./campeonatos.js"></script><style>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM Competitive Circuit | Ligas, Times e Chaveamentos</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js"></script><script defer src="./campeonatos.js?v=20261125"></script><style>
 html.cmim-auth-pending body{visibility:visible!important}
 .cmim-circuito{margin:0 0 26px;scroll-margin-top:28px}
 .cmim-circuito-head{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
@@ -81,8 +81,8 @@ html.cmim-auth-pending body{visibility:visible!important}
 <option value="open" selected>CMIM OPEN</option><option value="academy">CMIM ACADEMY</option><option value="major">CMIM MAJOR</option>
 </select></label>
 <label class="cmim-field">NOME DO CAMPEONATO<input name="title" minlength="4" maxlength="140" required placeholder="Ex.: CMIM Open — Etapa 1"></label>
-<label class="cmim-field">FORMATO DA COMPETIÇÃO<select name="structure"><option value="copa">🏆 Copa / Mata-mata</option><option value="liga">📊 Liga / Pontos corridos</option><option value="suico">⚔ Suíço / Rodadas</option></select></label>
-<label class="cmim-field">SÉRIE DAS PARTIDAS<select name="series_games"><option value="1">MD1</option><option value="3" selected>MD3</option><option value="5">MD5</option></select></label>
+<label class="cmim-field">FORMATO DA COMPETIÇÃO<select name="structure"><option value="copa">🏆 Copa / Mata-mata</option><option value="liga">📊 Liga / Pontos corridos</option><option value="suico">⚔ Suíço / Rodadas</option><option value="liga_mata_mata">🏆 Liga + Mata-Mata</option></select></label>
+<p id="hybrid-format-hint" class="cmim-muted" hidden>16 times · 4 grupos de 4 · 2 classificados por grupo · confronto direto · grupos MD1 · quartas e semifinais MD3 · final MD5.</p><label class="cmim-field">SÉRIE DAS PARTIDAS<select name="series_games"><option value="1">MD1</option><option value="3" selected>MD3</option><option value="5">MD5</option></select></label>
 <label class="cmim-field">RODADAS DO SUÍÇO<select name="swiss_rounds"><option value="3">3 rodadas</option><option value="4">4 rodadas</option><option value="5" selected>5 rodadas</option><option value="6">6 rodadas</option><option value="7">7 rodadas</option></select></label><label class="cmim-field">Nº MÁXIMO DE TIMES<input name="max_teams" type="number" min="2" max="128" value="16" required></label>
 <label class="cmim-field">INÍCIO<input name="starts_at" type="datetime-local" required></label>
 <label class="cmim-field">STATUS INICIAL<select name="status"><option value="draft">Rascunho</option><option value="open" selected>Inscrições abertas</option></select></label>
