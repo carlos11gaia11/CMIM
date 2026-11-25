@@ -4,6 +4,14 @@ document.addEventListener('DOMContentLoaded',()=>{
  const auth=window.CMIMAuth,$=id=>document.getElementById(id),esc=auth.esc;
  const state={events:[],comps:[],matches:[],squads:[],admin:false,editing:null};
  const TZ='America/Sao_Paulo';
+ const dateKey=iso=>{if(!iso||!Number.isFinite(Date.parse(iso)))return '';return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso))};
+ const todayKey=()=>dateKey(new Date().toISOString());
+ let month=todayKey().slice(0,7),selected=null;
+ const monthDate=()=>new Date(month+'-01T12:00:00Z');
+ const shiftMonth=n=>{const d=monthDate();d.setUTCMonth(d.getUTCMonth()+n);month=d.toISOString().slice(0,7);selected=null;render()};
+ const dayLabel=key=>new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',day:'numeric',month:'long',year:'numeric'}).format(new Date(key+'T12:00:00Z'));
+ const overlaps=(e,key)=>{const start=dateKey(e.starts_at),end=dateKey(e.ends_at)||start;return !!start&&start<=key&&end>=key};
+ const kind=e=>['completed','closed'].includes(e.status)?'done':e.match_id?'match':'event';
  const fmtDate=iso=>{
   if(!iso)return 'Data e horário a definir';
   const date=new Date(iso);if(Number.isNaN(date.getTime()))return 'Data e horário a definir';
@@ -59,7 +67,18 @@ document.addEventListener('DOMContentLoaded',()=>{
    if(scope==='finished'&&!completed)return false;
    return true;
   }).sort((a,b)=>(a.starts_at?Date.parse(a.starts_at):Infinity)-(b.starts_at?Date.parse(b.starts_at):Infinity));
-  $('agenda-events').innerHTML=visible.length?visible.map(e=>{
+  const first=monthDate(),last=new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0,12)).toISOString().slice(0,10);
+  const startKey=month+'-01',monthEvents=visible.filter(e=>{const start=dateKey(e.starts_at),end=dateKey(e.ends_at)||start;return !!start&&start<=last&&end>=startKey});
+  const current=todayKey(),offset=first.getUTCDay(),days=Number(last.slice(-2)),cells=Math.ceil((days+offset)/7)*7;
+  $('calendar-month').textContent=new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',month:'long',year:'numeric'}).format(first);
+  $('calendar-grid').innerHTML=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d=>'<div class="calendar-weekday">'+d+'</div>').join('')+Array.from({length:cells},(_,i)=>{
+   const d=new Date(first);d.setUTCDate(1-offset+i);const key=d.toISOString().slice(0,10),events=visible.filter(e=>overlaps(e,key)),outside=!key.startsWith(month);
+   return '<button type="button" class="calendar-day'+(outside?' outside':'')+(key===current?' today':'')+(key===selected?' selected':'')+'" data-day="'+key+'" aria-pressed="'+(key===selected)+'" aria-label="'+esc(dayLabel(key)+', '+events.length+' evento(s)')+'"><span class="calendar-number">'+d.getUTCDate()+'</span>'+events.slice(0,3).map(e=>'<span class="calendar-chip '+kind(e)+'" title="'+esc(e.title)+'">'+esc(e.title)+'</span>').join('')+(events.length>3?'<span class="calendar-more">+'+(events.length-3)+'</span>':'')+'</button>';
+  }).join('');
+  $('calendar-grid').querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{selected=b.dataset.day;month=selected.slice(0,7);render()});
+  $('calendar-all').hidden=!selected;$('calendar-list-title').textContent=selected?'Eventos de '+dayLabel(selected):'Programação do mês';
+  const displayed=selected?visible.filter(e=>overlaps(e,selected)):monthEvents;
+  const card=e=>{
    const comp=e.match_id?state.matches.find(m=>m.id===e.match_id):null;
    const competition=comp?state.comps.find(c=>c.id===comp.competition_id):null;
    const teamA=comp?state.squads.find(s=>s.id===comp.team_a_id)?.name:null;
@@ -75,9 +94,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     (desc?'<p>'+esc(desc)+'</p>':'')+link+'</div>'+
     (state.admin?'<aside><button type="button" class="secondary" data-edit="'+esc(e.id)+'">Editar'+(e.match_id?' horário':' evento')+'</button></aside>':'')+
     '</article>';
-  }).join(''):'<p class="hint">Nenhum evento encontrado para os filtros selecionados.</p>';
-  $('agenda-events').querySelectorAll('[data-edit]').forEach(x=>x.addEventListener('click',()=>edit(x.dataset.edit)));
-  info(visible.length+' evento(s) exibido(s) de '+state.events.length+' na agenda.');
+  };
+  $('agenda-events').innerHTML=displayed.length?displayed.map(card).join(''):'<p class="hint">Nenhum evento programado para este período.</p>';
+  const undated=visible.filter(e=>!dateKey(e.starts_at));$('calendar-undated-section').hidden=!undated.length;$('calendar-undated').innerHTML=undated.map(card).join('');
+  document.querySelectorAll('#agenda-events [data-edit],#calendar-undated [data-edit]').forEach(x=>x.addEventListener('click',()=>edit(x.dataset.edit)));
+  info(displayed.length+' evento(s) no período · '+undated.length+' sem data definida.');
  }
  async function load(){
   const urls=[
@@ -91,6 +112,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const [events,comps,matches,squads]=res.map(x=>x.status==='fulfilled'&&Array.isArray(x.value)?x.value:[]);
   Object.assign(state,{events,comps,matches,squads});render();
  }
+ $('calendar-prev').onclick=()=>shiftMonth(-1);$('calendar-next').onclick=()=>shiftMonth(1);$('calendar-today').onclick=()=>{month=todayKey().slice(0,7);selected=null;render()};$('calendar-all').onclick=()=>{selected=null;render()};
  $('agenda-search').addEventListener('input',render);
  $('agenda-category').addEventListener('change',render);
  $('agenda-scope').addEventListener('change',render);

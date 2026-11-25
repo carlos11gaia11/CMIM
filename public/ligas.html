@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM Competitive Circuit | Ligas, Times e Chaveamentos</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-invites"></script><script defer src="./campeonatos.js?v=20261125-invites"></script><style>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMIM Competitive Circuit | Ligas, Times e Chaveamentos</title><link rel="stylesheet" href="./cmim-auth.css"><script defer src="./cmim-auth.js?v=20261125-invites"></script><script defer src="./campeonatos.js?v=20261125-approval"></script><style>
 html.cmim-auth-pending body{visibility:visible!important}
 .cmim-circuito{margin:0 0 26px;scroll-margin-top:28px}
 .cmim-circuito-head{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
@@ -63,7 +63,7 @@ html.cmim-auth-pending body{visibility:visible!important}
 <section class="cmim-hub-section" id="chaveamentos"><div class="cmim-hub-section-heading"><div><span class="cmim-kicker">05 / CAMPEONATOS E RESULTADOS</span><h2>CHAVEAMENTOS &amp; CLASSIFICAÇÃO</h2></div><p>Escolha um evento para explorar confrontos por rodada, placares, ranking de equipes e resultados homologados.</p></div><section class="cmim-card" style="margin-top:18px"><h2>TABELAS, CONFRONTOS E CLASSIFICAÇÃO</h2><p class="cmim-muted">Selecione um campeonato para ver os jogos e o formato da disputa.</p>
 <label class="cmim-field">CAMPEONATO<select id="selected-competition"><option value="">Escolha um campeonato</option></select></label><div id="competition-overview"></div></section></section>
 <section class="cmim-hub-section" id="gestao"><section id="league-reschedule-admin" class="cmim-card" hidden><h2>CONFIRMAÇÃO DE REAGENDAMENTOS</h2><div id="my-reschedules"></div></section><section id="competition-admin" class="cmim-card" hidden style="margin-top:20px;border-color:#b99b56"><span class="cmim-kicker">ÁREA RESTRITA · ORGANIZAÇÃO</span><h2>GESTÃO DAS LIGAS E EVENTOS</h2>
-<div class="cmim-tabs"><button class="active" data-admin-screen="create">Criar campeonato</button><button data-admin-screen="manage">Inscrições e rodadas</button></div>
+<div class="cmim-tabs"><button class="active" data-admin-screen="create">Criar campeonato</button><button data-admin-screen="manage">Aprovar inscrições e rodadas</button></div>
 <form id="admin-comp-create"><div class="cmim-form-row">
 <label class="cmim-field">LIGA COMPETITIVA<select name="league_tier" required>
 <option value="open" selected>CMIM OPEN</option><option value="academy">CMIM ACADEMY</option><option value="major">CMIM MAJOR</option>
@@ -75,6 +75,6 @@ html.cmim-auth-pending body{visibility:visible!important}
 <label class="cmim-field">LOGO PERSONALIZADA (OPCIONAL)<input name="cover" type="file" accept="image/jpeg,image/png,image/webp"><small>512 × 512 px; se vazia, usa a logo oficial da liga.</small></label><label class="cmim-field">ENCERRAMENTO DAS INSCRIÇÕES (OPCIONAL)<input name="closes_at" type="datetime-local"></label><label class="cmim-field">INÍCIO<input name="starts_at" type="datetime-local" required></label>
 <label class="cmim-field">STATUS INICIAL<select name="status"><option value="draft">Rascunho</option><option value="open" selected>Inscrições abertas</option></select></label>
 </div><label class="cmim-field">DESCRIÇÃO E REGULAMENTO<textarea name="description" rows="4" maxlength="5000"></textarea></label><div class="cmim-actions"><button class="cmim-button">＋ PUBLICAR CAMPEONATO</button></div></form>
-<div id="admin-comp-manage" hidden><label class="cmim-field">SELECIONE O CAMPEONATO<select id="admin-competition-select"></select></label>
+<div id="admin-comp-manage" hidden><p class="cmim-muted">As equipes precisam de aprovação manual antes de entrar no chaveamento.</p><label class="cmim-field">SELECIONE O CAMPEONATO<select id="admin-competition-select"></select></label>
 <div id="admin-competition-body" style="margin-top:20px"></div></div></section></section>
 </main></body></html>

@@ -17,7 +17,7 @@ const status=(message,bad=false)=>{
  clearTimeout(status.timer);status.timer=setTimeout(()=>toast.hidden=true,bad?9000:4500);
 };
 const leagueLabel=x=>({open:'CMIM OPEN',academy:'CMIM ACADEMY',major:'CMIM MAJOR'}[x]||'CIRCUITO GERAL');
-const label=s=>({copa:'Copa / Mata-mata',liga:'Liga / Pontos corridos',suico:'Suíço',liga_mata_mata:'Liga + Mata-Mata',draft:'Rascunho',open:'Inscrições abertas',closed:'Inscrições encerradas',live:'Em andamento',finished:'Finalizado',pending:'Pendente',approved:'Aprovado',rejected:'Rejeitado',scheduled:'Agendado'}[s]||s);
+const label=s=>({copa:'Copa / Mata-mata',liga:'Liga / Pontos corridos',suico:'Suíço',liga_mata_mata:'Liga + Mata-Mata',draft:'Rascunho',open:'Inscrições abertas',closed:'Inscrições encerradas',live:'Em andamento',finished:'Finalizado',pending:'Aguardando aprovação do ADM',approved:'Aprovado',rejected:'Inscrição recusada',scheduled:'Agendado'}[s]||s);
 const hybrid=c=>c?.structure==='liga_mata_mata';
 const bestOf=(c,m)=>hybrid(c)?(Number(m.round_number)<=3?1:Number(m.round_number)<=5?3:5):Number(c.series_games);
 const seriesLabel=c=>hybrid(c)?'Grupos MD1 · Quartas e semis MD3 · Final MD5':'MD'+Number(c.series_games||3);
@@ -158,7 +158,7 @@ function render(){
  });
  $('competition-list').innerHTML=visibleComps.length?visibleComps.map(c=>{
   const count=state.entries.filter(e=>e.competition_id===c.id&&e.status!=='rejected').length;
-  const buttons=c.status==='open'&&state.me?'<button class="cmim-button" data-register="'+c.id+'">INSCREVER MEU TIME →</button>':'';
+  const ownEntry=state.entries.find(e=>e.competition_id===c.id&&own().some(t=>t.id===e.team_id));const buttons=ownEntry?'<span class="cmim-badge">'+esc(label(ownEntry.status))+'</span><a class="cmim-button ghost" href="./meu-time.html#minhas-inscricoes">MINHAS INSCRIÇÕES</a>':c.status==='open'&&state.me?'<button class="cmim-button" data-register="'+c.id+'">SOLICITAR INSCRIÇÃO →</button>':'';
   return '<article class="cmim-cup">'+compLogoTag(c)+'<span class="cmim-kicker">'+esc(label(c.structure))+' · '+esc(seriesLabel(c))+'</span><h3>'+esc(c.title)+'</h3><p class="cmim-muted">'+esc(c.description||'Confira o regulamento do evento.')+'</p>'+
   '<div><span class="cmim-badge">'+esc(leagueLabel(c.league_tier))+'</span><span class="cmim-badge">'+esc(label(c.status))+'</span><span class="cmim-badge">'+count+'/'+c.max_teams+' times</span><span class="cmim-badge">'+formatDate(c.starts_at)+'</span></div>'+
   '<div class="cmim-actions"><button class="cmim-button ghost" data-select-comp="'+c.id+'">VER CONFRONTOS</button>'+buttons+'</div>'+(c.league_tier&&['open','academy','major'].includes(c.league_tier)?'<a class="cmim-league-event-link" href="./liga.html?liga='+encodeURIComponent(c.league_tier)+'">PÁGINA DA LIGA →</a>':'')+'</article>'
@@ -240,13 +240,13 @@ function renderReschedules(){
 async function register(compId){
  if(!state.me){a.gotoLogin();return}
  const comp=competition(compId),eligible=own().filter(t=>startersFor(t.id).length===5&&t.logo_url&&membersFor(t.id).every(m=>state.profiles.find(p=>p.id===m.user_id)?.avatar_url)&&
-  !state.entries.some(e=>e.competition_id===compId&&e.team_id===t.id&&e.status!=='rejected'));
+  !state.entries.some(e=>e.competition_id===compId&&e.team_id===t.id));
  if(!eligible.length){status('Para se inscrever, tenha cinco titulares, logo e fotos de todos os membros.',true);return}
  const choice=eligible.length===1?eligible[0].id:prompt('Qual time deseja inscrever? Informe a sigla:\n'+eligible.map(t=>t.short_name+' — '+t.name).join('\n'));
  const chosen=eligible.length===1?eligible[0]:eligible.find(t=>t.id===choice||t.short_name.toLowerCase()===String(choice||'').toLowerCase());
  if(!chosen)return;
  try{await a.call('/rest/v1/rpc/cmim_register_competition',{method:'POST',secure:true,body:{p_competition:comp.id,p_team:chosen.id}});
-  status('✓ '+chosen.name+' inscrito! Aguarde a análise do organizador.');await read()}
+  status('✓ Solicitação de '+chosen.name+' enviada. Aguarde a aprovação do ADM antes de participar.');await read()}
  catch(e){status('Inscrição não concluída: '+safeErr(e),true)}
 }
 function standings(compId){
@@ -393,11 +393,11 @@ function renderAdminManage(){
  if(!state.admin)return;
  const comp=competition($('admin-competition-select').value),box=$('admin-competition-body');
  if(!comp){box.innerHTML='<div class="cmim-empty">Cadastre um campeonato antes de administrar.</div>';return}
- const entries=state.entries.filter(e=>e.competition_id===comp.id);
+ const entries=state.entries.filter(e=>e.competition_id===comp.id).sort((a,b)=>Number(b.status==='pending')-Number(a.status==='pending')||String(a.created_at).localeCompare(String(b.created_at)));
  const games=state.matches.filter(m=>m.competition_id===comp.id),currentRound=Math.max(0,...games.map(g=>g.round_number));
  box.innerHTML=compLogoTag(comp)+'<form class="cmim-form-row" id="competition-logo-form"><label class="cmim-field">LOGO DO CAMPEONATO<input type="file" name="logo" accept="image/jpeg,image/png,image/webp" required></label><button class="cmim-button ghost">Salvar logo</button></form><div class="cmim-actions">'+['draft','open','closed','live','finished'].map(s=>'<button data-comp-status="'+s+'" class="cmim-button '+(comp.status===s?'':'ghost')+'">'+esc(label(s))+'</button>').join('')+'</div>'+
- '<h3 style="color:#ffe08d">INSCRIÇÕES · '+entries.length+'</h3>'+
- (entries.length?entries.map(e=>'<div class="cmim-match">'+readable(e.team_id)+' · '+esc(label(e.status))+
+ '<h3 style="color:#ffe08d">ANÁLISE DE INSCRIÇÕES · '+entries.filter(e=>e.status==='pending').length+' PENDENTE(S)</h3><p class="cmim-muted">Somente equipes aprovadas pelo ADM entram na competição. Confira o elenco e os requisitos antes de homologar.</p><p>'+entries.filter(e=>e.status==='approved').length+'/'+comp.max_teams+' aprovadas · '+entries.filter(e=>e.status==='rejected').length+' recusadas</p>'+
+ (entries.length?entries.map(e=>'<div class="cmim-match">'+imageTag(team(e.team_id)?.logo_url,'Logo')+teamLink(e.team_id)+' · '+esc(label(e.status))+'<p>'+startersFor(e.team_id).length+'/5 titulares · '+membersFor(e.team_id).length+'/10 jogadores</p><a href="./equipe.html?id='+encodeURIComponent(e.team_id)+'" target="_blank" rel="noopener">CONFERIR ELENCO E FOTOS ↗</a>'+
  '<div class="cmim-actions">'+(e.status==='pending'?'<button class="cmim-button" data-entry="'+e.id+'" data-entry-status="approved">✓ Aprovar time</button><button class="cmim-button ghost" data-entry="'+e.id+'" data-entry-status="rejected">Rejeitar</button>':'')+'</div></div>').join(''):'<p class="cmim-muted">Sem inscrições.</p>')+
  (hybrid(comp)&&currentRound===0?groupEditor(comp,entries):'')+
  '<div class="cmim-actions" style="margin-top:21px"><button id="generate-round" class="cmim-button">⚔ GERAR '+(comp.structure==='liga'?'TABELA DA LIGA':'PRÓXIMA RODADA')+'</button><span class="cmim-muted">Rodada atual: '+currentRound+'</span></div>'+
@@ -427,7 +427,7 @@ function renderAdminManage(){
   try{await a.call('/rest/v1/cmim_competitions?id=eq.'+comp.id,{method:'PATCH',secure:true,body:{status:b.dataset.compStatus}});await read()}catch(e){status(safeErr(e),true)}
  });
  box.querySelectorAll('[data-entry]').forEach(b=>b.onclick=async()=>{
-  try{await a.call('/rest/v1/cmim_competition_entries?id=eq.'+b.dataset.entry,{method:'PATCH',secure:true,body:{status:b.dataset.entryStatus}});await read()}catch(e){status(safeErr(e),true)}
+  if(!confirm(b.dataset.entryStatus==='approved'?'Aprovar a inscrição desta equipe?':'Recusar a inscrição desta equipe?'))return;b.disabled=true;try{const result=await a.call('/rest/v1/cmim_competition_entries?id=eq.'+b.dataset.entry+'&status=eq.pending',{method:'PATCH',secure:true,headers:{Prefer:'return=representation'},body:{status:b.dataset.entryStatus}});if(!Array.isArray(result)||result.length!==1||result[0].status!==b.dataset.entryStatus)throw Error('A inscrição não foi alterada. Atualize a página.');await read();status(b.dataset.entryStatus==='approved'?'Equipe aprovada para o torneio.':'Inscrição recusada.')}catch(e){status(safeErr(e),true)}finally{b.disabled=false}
  });
  box.querySelectorAll('[data-tiebreak]').forEach(b=>b.onclick=async()=>{
   const entry=entries.find(e=>e.team_id===b.dataset.tiebreak);
