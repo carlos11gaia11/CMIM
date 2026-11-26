@@ -11,8 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./admin-ui.css">
   <title>CMIM | Administração</title>
-  <script defer src="./cmim-auth.js?v=20261125-pro3b"></script><script defer src="./portal-admin.js?v=20261125-pro3b"></script><script defer src="./admin-users.js?v=20261113-tag-espacos"></script><script defer src="./admin-manual-games.js"></script>
-<link rel="stylesheet" href="./cmim-auth.css"><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script><link rel="icon" href="./assets/branding/cmim-main.webp?v=20261125-logo" type="image/webp"><link rel="stylesheet" href="./cmim-pro.css?v=20261125-pro3b"><script defer src="./cmim-pro.js?v=20261125-pro3b"></script></head>
+  <script defer src="./cmim-auth.js?v=20261126-creators"></script><script defer src="./portal-admin.js?v=20261125-pro3b"></script><script defer src="./admin-users.js?v=20261113-tag-espacos"></script><script defer src="./admin-manual-games.js"></script>
+<link rel="stylesheet" href="./cmim-auth.css"><link rel="stylesheet" href="./cmim-modern.css"><script defer src="./cmim-modern.js"></script><link rel="icon" href="./assets/branding/cmim-main.webp?v=20261125-logo" type="image/webp"><link rel="stylesheet" href="./cmim-pro.css?v=20261125-pro3b"><script defer src="./cmim-pro.js?v=20261125-pro3b"></script><script defer src="./cmim-creators.js?v=1"></script><style>.creator-admin-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #38383c}.creator-admin-row>div:nth-child(2){flex:1;min-width:120px}.creator-avatar{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:50%;background:#333026;color:#ffe134;font-size:20px;font-weight:800;overflow:hidden}.creator-avatar img{width:100%;height:100%;object-fit:cover}.creator-admin-row button,#creator-cancel,#creator-reload{border:1px solid #535358;background:#242429;color:#fff;padding:9px 12px;border-radius:6px;cursor:pointer}#creator-message{min-height:1.4em;color:#ffe134}</style></head>
 <body data-no-auth-badge="1" class="admin-page">
   <div class="admin-layout">
     <aside class="admin-sidebar" aria-label="Navegação administrativa">
@@ -27,6 +27,7 @@
         <button type="button" data-admin-tab="users"><span class="nav-icon">◎</span><span>Usuários e cargos</span></button>
         <button type="button" data-admin-tab="register"><span class="nav-icon">✚</span><span>Cadastro e inscrições</span></button>
         <button type="button" data-admin-tab="audio"><span class="nav-icon">♫</span><span>Música de fundo</span></button>
+        <button type="button" data-admin-tab="creators"><span class="nav-icon">▶</span><span>CMIM Creators / Transmissões</span></button>
         <button type="button" data-admin-tab="news"><span class="nav-icon">▣</span><span>CMIM News</span></button>
       </nav>
       <div class="admin-sidebar-label">ACESSOS RÁPIDOS</div>
@@ -245,6 +246,7 @@
             <audio id="admin-soundtrack-preview" controls preload="none" style="display:block;width:100%;max-width:500px"></audio>
            </form></section>
           </section>
+          <section id="admin-tab-creators" class="admin-tab-content" hidden aria-label="Gerenciar transmissões"><div class="module-heading"><div><span class="admin-eyebrow">COMUNIDADE / TWITCH</span><h2>CMIM Creators</h2><p>Adicione, edite e remova os canais exibidos em Transmissões.</p></div><a href="./transmissoes.html" class="cmim-button">VER PÁGINA PÚBLICA →</a></div><section class="admin-card"><header class="card-header"><div><span class="card-step">▶</span><div><h3>Canal do creator</h3><p>Informe o nome público e o usuário ou link da Twitch.</p></div></div></header><form id="creator-form" class="card-body admin-form"><label>NOME DO CREATOR<input name="display_name" maxlength="80" required placeholder="Nome artístico"></label><label>CANAL DA TWITCH<input name="twitch_login" required maxlength="250" placeholder="https://twitch.tv/usuario"></label><label>ÍCONE DO CANAL (URL HTTPS, OPCIONAL)<input name="avatar_url" type="url" maxlength="2048" placeholder="https://..."><span class="field-help">Usado quando a foto automática da Twitch não está disponível.</span></label><div><button type="submit" id="creator-submit" class="admin-main-button">Adicionar creator</button> <button type="button" id="creator-cancel" hidden>Cancelar edição</button></div><p id="creator-message" role="status"></p></form></section><section class="admin-card"><header class="card-header"><div><span class="card-step">C</span><div><h3>Canais cadastrados</h3><p>As alterações valem para todos os visitantes do site.</p></div></div><button id="creator-reload" type="button">Atualizar</button></header><div id="creator-list" class="card-body"></div></section></section>
           <section id="admin-tab-news" class="admin-tab-content" hidden aria-label="Gerenciar CMIM News">
             <div class="module-heading"><div><span class="admin-eyebrow">MÓDULO 03 / REDAÇÃO</span><h2>CMIM News</h2><p>Escreva reportagens, prepare rascunhos e publique as notícias oficiais da comunidade.</p></div><div class="heading-badge">JORNAL OFICIAL</div></div>
             <section class="admin-card">
@@ -313,7 +315,7 @@
   <script>
     (() => {
       const tabs=[...document.querySelectorAll('[data-admin-tab]')];
-      const panels={matches:document.getElementById('admin-tab-matches'),players:document.getElementById('admin-tab-players'),users:document.getElementById('admin-tab-users'),register:document.getElementById('admin-tab-register'),audio:document.getElementById('admin-tab-audio'),news:document.getElementById('admin-tab-news')};
+      const panels={matches:document.getElementById('admin-tab-matches'),players:document.getElementById('admin-tab-players'),users:document.getElementById('admin-tab-users'),register:document.getElementById('admin-tab-register'),audio:document.getElementById('admin-tab-audio'),news:document.getElementById('admin-tab-news'),creators:document.getElementById('admin-tab-creators')};
       function activate(name){
         if(!panels[name])name='matches';
         tabs.forEach(b=>{const on=b.dataset.adminTab===name;b.classList.toggle('current',on);b.setAttribute('aria-current',on?'page':'false')});
