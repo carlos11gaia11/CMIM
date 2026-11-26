@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id), A=window.CMIMAuth, L=['TOP','JG','MID','ADC','SUP'], esc=A.esc, fmt=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2});
 const opt=(v,t,s=false)=>'<option value="'+esc(v)+'"'+(s?' selected':'')+'>'+esc(t)+'</option>';
-let rounds=[],round=null,market=[],scores=[],games=[],stats=[],user=null,admin=false,picks={},captain='',saved=false,version=0,editing=null,busy=false;
+let rounds=[],round=null,market=[],scores=[],games=[],stats=[],user=null,admin=false,picks={},captain='',saved=false,version=0,editing=null,busy=false,teamProfile=null;
 const rest=(table,query='',secure=false)=>A.call('/rest/v1/'+table+'?'+query,{secure});
 const rpc=(name,body,secure=true)=>A.call('/rest/v1/rpc/cmim_fantasy_'+name,{method:'POST',body,secure});
 const open=()=>!!round&&!round.finalized&&Date.parse(round.closes_at)>Date.now();
@@ -9,10 +9,10 @@ const get=id=>market.find(p=>p.player_id===id), score=id=>scores.find(p=>p.playe
 function msg(s='',error=false){$('message').hidden=!s;$('message').textContent=s;$('message').classList.toggle('error',error)}
 async function task(fn){if(busy)return;busy=true;try{msg();await fn()}catch(e){msg(e.message||'Falha ao consultar Fantasy',true)}finally{busy=false;controls()}}
 function controls(){
- const can=open()&&!!user, cost=Object.values(picks).reduce((a,id)=>a+(get(id)?.price||0),0);
+ const can=open()&&!!user&&!!teamProfile, cost=Object.values(picks).reduce((a,id)=>a+(get(id)?.price||0),0);
  $('balance').textContent=fmt(100-cost)+' C$';$('balance').style.color=cost>100?'#ff8888':'';$('count').textContent=Object.values(picks).filter(Boolean).length+'/5';
- $('name').disabled=!can;$('captain').disabled=!can;$('save').disabled=busy||!can||cost>100||L.some(l=>!picks[l])||!captain;
- $('login').hidden=!!user; $('saved').textContent=saved?'Escalação salva':'Não salva';
+ $('team-name').disabled=!user||busy;$('register-team').disabled=!user||busy||!$('team-name').value.trim();$('register-team').textContent=teamProfile?'Salvar nome do time':'Criar meu time';$('team-state').textContent=!user?'Entre na sua conta CMIM para criar seu time.':teamProfile?'Time cadastrado: '+teamProfile.name:'Crie seu time agora, mesmo sem uma rodada aberta.';$('lineup-help').textContent=!user?'Entre na sua conta para jogar.':!teamProfile?'Primeiro, crie seu time no campo acima.':!round?'Seu time está cadastrado. Aguarde a primeira rodada para escolher os jogadores.':!open()?'O mercado desta rodada está fechado.':'Selecione os cinco jogadores e o capitão, respeitando os 100 créditos.';$('name').disabled=!can;$('captain').disabled=!can;$('save').disabled=busy||!can||cost>100||L.some(l=>!picks[l])||!captain;
+ $('login').hidden=!!user;$('team-login').hidden=!!user; $('saved').textContent=saved?'Escalação salva':'Não salva';
  $('round-state').textContent=!round?'Nenhuma rodada aberta':round.finalized?'Rodada publicada':open()?'Mercado aberto':'Mercado fechado';
  $('deadline').textContent=round?'Fechamento: '+new Date(round.closes_at).toLocaleString('pt-BR'):'O administrador precisa criar a primeira rodada.';
  $('close').disabled=busy||!admin||!open();$('publish').disabled=busy||!admin||!round||open()||round.finalized||!games.length;
@@ -27,7 +27,7 @@ function renderSlots(){
  $('captain').innerHTML=opt('','Escolher capitão',!captain)+L.filter(l=>picks[l]).map(l=>opt(picks[l],get(picks[l])?.nick||l,captain===picks[l])).join('');
  controls();
 }
-function pick(l,id){if(!open()||!user)return;picks[l]=id;if(!Object.values(picks).includes(captain))captain='';saved=false;renderSlots();renderMarket()}
+function pick(l,id){if(!open()||!user||!teamProfile)return;picks[l]=id;if(!Object.values(picks).includes(captain))captain='';saved=false;renderSlots();renderMarket()}
 function renderMarket(){
  const q=$('search').value.trim().toLowerCase(),lane=$('lane-filter').value,order=$('order').value;
  const list=market.filter(p=>(!lane||p.lane===lane)&&(!q||(p.nick+' '+p.team+' '+p.elo).toLowerCase().includes(q))).sort((a,b)=>order==='high'?b.price-a.price:order==='points'?Number(score(b.player_id)?.points||0)-Number(score(a.player_id)?.points||0):a.price-b.price);
@@ -51,13 +51,15 @@ function renderSide(side,old=[]){
 }
 function editGame(id){const g=games.find(x=>x.id===id);if(!g)return;editing=id;$('game-label').value=g.label;$('team-a').value=g.team_a;$('team-b').value=g.team_b;const old=stats.filter(s=>s.game_id===id);renderSide('a',old);renderSide('b',old)}
 async function loadRound(id){
- const v=++version;round=rounds.find(r=>r.id===id)||null;market=[];scores=[];games=[];stats=[];picks={};captain='';saved=false;$('name').value='';
+ const v=++version;round=rounds.find(r=>r.id===id)||null;market=[];scores=[];games=[];stats=[];picks={};captain='';saved=false;$('name').value=teamProfile?.name||'';
  if(round){const filter='round_id=eq.'+encodeURIComponent(round.id);const result=await Promise.all([rest('cmim_fantasy_market',filter),rest('cmim_fantasy_player_scores',filter),rest('cmim_fantasy_games',filter),rest('cmim_fantasy_stats',filter),user?rest('cmim_fantasy_lineups',filter,true):Promise.resolve([])]);if(v!==version)return;
  [market,scores,games,stats]=result;const own=result[4][0];if(own){own.picks.forEach(id=>{const p=get(id);if(p)picks[p.lane]=id});captain=own.captain;$('name').value=own.name;saved=true}}
  renderSlots();renderMarket();renderScores();renderAdmin();await ranking();controls();
 }
-async function load(id){user=await A.user();admin=user?.app_metadata?.cmim_admin===true;rounds=await rest('cmim_fantasy_rounds','order=created_at.desc');$('round').innerHTML=rounds.length?rounds.map(r=>opt(r.id,r.title,r.id===id)).join(''):opt('','Nenhuma rodada');if(id&&rounds.some(r=>r.id===id))$('round').value=id;await loadRound($('round').value)}
+async function load(id){user=await A.user();admin=user?.app_metadata?.cmim_admin===true;teamProfile=user?(await rest('cmim_fantasy_teams','select=name&user_id=eq.'+encodeURIComponent(user.id),true))[0]||null:null;$('team-name').value=teamProfile?.name||'';rounds=await rest('cmim_fantasy_rounds','order=created_at.desc');$('round').innerHTML=rounds.length?rounds.map(r=>opt(r.id,r.title,r.id===id)).join(''):opt('','Nenhuma rodada');if(id&&rounds.some(r=>r.id===id))$('round').value=id;await loadRound($('round').value)}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='admin'&&!admin)return;document.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected',String(x===b)));for(const t of ['play','ranking','results','admin'])$('tab-'+t).hidden=t!==b.dataset.tab;if(b.dataset.tab==='ranking')task(ranking)});
+$('team-name').oninput=controls;
+$('team-form').onsubmit=e=>{e.preventDefault();task(async()=>{if(!user)throw Error('Entre na sua conta CMIM.');const name=$('team-name').value.trim();if(!name||name.length>40)throw Error('Informe um nome de 1 a 40 caracteres.');const data=await A.call('/rest/v1/cmim_fantasy_teams?on_conflict=user_id',{method:'POST',secure:true,headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:{user_id:user.id,name}});teamProfile=data[0];if(!saved)$('name').value=teamProfile.name;renderSlots();renderMarket();msg('Seu time Fantasy foi cadastrado com sucesso!'+(round?'':' A escalação estará disponível quando uma rodada abrir.'));})};
 $('round').onchange=()=>task(()=>loadRound($('round').value));$('refresh').onclick=()=>task(()=>load(round?.id));
 $('search').oninput=renderMarket;$('lane-filter').onchange=renderMarket;$('order').onchange=renderMarket;
 $('slots').onchange=e=>{if(e.target.dataset.lane)pick(e.target.dataset.lane,e.target.value)};
