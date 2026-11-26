@@ -45,6 +45,8 @@ jobs:
           node --check public/agenda.js
           node --check public/campeonatos.js
           node --check public/cmim-competitive-details.js
+          node --check public/cmim-creators.js
+          node --check public/cmim-auth.js
 
       - name: Compilar CMIM
         run: npm run build
